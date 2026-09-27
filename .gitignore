@@ -1,0 +1,32 @@
+# Secrets — never commit these
+.env
+**/.env
+
+# Python
+.venv/
+**/.venv/
+__pycache__/
+**/__pycache__/
+
+# Personal data (health logs, session history)
+apps/health-coach/data/
+
+# Editor + tool clutter
+.obsidian/
+**/.obsidian/
+.playwright-mcp/
+**/.playwright-mcp/
+Untitled.md
+
+# Local-only workspace (see README "Where everything lives") — never published
+.claude/
+brain/
+content/
+ideas/
+ops/
+outreach/
+sandbox/
+workflows/
+agents/
+deliverables/
+health/

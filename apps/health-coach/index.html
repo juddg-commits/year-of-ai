@@ -1,0 +1,1095 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coach</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#090b0e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Coach">
+<style>
+  :root {
+    --bg: #090b0e;
+    --card: #111419; --card2: #171b21;
+    --line: rgba(255,255,255,.07); --line-strong: rgba(255,255,255,.13);
+    --ink: #eef1f4; --muted: #8a93a3; --faint: #5d6574;
+    --accent: #4ade80; --accent-deep: #22c55e;
+    --accent-soft: rgba(74,222,128,.11); --accent-line: rgba(74,222,128,.3);
+    --flame: #fbbf24; --flame-soft: rgba(251,191,36,.1); --flame-line: rgba(251,191,36,.3);
+    --radius: 18px;
+    --shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 10px 30px rgba(0,0,0,.28);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: radial-gradient(130% 45% at 50% -8%, rgba(74,222,128,.09), transparent 62%), var(--bg);
+    color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+    display: flex; flex-direction: column; height: 100dvh; overflow: hidden;
+  }
+  button { font: inherit; cursor: pointer; color: inherit; }
+  button:active:not(:disabled) { transform: scale(.97); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ── Header ─────────────────────────────────────────── */
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: calc(env(safe-area-inset-top) + 12px) 18px 10px; max-width: 720px; width: 100%; margin: 0 auto;
+  }
+  header .brand { font-size: 19px; font-weight: 850; letter-spacing: .07em; }
+  header .brand span { color: var(--accent); }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  #lvl-badge {
+    display: none; align-items: center; gap: 7px; padding: 4px 11px 4px 5px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+    font-size: 12.5px; font-weight: 750; transition: transform .15s;
+  }
+  #lvl-badge svg { width: 24px; height: 24px; display: block; }
+  #lvl-badge .ring-bg { stroke: var(--line-strong); }
+  #lvl-badge .ring-fg { stroke: var(--accent); transition: stroke-dashoffset .8s cubic-bezier(.22,1,.36,1); }
+  #end-session {
+    background: none; border: 1px solid var(--line); color: var(--muted);
+    padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600; transition: all .2s;
+  }
+  #end-session:hover { color: var(--ink); border-color: var(--line-strong); }
+  #end-session:disabled { opacity: .4; }
+
+  /* ── Tabs (bottom nav) ──────────────────────────────── */
+  nav {
+    display: flex; border-top: 1px solid var(--line);
+    background: rgba(13,16,20,.86); backdrop-filter: saturate(160%) blur(18px); -webkit-backdrop-filter: saturate(160%) blur(18px);
+    padding: 6px 8px calc(env(safe-area-inset-bottom) + 6px);
+  }
+  nav button {
+    flex: 1; background: none; border: 0; color: var(--faint);
+    padding: 4px 0 2px; font-size: 11.5px; font-weight: 650; letter-spacing: .01em;
+    display: flex; flex-direction: column; align-items: center; gap: 3px; transition: color .2s;
+  }
+  nav button .ico {
+    width: 58px; height: 30px; border-radius: 999px; display: grid; place-items: center;
+    transition: background .25s, transform .25s;
+  }
+  nav button .ico svg { width: 22px; height: 22px; }
+  nav button.active { color: var(--accent); }
+  nav button.active .ico { background: var(--accent-soft); }
+
+  /* ── Tab panels ─────────────────────────────────────── */
+  main { flex: 1; overflow: hidden; display: flex; }
+  .tab {
+    display: none; flex-direction: column; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    width: 100%; max-width: 720px; margin: 0 auto; padding: 6px 16px 28px;
+  }
+  .tab.active { display: flex; animation: rise .28s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+
+  .card {
+    background: linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.008)), var(--card);
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .card h2 {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11.5px; font-weight: 750; letter-spacing: .11em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+  }
+  .empty { color: var(--muted); text-align: center; padding: 22px 14px; border: 1px dashed var(--line-strong); border-radius: 14px; font-size: 14.5px; }
+  .empty b { color: var(--ink); }
+
+  /* ── Coach tab ──────────────────────────────────────── */
+  #tab-coach { padding-bottom: 0; }
+  #chat { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 10px 2px 14px; }
+  .msg {
+    max-width: 86%; padding: 11px 15px; border-radius: 20px; white-space: pre-wrap; overflow-wrap: anywhere;
+    font-size: 15.5px; line-height: 1.5; animation: pop .25s ease;
+  }
+  .msg strong { font-weight: 750; color: #fff; }
+  .msg code { font: 13.5px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(255,255,255,.07); padding: 1px 5px; border-radius: 6px; }
+  .msg a { color: var(--accent); }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(.98); } }
+  .user {
+    align-self: flex-end; color: #eafff2; border-bottom-right-radius: 6px;
+    background: linear-gradient(135deg, #1f7a48, #17603a); box-shadow: 0 6px 18px rgba(34,197,94,.14);
+  }
+  .coach { align-self: flex-start; background: var(--card2); border: 1px solid var(--line); border-bottom-left-radius: 6px; }
+  .thinking { align-self: flex-start; color: var(--muted); font-size: 14px; }
+  .typing { display: inline-flex; gap: 5px; padding: 15px 16px; background: var(--card2); border: 1px solid var(--line); border-bottom-left-radius: 6px; }
+  .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite ease-in-out; }
+  .typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+  @keyframes pulse { 50% { opacity: .45; } }
+  .tools { align-self: flex-start; display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: -4px; }
+  .chip {
+    font-size: 11.5px; font-weight: 650; color: var(--accent); background: var(--accent-soft);
+    border: 1px solid var(--accent-line); padding: 3px 10px; border-radius: 999px; animation: pop .3s ease;
+  }
+  #composer { display: flex; gap: 8px; align-items: center; padding: 8px 0 12px; }
+  #composer input {
+    flex: 1; min-width: 0; padding: 13px 18px; font-size: 16px; color: var(--ink);
+    background: var(--card); border: 1px solid var(--line-strong); border-radius: 999px; outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  #composer input::placeholder { color: var(--faint); }
+  #composer input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(74,222,128,.1); }
+  #composer button {
+    width: 48px; height: 48px; min-width: 48px; border: 0; border-radius: 50%; display: grid; place-items: center;
+    background: linear-gradient(180deg, #5ee68f, var(--accent-deep)); color: #05130a;
+    box-shadow: 0 6px 18px rgba(34,197,94,.28); transition: opacity .2s, transform .15s;
+  }
+  #composer button svg { width: 20px; height: 20px; }
+  #composer button:disabled { opacity: .35; box-shadow: none; }
+
+  /* ── Workout tab ────────────────────────────────────── */
+  .btn-hero {
+    width: 100%; padding: 15px; border: 0; border-radius: 16px; color: #05130a; font-size: 16px; font-weight: 800;
+    background: linear-gradient(180deg, #5ee68f, var(--accent-deep)); box-shadow: 0 8px 24px rgba(34,197,94,.25);
+  }
+  .btn-ghost {
+    background: rgba(255,255,255,.02); border: 1px solid var(--line-strong); color: var(--ink);
+    padding: 9px 15px; border-radius: 999px; font-size: 13.5px; font-weight: 600; transition: border-color .2s;
+  }
+  .btn-ghost:hover { border-color: var(--muted); }
+  .btn-ghost:disabled { opacity: .4; }
+  #wo-start .hero-ico { width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 20px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+  #wo-start .hero-ico svg { width: 34px; height: 34px; }
+  #wo-start p { color: var(--muted); margin: 0 auto 18px; max-width: 320px; font-size: 15px; }
+  #wo-loading { text-align: center; color: var(--muted); font-size: 15px; padding: 28px 18px; animation: pulse 1.4s ease infinite; }
+  #wo-meta { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 8px; }
+  .pill { font-size: 12px; font-weight: 650; color: var(--muted); background: var(--card); border: 1px solid var(--line); padding: 4px 11px; border-radius: 999px; }
+  .pill.go { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+  #wo-title { font-size: 25px; font-weight: 850; letter-spacing: -.01em; line-height: 1.2; margin: 2px 0 6px; }
+  #wo-focus { color: var(--muted); font-size: 14.5px; margin-bottom: 14px; }
+  #wo-bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; margin-bottom: 16px; }
+  #wo-bar div { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-deep), var(--accent)); border-radius: 99px; transition: width .4s cubic-bezier(.22,1,.36,1); }
+  .ex {
+    display: flex; gap: 14px; align-items: flex-start; padding: 15px 16px;
+    background: var(--card2); border: 1px solid var(--line); border-radius: 16px;
+    margin-bottom: 10px; transition: opacity .25s, border-color .25s; cursor: pointer;
+  }
+  .ex:hover { border-color: var(--line-strong); }
+  .ex.done { opacity: .5; }
+  .ex.done .ex-name { text-decoration: line-through; text-decoration-color: var(--faint); }
+  .ex .box {
+    width: 30px; height: 30px; min-width: 30px; border-radius: 50%;
+    border: 1.5px solid var(--line-strong); display: grid; place-items: center;
+    font-size: 13px; font-weight: 800; color: var(--muted); transition: all .2s;
+  }
+  .ex .box .ck { display: none; }
+  .ex.done .box { background: var(--accent); border-color: var(--accent); color: #05130a; }
+  .ex.done .box .n { display: none; }
+  .ex.done .box .ck { display: inline; }
+  .ex-name { font-weight: 750; font-size: 16px; line-height: 1.35; }
+  .ex-scheme { color: var(--accent); font-size: 14px; font-weight: 650; margin: 2px 0 3px; }
+  .ex-notes { color: var(--muted); font-size: 13.5px; line-height: 1.45; }
+  .vid { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 13px; font-weight: 700;
+         color: var(--accent); text-decoration: none; padding: 7px 14px; border-radius: 999px;
+         border: 1px solid var(--accent-line); background: var(--accent-soft); }
+  #wo-new { margin-top: 6px; align-self: flex-start; }
+
+  /* Stakes banner: what finishing is worth, before you start */
+  .stakes { border-color: var(--flame-line); background: linear-gradient(160deg, rgba(251,191,36,.09), transparent 55%), var(--card); }
+  .stakes h2 { color: var(--flame); }
+  .stakes.banked { border-color: var(--accent-line); background: linear-gradient(160deg, rgba(74,222,128,.09), transparent 55%), var(--card); }
+  .stakes.banked h2 { color: var(--accent); }
+  .stakes-xp { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .stakes-big { font-size: 30px; font-weight: 850; color: var(--accent); font-variant-numeric: tabular-nums; letter-spacing: -.01em; margin-right: 2px; }
+  .stake-chip { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+                color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line); }
+  .stake-chip.gold { color: var(--flame); background: var(--flame-soft); border-color: var(--flame-line); }
+  .stakes-meter { position: relative; margin: 12px 0 10px; }
+  .stakes-meter > div { position: absolute; top: 0; }
+  .stakes-meter .gain { border-radius: 0 99px 99px 0; animation: pulse 1.6s ease infinite;
+    background: repeating-linear-gradient(45deg, rgba(74,222,128,.6) 0 6px, rgba(74,222,128,.28) 6px 12px); }
+  .stakes-line { font-size: 14px; color: var(--muted); margin-top: 5px; }
+  .stakes-line b { color: var(--ink); }
+
+  /* ── Journey ────────────────────────────────────────── */
+  .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-row .card { margin-bottom: 14px; }
+  .big { font-size: 34px; font-weight: 850; font-variant-numeric: tabular-nums; line-height: 1.1; letter-spacing: -.01em; }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .flame { animation: flicker 1.6s ease infinite; display: inline-block; }
+  @keyframes flicker { 50% { transform: scale(1.12) rotate(-3deg); } }
+  #chart-svg { width: 100%; height: auto; max-height: 210px; display: block; }
+  #weight-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  #week-avg { font-size: 24px; }
+  #ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  #ring-svg { width: 96px; height: 96px; }
+  #ring-svg .track { stroke: var(--line-strong); }
+  #ring-svg .fill { stroke: var(--accent); transition: stroke-dashoffset 1s cubic-bezier(.22,1,.36,1); }
+  #ring-label { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; text-align: center; }
+  #ring-sub { text-align: center; }
+  .hit { animation: ringpop .5s cubic-bezier(.22,2,.36,1); }
+  @keyframes ringpop { 40% { transform: scale(1.07); } }
+  .plan-card { border-left: 3px solid var(--accent); }
+  .plan-text { font-size: 17px; font-weight: 650; line-height: 1.45; }
+  .plan-text .kw { color: var(--accent); }
+  .fresh-card { border-left: 3px solid var(--flame); }
+  .goal { margin-bottom: 14px; }
+  .goal:last-child { margin-bottom: 2px; }
+  .goal-head { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; margin-bottom: 7px; }
+  .goal-head b { font-weight: 700; }
+  .goal-head span { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .meter { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; }
+  .meter > div {
+    height: 100%; width: 0%; border-radius: 99px; background: linear-gradient(90deg, var(--accent-deep), var(--accent));
+    transition: width .9s cubic-bezier(.22,1,.36,1);
+  }
+  .goal.hot .meter > div { background: linear-gradient(90deg, var(--accent), #a3f7c4); box-shadow: 0 0 12px rgba(74,222,128,.45); }
+  .goal.hot .goal-head b { color: var(--accent); }
+  .auto-meter { margin-bottom: 12px; }
+  .auto-meter:last-child { margin-bottom: 0; }
+  .info-btn { background: none; border: 0; color: var(--muted); font-size: 14px; padding: 0 2px; letter-spacing: 0; }
+
+  /* ── Game layer ── */
+  #avatar-card { background: radial-gradient(90% 90% at 15% 20%, rgba(74,222,128,.1), transparent 60%), var(--card); }
+  #avatar-wrap { display: flex; gap: 16px; align-items: center; }
+  #avatar-svg svg { width: 116px; height: 116px; display: block; }
+  #avatar-side { flex: 1; min-width: 0; }
+  #game-title { font-size: 25px; }
+  #xp-bar { background: linear-gradient(90deg, #2f9e5f, var(--accent)); height: 100%; width: 0%; border-radius: 99px; transition: width .9s cubic-bezier(.22,1,.36,1); }
+  #gear-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 14px; }
+  .gear { font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); color: var(--faint); background: rgba(255,255,255,.02); }
+  .gear.on { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+  .quest { display: flex; gap: 12px; align-items: flex-start; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .quest:first-child { padding-top: 2px; }
+  .quest:last-child { border-bottom: 0; }
+  .q-mark { width: 22px; height: 22px; min-width: 22px; margin-top: 1px; border-radius: 50%; border: 1.5px solid var(--line-strong); display: grid; place-items: center; font-size: 12px; font-weight: 800; color: transparent; }
+  .quest.done .q-mark { background: var(--accent); border-color: var(--accent); color: #05130a; animation: ringpop .4s cubic-bezier(.22,2,.36,1); }
+  .quest.done .q-text { color: var(--muted); text-decoration: line-through; }
+  .q-text { font-size: 14.5px; }
+  #trophies { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 9px; }
+  .trophy { border: 1px solid var(--line); border-radius: 14px; padding: 12px 8px; text-align: center; background: rgba(255,255,255,.02); }
+  .trophy .t-ico { font-size: 26px; line-height: 1.2; }
+  .trophy .t-name { font-size: 12.5px; font-weight: 750; margin-top: 4px; }
+  .trophy .t-need { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+  .trophy.locked { opacity: .42; filter: grayscale(1); }
+  .trophy.earned { border-color: var(--accent-line); background: var(--accent-soft); }
+
+  /* ── Toasts ── */
+  #toasts { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 142px); left: 50%; transform: translateX(-50%); z-index: 300; pointer-events: none; display: flex; flex-direction: column-reverse; gap: 8px; width: min(92vw, 420px); }
+  .toast {
+    background: rgba(23,27,33,.94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--accent-line); border-radius: 14px; padding: 12px 16px; font-size: 14px; font-weight: 650;
+    box-shadow: 0 14px 40px rgba(0,0,0,.5); animation: toastIn .3s ease;
+  }
+  .toast.gold { border-color: var(--flame-line); }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+
+  /* ── Video modal: never leave the app ── */
+  #video-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.8);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 200;
+    display: none; align-items: center; justify-content: center; padding: 18px;
+  }
+  #video-backdrop.open { display: flex; animation: rise .22s ease; }
+  #video-modal { position: relative; width: min(94vw, 760px); }
+  #video-frame { aspect-ratio: 16 / 9; background: #000; border-radius: 16px; overflow: hidden; border: 1px solid var(--line-strong); }
+  #video-frame iframe { width: 100%; height: 100%; border: 0; }
+  #video-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px; margin-top: 12px; }
+  #video-meta { font-size: 13px; color: var(--muted); min-width: 0; flex: 1 1 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #video-meta b { color: var(--ink); }
+  #video-next { flex-shrink: 0; }
+  #video-close {
+    position: absolute; top: -46px; right: -4px; width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255,255,255,.1); border: 0; color: #fff; font-size: 17px; display: grid; place-items: center;
+  }
+
+  /* celebration burst */
+  .spark { position: fixed; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); pointer-events: none; z-index: 301; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">COACH<span>.</span></div>
+    <div class="header-right">
+      <button id="lvl-badge" title="Your level — open Journey" aria-label="Level">
+        <svg viewBox="0 0 24 24"><circle class="ring-bg" cx="12" cy="12" r="9" fill="none" stroke-width="3"/>
+          <circle class="ring-fg" cx="12" cy="12" r="9" fill="none" stroke-width="3" stroke-linecap="round"
+                  transform="rotate(-90 12 12)" stroke-dasharray="56.55" stroke-dashoffset="56.55"/></svg>
+        <span id="lvl-text" class="num">Lv 1</span>
+      </button>
+      <button id="end-session" title="Save this session to the coach's memory">End session</button>
+    </div>
+  </header>
+  <div id="toasts"></div>
+  <div id="video-backdrop">
+    <div id="video-modal">
+      <button id="video-close" aria-label="Close video">✕</button>
+      <div id="video-frame">
+        <iframe id="video-iframe" title="Form video"
+                allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <div id="video-bar">
+        <div id="video-meta"></div>
+        <button class="btn-ghost" id="video-next">↻ Wrong video? Try another</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <!-- ── Coach ── -->
+    <section class="tab active" id="tab-coach">
+      <div id="chat" aria-live="polite"></div>
+      <form id="composer">
+        <input id="input" placeholder="Meals, workouts, anything…" autocomplete="off" enterkeyhint="send" maxlength="4000">
+        <button type="submit" id="send" aria-label="Send">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        </button>
+      </form>
+    </section>
+
+    <!-- ── Today's Workout ── -->
+    <section class="tab" id="tab-workout">
+      <div id="wo-stakes" class="card stakes" style="display:none;"></div>
+      <div id="wo-start" class="card" style="text-align:center; padding:30px 20px;">
+        <div class="hero-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></div>
+        <p>Your coach reads your profile and recent training, then programs today's session around what's fresh.</p>
+        <button class="btn-hero" id="wo-generate">Generate today's workout</button>
+      </div>
+      <div id="wo-loading" class="card" style="display:none;">Programming your session…</div>
+      <div id="wo-plan" style="display:none; flex-direction:column;">
+        <div id="wo-meta"></div>
+        <div id="wo-title"></div>
+        <div id="wo-focus"></div>
+        <div id="wo-bar"><div></div></div>
+        <div id="wo-list"></div>
+        <button class="btn-ghost" id="wo-new">↻ Different workout</button>
+      </div>
+    </section>
+
+    <!-- ── Journey ── -->
+    <section class="tab" id="tab-progress">
+      <div class="sub" id="journey-status" style="display:none; text-align:center; padding:10px;"></div>
+      <div class="card" id="avatar-card">
+        <div id="avatar-wrap">
+          <div id="avatar-svg"></div>
+          <div id="avatar-side">
+            <div class="big" id="game-title">–</div>
+            <div class="sub" id="game-level-sub"></div>
+            <div class="meter" style="margin-top:10px;"><div id="xp-bar"></div></div>
+            <div class="sub" id="xp-sub"></div>
+          </div>
+        </div>
+        <div id="gear-row"></div>
+      </div>
+      <div class="card">
+        <h2>Daily quests</h2>
+        <div id="quests"></div>
+        <div class="sub" id="quest-note" style="margin-top:10px;"></div>
+      </div>
+      <div class="stat-row">
+        <div class="card">
+          <h2>Streak</h2>
+          <div class="big"><span class="flame">🔥</span> <span id="streak">–</span></div>
+          <div class="sub" id="streak-sub">days logging</div>
+        </div>
+        <div class="card">
+          <h2>Protein today</h2>
+          <div id="ring-wrap">
+            <svg id="ring-svg" viewBox="0 0 120 120">
+              <circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="11"/>
+              <circle class="fill" cx="60" cy="60" r="52" fill="none" stroke-width="11"
+                      stroke-linecap="round" transform="rotate(-90 60 60)"/>
+            </svg>
+            <div id="ring-label">–</div>
+            <div class="sub" id="ring-sub">toward your target</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>This week</h2>
+        <div id="goals"></div>
+      </div>
+      <div class="card plan-card" id="plan-card">
+        <h2>Active plan</h2>
+        <div id="plan-body"></div>
+      </div>
+      <div class="card fresh-card" id="fresh-card" style="display:none;">
+        <h2>Fresh start</h2>
+        <div id="fresh-body"></div>
+        <button class="btn-ghost" id="fresh-btn" style="margin-top:12px;">Plan my fresh start with the coach →</button>
+      </div>
+      <div class="card">
+        <h2>Weight</h2>
+        <div id="weight-head">
+          <div class="big" id="week-avg">–</div>
+          <div class="sub" id="week-delta">log weigh-ins to compare</div>
+        </div>
+        <div id="chart-holder"></div>
+      </div>
+      <div class="card">
+        <h2>Habit autopilot <button class="info-btn" id="auto-info-btn" aria-label="What is this?">ⓘ</button></h2>
+        <div class="sub" id="auto-info" style="display:none; margin-bottom:12px;">
+          Habits become automatic through repetition in a stable context — the classic
+          study (Lally et al., 2010) found it takes a median of <b>66 days</b>. Each
+          meter blends your reps over the last 66 days with how consistent your
+          weekly pattern is. It only ever fills up — there's no losing progress here.
+        </div>
+        <div id="auto-meters"></div>
+      </div>
+      <div class="card">
+        <h2>Trophy case</h2>
+        <div id="trophies"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav>
+    <button data-tab="tab-coach" class="active"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span>Coach</button>
+    <button data-tab="tab-workout"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></span>Workout</button>
+    <button data-tab="tab-progress"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg></span>Journey</button>
+  </nav>
+
+<script>
+/* This file is a SKIN. It fetches JSON and renders it — every decision
+   (what to log, what to program, what the stats are) happens server-side. */
+
+const $ = (id) => document.getElementById(id);
+
+/* Every API call carries X-Coach (the server rejects calls without it, so other
+   sites can't fire paid requests). A 401 means the login lapsed → sign in again. */
+async function api(url, opts = {}) {
+  const res = await fetch(url, { ...opts, headers: { ...(opts.headers || {}), "X-Coach": "1" } });
+  if (res.status === 401) { location.href = "/login"; throw new Error("login required"); }
+  return res;
+}
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+/* Coach replies use light markdown; render the common bits instead of showing raw ** */
+function renderMarkdown(text) {
+  return esc(text)
+    .replace(/`([^`\n]+)`/g, "<code>$1</code>")
+    .replace(/^(\s*)[-*]\s+/gm, "$1• ")
+    .replace(/^#{1,6}\s+(.+)$/gm, "<strong>$1</strong>")
+    .replace(/\*\*\*(\S(?:.*?\S)?)\*\*\*/g, "<strong><em>$1</em></strong>")
+    .replace(/\*\*(\S(?:.*?\S)?)\*\*/g, "<strong>$1</strong>")
+    // *italic* only when it hugs a word on both sides — so "3 * 8 * 2" stays math
+    .replace(/(^|[^\w*])[*_](?=\S)([^*_\n]*?\S)[*_](?![\w*])/gm, "$1<em>$2</em>")
+    // [label](https://…) → link; anything that isn't http(s) stays plain text
+    .replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+
+/* ── Tabs ─────────────────────────────────────────────── */
+document.querySelectorAll("nav button").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+    btn.classList.add("active");
+    $(btn.dataset.tab).classList.add("active");
+    if (btn.dataset.tab === "tab-progress") loadProgress();
+    if (btn.dataset.tab === "tab-workout") loadStakes();
+    if (btn.dataset.tab === "tab-coach") scrollToLatest();   // replies that landed while away
+  });
+});
+
+/* ── Celebration burst ────────────────────────────────── */
+function burst(x, y) {
+  for (let i = 0; i < 10; i++) {
+    const s = document.createElement("span");
+    s.className = "spark";
+    s.style.left = x + "px"; s.style.top = y + "px";
+    document.body.appendChild(s);
+    const a = (Math.PI * 2 * i) / 10, d = 40 + Math.random() * 50;
+    s.animate(
+      [{ transform: "translate(0,0)", opacity: 1 },
+       { transform: `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d}px)`, opacity: 0 }],
+      { duration: 600 + Math.random() * 300, easing: "cubic-bezier(.22,1,.36,1)" }
+    ).onfinish = () => s.remove();
+  }
+}
+
+/* ── Coach tab ────────────────────────────────────────── */
+const chat = $("chat"), input = $("input"), send = $("send");
+
+function add(cls, text) {
+  const el = document.createElement("div");
+  el.className = "msg " + cls;
+  if (cls === "coach") el.innerHTML = renderMarkdown(text);
+  else el.textContent = text;
+  chat.appendChild(el);
+  scrollToLatest();
+  return el;
+}
+
+/* Long coach replies: land on their FIRST line, not their last */
+function scrollToLatest() {
+  const last = chat.lastElementChild;
+  if (!last) return;
+  if (last.classList.contains("coach") && last.offsetHeight > chat.clientHeight * 0.7) {
+    chat.scrollTop = last.offsetTop - chat.offsetTop - 12;
+  } else {
+    chat.scrollTop = chat.scrollHeight;
+  }
+}
+
+/* One reply at a time: a second send or End session mid-reply would scramble it */
+let busy = false;
+function setBusy(b) {
+  busy = b;
+  send.disabled = b; $("end-session").disabled = b; $("fresh-btn").disabled = b;
+}
+
+function addChips(tools) {
+  if (!tools.length) return;
+  const wrap = document.createElement("div");
+  wrap.className = "tools";
+  tools.forEach((t) => {
+    const c = document.createElement("span");
+    c.className = "chip"; c.textContent = "⚙ " + t;
+    wrap.appendChild(c);
+  });
+  chat.appendChild(wrap);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function sendMessage(text) {
+  if (busy) { toast("Hang on, the coach is still replying."); return; }
+  add("user", text);
+  input.value = ""; setBusy(true);
+  const thinking = document.createElement("div");
+  thinking.className = "msg typing"; thinking.setAttribute("aria-label", "Coach is typing");
+  thinking.innerHTML = "<i></i><i></i><i></i>";
+  chat.appendChild(thinking); scrollToLatest();
+  try {
+    const res = await api("/chat", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text }),
+    });
+    const data = await res.json();
+    thinking.remove();
+    addChips(data.tools_used || []);
+    add("coach", data.reply || "(no reply)");
+    if ((data.events || []).length) {
+      playEvents(data.events);
+      api("/events/ack", { method: "POST" }).catch(() => {});   // shown → don't replay on reload
+      loadStakes();   // XP moved → refresh badge + stakes
+    }
+  } catch (e) {
+    thinking.className = "msg thinking";
+    thinking.textContent = "Connection hiccup — your message wasn't lost on the server side. Try sending again.";
+  }
+  finally { setBusy(false); input.focus(); }
+}
+
+$("composer").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const t = input.value.trim();
+  if (t) sendMessage(t);
+});
+
+$("end-session").addEventListener("click", async () => {
+  await api("/reset", { method: "POST" });
+  chat.innerHTML = "";
+  add("coach", "Session saved to memory. Fresh start — what's going on?");
+});
+
+/* Rehydrate the conversation after a reload — the server remembers.
+   Only auto-kickoff a brand-new session (no history yet). */
+(async () => {
+  setBusy(true);
+  const loading = add("thinking", "Loading your conversation…");   // /history waits out an in-flight reply
+  let turns = [], missed = [];
+  try { ({ turns = [], events: missed = [] } = await (await api("/history")).json()); } catch (e) {}
+  loading.remove();
+  setBusy(false);
+  if (missed.length) {   // a reply finished while the page was reloading — play what you missed
+    playEvents(missed);
+    api("/events/ack", { method: "POST" }).catch(() => {});
+  }
+  if (!turns.length) return sendMessage("Hi, I'm here for today's check-in.");
+  turns.forEach((t) => {
+    if (t.role === "assistant") { addChips(t.tools || []); if (t.text) add("coach", t.text); }
+    else add("user", t.text);
+  });
+})();
+
+loadStakes();   // header badge + a ready Workout tab
+
+/* PWA: register the service worker so Coach installs to a phone home screen */
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");
+
+/* ── Workout tab ──────────────────────────────────────── */
+let plan = null, doneCount = 0, stakes = null, logged = false;
+
+async function generateWorkout(fresh) {
+  $("wo-start").style.display = "none";
+  $("wo-plan").style.display = "none";
+  $("wo-loading").textContent = fresh ? "Finding you a different session…" : "Programming your session…";
+  $("wo-loading").style.display = "block";
+  try {
+    const res = await api("/workout" + (fresh ? "?new=1" : ""));
+    const next = await res.json();
+    if (next.error) throw new Error(next.error);
+    plan = next;
+    renderWorkout();
+  } catch (e) {
+    $("wo-loading").style.display = "none";
+    if (plan) $("wo-plan").style.display = "flex";   // the old session, ticks intact
+    else $("wo-start").style.display = "block";
+    toast("Couldn't program the session — give it a moment and tap again.");
+  }
+}
+
+/* ── Stakes: what finishing is worth, before you start (preview only — logging pays) ── */
+const START_COPY = $("wo-start").querySelector("p").textContent;
+async function loadStakes() {
+  try { stakes = await (await api("/workout/stakes")).json(); } catch (e) { return; }
+  if (plan && plan.date && plan.date !== stakes.today) {   // the page stayed open past midnight
+    plan = null; logged = false;
+    $("wo-plan").style.display = "none";
+    $("wo-start").style.display = "block";
+  }
+  renderStakes();
+  const p = $("wo-start").querySelector("p");
+  if (stakes.done_today && !plan) {
+    p.textContent = `Today's session is logged: ${stakes.done_today}. Recovery is where it pays off.`;
+    $("wo-generate").style.display = "none";
+  } else {
+    p.textContent = START_COPY;
+    $("wo-generate").style.display = "";
+  }
+  if (stakes.done_today && plan) markLogged();
+}
+
+/* Header badge: level + a ring for progress into it; tap → Journey */
+function setLevelBadge(n, pct) {
+  const b = $("lvl-badge");
+  b.style.display = "inline-flex";
+  $("lvl-text").textContent = `Lv ${n}`;
+  b.querySelector(".ring-fg").style.strokeDashoffset = 56.55 * (1 - Math.min(pct, 100) / 100);
+}
+$("lvl-badge").addEventListener("click", () => document.querySelector('nav button[data-tab="tab-progress"]').click());
+
+function renderStakes() {
+  const el = $("wo-stakes"), s = stakes;
+  setLevelBadge(s.level.n, s.level.pct);
+  el.style.display = "block";
+  if (s.done_today) {
+    el.className = "card stakes banked";
+    el.innerHTML = `<h2>✓ Banked today</h2>
+      <div class="stakes-xp"><span class="stakes-big">+${s.earned_today} XP</span></div>
+      <div class="stakes-line"><b>${esc(s.done_today)}</b> is logged. Lv ${s.level.n} bar at ${s.level.pct}%.</div>`;
+    return;
+  }
+  const up = s.level_after.n > s.level.n;
+  const gainW = up ? 100 - s.level.pct : s.level_after.pct - s.level.pct;
+  const chips = [];
+  if (s.quest_xp) chips.push(`<span class="stake-chip">+${s.quest_xp} quest</span>`);
+  if (s.sweep_xp) chips.push(`<span class="stake-chip">+${s.sweep_xp} all quests</span>`);
+  chips.push(`<span class="stake-chip gold">🎁 ${s.chest_pct}% chest</span>`);
+  const lines = [
+    up ? `⬆️ <b>Levels you up</b> to Lv ${s.level_after.n} · ${esc(s.level_after.title)}`
+       : `Lv ${s.level.n} bar: ${s.level.pct}% → <b>${s.level_after.pct}%</b>`,
+    s.streak.after > s.streak.now
+      ? (s.streak.now ? `🔥 Streak ${s.streak.now} → <b>${s.streak.after} days</b>` : "🔥 <b>Starts a streak</b>")
+      : `🔥 Streak already safe today (${s.streak.now} ${s.streak.now === 1 ? "day" : "days"})`,
+  ];
+  if (s.unlock) lines.push(s.unlock.to_go === 1
+    ? `🔓 <b>Unlocks ${esc(s.unlock.name)}</b>`
+    : `🔓 ${s.unlock.to_go} workouts to ${esc(s.unlock.name)}`);
+  el.className = "card stakes";
+  el.innerHTML = `<h2>🎯 On the line today</h2>
+    <div class="stakes-xp"><span class="stakes-big">+${s.xp} XP</span>${chips.join("")}</div>
+    <div class="meter stakes-meter"><div style="left:0; width:${s.level.pct}%"></div><div class="gain" style="left:${s.level.pct}%; width:${gainW}%"></div></div>
+    ${lines.map((l) => `<div class="stakes-line">${l}</div>`).join("")}`;
+}
+
+function markLogged(chipText) {
+  logged = true;
+  document.querySelectorAll(".ex").forEach((r) => { r.classList.add("done"); r.setAttribute("aria-checked", "true"); });
+  $("wo-bar").firstElementChild.style.width = "100%";
+  $("wo-new").style.display = "none";
+  if (!$("wo-done-chip")) {
+    const c = document.createElement("div");
+    c.id = "wo-done-chip"; c.className = "chip"; c.style.marginTop = "8px";
+    c.textContent = chipText || "✓ Logged today — the coach knows 💪";
+    $("wo-list").appendChild(c);
+  }
+}
+
+function renderWorkout() {
+  doneCount = 0; logged = false;
+  $("wo-new").style.display = "";
+  $("wo-loading").style.display = "none";
+  $("wo-plan").style.display = "flex";
+  $("wo-title").textContent = plan.title;
+  $("wo-focus").textContent = plan.focus;
+  $("wo-meta").innerHTML =
+    `<span class="pill">⏱ ~${esc(plan.duration_minutes)} min</span>` +
+    `<span class="pill go num" id="wo-count">0/${plan.exercises.length} done</span>`;
+  $("wo-bar").firstElementChild.style.width = "0%";
+
+  const list = $("wo-list");
+  list.innerHTML = "";
+  plan.exercises.forEach((ex, i) => {
+    const row = document.createElement("div");
+    row.className = "ex";
+    row.innerHTML =
+      `<div class="box"><span class="n">${i + 1}</span><span class="ck">✓</span></div><div>` +
+      `<div class="ex-name"></div><div class="ex-scheme"></div><div class="ex-notes"></div></div>`;
+    row.querySelector(".ex-name").textContent = ex.exercise;
+    row.querySelector(".ex-scheme").textContent =
+      `${ex.sets} × ${ex.reps}` + (ex.rest_seconds ? ` · rest ${ex.rest_seconds}s` : "");
+    row.querySelector(".ex-notes").textContent = ex.notes;
+    if (ex.video_query) {
+      const a = document.createElement("a");
+      a.className = "vid";
+      a.textContent = plan.slot_type === "lift" ? "▶ watch form" : "▶ watch guide";
+      a.href = "https://www.youtube.com/results?search_query=" + encodeURIComponent(ex.video_query);
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.addEventListener("click", (e) => {
+        e.preventDefault();       // stay in the app — modal first, link is the fallback
+        e.stopPropagation();      // don't tick the checkbox
+        openVideo(ex.video_query, a.href);
+      });
+      row.lastElementChild.appendChild(a);
+    }
+    row.tabIndex = 0;
+    row.setAttribute("role", "checkbox");
+    row.setAttribute("aria-checked", "false");
+    row.addEventListener("click", () => toggle(row));
+    row.addEventListener("keydown", (e) => {
+      if (e.target === row && (e.key === " " || e.key === "Enter")) { e.preventDefault(); toggle(row); }
+    });
+    list.appendChild(row);
+  });
+  if (stakes && stakes.done_today) markLogged();
+}
+
+async function toggle(row) {
+  if (logged) return;   // session is banked; ticks are locked so it can't log twice
+  row.classList.toggle("done");
+  row.setAttribute("aria-checked", row.classList.contains("done"));
+  doneCount = document.querySelectorAll(".ex.done").length;
+  const total = plan.exercises.length;
+  $("wo-bar").firstElementChild.style.width = (doneCount / total) * 100 + "%";
+  $("wo-count").textContent = `${doneCount}/${total} done`;
+
+  if (doneCount === total) {
+    // Final box ticked → tell the ENGINE, so the coach's memory knows you trained.
+    const r = row.getBoundingClientRect();
+    burst(r.left + 26, r.top + 20);
+    const details = plan.exercises.map((e) => `${e.exercise} ${e.sets}x${e.reps}`).join("; ");
+    try {
+      const resp = await (await api("/workout/complete", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: plan.title, details }),
+      })).json();
+      markLogged(resp.already
+        ? "Already logged today — extra credit is still credit 💪"
+        : "⚙ log_workout — session saved, the coach knows 💪");
+      playEvents(resp.events || []);
+      loadStakes();
+    } catch (e) {
+      toast("Couldn't reach the server to log the session — it'll still be here when you retry.");
+    }
+  }
+}
+
+$("wo-generate").addEventListener("click", () => generateWorkout(false));
+$("wo-new").addEventListener("click", () => generateWorkout(true));
+
+/* ── Progress tab ─────────────────────────────────────── */
+let journeyLoaded = false;
+async function loadProgress() {
+  const status = $("journey-status");
+  if (!journeyLoaded) {                  // only before first paint — later refreshes update in place
+    status.style.display = "block";
+    status.textContent = "Loading your journey…";
+  }
+  let data, game;
+  try {
+    [data, game] = await Promise.all([
+      api("/progress").then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+      api("/game").then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+    ]);
+  } catch (e) {
+    status.textContent = "Couldn't load your journey — is the server running? Tap Journey to retry.";
+    return;
+  }
+  status.style.display = "none";
+  const first = !journeyLoaded;
+  journeyLoaded = true;
+
+  /* Avatar + XP (all server-derived from real logs) */
+  $("avatar-svg").innerHTML = avatarSVG(game.avatar.stage, game.gear);
+  $("game-title").textContent = `Lv ${game.level.n} · ${game.level.title}`;
+  setLevelBadge(game.level.n, game.level.pct);
+  $("game-level-sub").textContent = game.avatar.next_milestone
+    ? `powered by ${game.narration} — next form at level ${game.avatar.next_milestone}`
+    : `powered by ${game.narration} — final form`;
+  $("xp-bar").dataset.w = game.level.pct;
+  $("xp-sub").textContent =
+    `${game.level.into}/${game.level.needs} XP into this level · ${game.xp.total} lifetime — every point from real logs`;
+  $("gear-row").innerHTML = game.gear.map((g) =>
+    `<span class="gear ${g.earned ? "on" : ""}">${g.earned ? esc(g.icon) : "🔒"} ${esc(g.name)}${g.earned ? "" : " — " + esc(g.need)}</span>`
+  ).join("");
+
+  /* Daily quests — they verify themselves against your logs */
+  $("quests").innerHTML = (game.quests.items.length ? game.quests.items : [{ text: "All caught up — quests reset at midnight.", done: true, id: "none" }])
+    .map((q) => `<div class="quest ${q.done ? "done" : ""}"><div class="q-mark">✓</div><div class="q-text">${esc(q.text)}</div></div>`).join("");
+  $("quest-note").textContent =
+    `Quests check themselves when the log lands — a tap can't mint XP. Chest odds: ${game.chest_odds}. All 3 = +20 bonus.`;
+
+  /* Trophy case */
+  $("trophies").innerHTML = game.trophies.map((t) =>
+    `<div class="trophy ${t.earned ? "earned" : "locked"}"><div class="t-ico">${t.earned ? esc(t.icon) : "🔒"}</div>
+     <div class="t-name">${esc(t.name)}</div><div class="t-need">${esc(t.need)}</div></div>`).join("");
+
+  /* Active plan card */
+  const planBody = $("plan-body");
+  if (data.plan.exists) {
+    const t = esc(data.plan.text).replace(/^If /, '<span class="kw">If</span> ')   // plan text came from chat — escape first
+                            .replace(/, then /, ', <span class="kw">then</span> ');
+    planBody.innerHTML = `<div class="plan-text">${t}</div>
+      <div class="sub">locked ${esc(data.plan.date || "recently")} — your coach will check in on it, zero pressure</div>`;
+  } else {
+    planBody.innerHTML = `<div class="empty">No plan locked yet. Ask your coach to help you set one
+      "<b>If [moment], then [action]</b>" plan, and it shows up here.</div>`;
+  }
+
+  /* Fresh start card — only appears when a reset would genuinely help */
+  const fresh = $("fresh-card");
+  if (data.fresh_start.show) {
+    fresh.style.display = "block";
+    $("fresh-body").innerHTML =
+      `<div class="plan-text">New week, clean slate — starting <b>${esc(data.fresh_start.landmark)}</b>.</div>
+       <div class="sub">Research on the fresh-start effect: goals begun at temporal landmarks stick better.
+       Last week is data, not debt.</div>`;
+  } else { fresh.style.display = "none"; }
+
+  /* Weekly goals — endowed progress: the bar always shows credit */
+  $("goals").innerHTML = data.goals.map((g) => `
+    <div class="goal ${g.hot ? "hot" : ""}">
+      <div class="goal-head"><b>${esc(g.habit)}${g.done >= g.target ? " — done ✓" : g.hot ? " — almost there" : ""}</b><span>${g.done} of ${g.target} days</span></div>
+      <div class="meter"><div data-w="${g.pct}"></div></div>
+    </div>`).join("");
+
+  /* Habit autopilot meters */
+  $("auto-meters").innerHTML = data.automaticity.map((a) => `
+    <div class="auto-meter">
+      <div class="goal-head"><b>${esc(a.habit)}</b><span>${a.pct}% automatic · ${a.reps} ${a.reps === 1 ? "rep" : "reps"}</span></div>
+      <div class="meter"><div data-w="${a.pct}"></div></div>
+    </div>`).join("");
+
+  /* animate meters on first open only; later opens just update (no jump back to zero) */
+  const meters = $("tab-progress").querySelectorAll(".meter > div");
+  if (first) {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      meters.forEach((m) => { m.style.width = (m.dataset.w || 0) + "%"; });
+    }));
+  } else {
+    meters.forEach((m) => {
+      m.style.transition = "none"; m.style.width = (m.dataset.w || 0) + "%";
+      void m.offsetWidth; m.style.transition = "";
+    });
+  }
+
+  $("streak").textContent = data.streak;
+  $("streak-sub").innerHTML = (data.streak === 1 ? "day logging" : "days logging") +
+    (data.shield_ready
+      ? ' · 🛡 rest-day pass ready'
+      : ' · 🛡 pass used — rest was covered, streak intact');
+
+  if (data.week.this != null) {
+    $("week-avg").textContent = data.week.this + " lb";
+    if (data.week.last != null) {
+      const d = +(data.week.this - data.week.last).toFixed(1);
+      $("week-delta").textContent =
+        (d > 0 ? "▲ +" : d < 0 ? "▼ " : "→ ") + Math.abs(d) + " lb vs last week";
+    } else { $("week-delta").textContent = "no data from last week yet"; }
+  } else { $("week-avg").textContent = "–"; }
+
+  renderChart(data.weights);
+  renderRing(data.protein, first);
+  playEvents(game.events || []);
+}
+
+/* ── Video modal: in-app form videos, three ways out, instant return ── */
+const vBackdrop = $("video-backdrop"), vFrame = $("video-iframe");
+
+let vOpener = null;
+function closeVideo() {
+  if (!vBackdrop.classList.contains("open")) return;
+  vBackdrop.classList.remove("open");
+  vFrame.src = "";                      // stops playback immediately
+  if (vOpener) vOpener.focus();         // back to the "watch form" you came from
+}
+vBackdrop.addEventListener("keydown", (e) => {   // keep Tab inside the modal
+  if (e.key !== "Tab") return;
+  const f = [...vBackdrop.querySelectorAll("button, iframe")].filter((el) => el.offsetParent !== null);
+  const i = f.indexOf(document.activeElement);
+  if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+  else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+});
+$("video-close").addEventListener("click", closeVideo);
+vBackdrop.addEventListener("click", (e) => { if (e.target === vBackdrop) closeVideo(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeVideo(); });
+
+let vQuery = "";
+function showVideo(v) {
+  vFrame.src = v.embed + "?autoplay=1&rel=0";
+  $("video-meta").innerHTML = `<b>${esc(v.channel)}</b> · ${esc(v.title)}`;
+  $("video-next").style.display = v.of > 1 ? "" : "none";
+  $("video-next").textContent = `↻ Wrong video? Try another (${v.n}/${v.of})`;
+  if (!vBackdrop.classList.contains("open")) vOpener = document.activeElement;
+  vBackdrop.classList.add("open");
+  $("video-close").focus();
+}
+
+/* A rejected video goes to the back of the ranked list — server-side, so it sticks */
+$("video-next").addEventListener("click", async () => {
+  try {
+    const v = await (await api("/video?another=1&q=" + encodeURIComponent(vQuery))).json();
+    if (v.embed) showVideo(v);
+  } catch (e) { toast("Couldn't load another video."); }
+});
+
+async function openVideo(query, fallbackUrl) {
+  vQuery = query;
+  try {
+    const v = await (await api("/video?q=" + encodeURIComponent(query))).json();
+    if (v.embed) return showVideo(v);
+    toast(v.error === "no_key"
+      ? "In-app playback needs YOUTUBE_API_KEY in .env — opening YouTube instead."
+      : "Couldn't fetch the video — opening YouTube instead.");
+  } catch (e) {
+    toast("Couldn't fetch the video — opening YouTube instead.");
+  }
+  window.open(fallbackUrl, "_blank", "noopener");   // never a broken modal
+}
+
+/* ── Game juice: toasts + bursts, staggered, never blocking ── */
+function toast(text, gold, celebrate) {
+  const t = document.createElement("div");
+  t.className = "toast" + (gold ? " gold" : "");
+  t.setAttribute("role", "status");
+  t.textContent = text;
+  const box = $("toasts");
+  box.appendChild(t);
+  while (box.children.length > 3) box.firstElementChild.remove();   // never a wall of toasts
+  if (celebrate) setTimeout(() => {   // sparks are for wins, not error messages
+    const b = t.getBoundingClientRect();
+    burst(b.left + b.width / 2, b.top + b.height / 2);
+  }, 120);
+  setTimeout(() => t.remove(), 4200);
+}
+
+function playEvents(events) {
+  // A first-ever log can unlock six things at once: show the top few, fold the rest.
+  const shown = events.length > 3 ? events.slice(0, 2) : events;
+  shown.forEach((ev, i) => {
+    setTimeout(() => toast(ev.text, ev.type === "chest" || ev.type === "level", true), i * 900);
+  });
+  if (shown.length < events.length) {
+    setTimeout(() => toast(`…and ${events.length - shown.length} more unlocks. See Journey 🏆`, true, true), shown.length * 900);
+  }
+}
+
+/* ── Avatar: pure inline SVG, stage = level milestones, gear = achievements ── */
+function avatarSVG(stage, gear) {
+  const on = (id) => gear.some((g) => g.id === id && g.earned);
+  const s = stage;                       // 1..5
+  const arm = 7 + s * 2;                 // arms thicken with stage
+  const torsoW = 30 + s * 7;             // shoulders widen with stage
+  const skin = "#e9ecef", suit = "#2a3140", acc = "#4ade80";
+  return `
+  <svg viewBox="0 0 160 160" role="img" aria-label="Your athlete, stage ${s} of 5">
+    <ellipse cx="80" cy="148" rx="${26 + s * 4}" ry="6" fill="#000" opacity=".35"/>
+    ${on("cape") ? `<path d="M ${80 - torsoW / 2} 64 Q 40 110 52 138 L 80 120 Z" fill="#fbbf24" opacity=".85"/>
+                    <path d="M ${80 + torsoW / 2} 64 Q 120 110 108 138 L 80 120 Z" fill="#fbbf24" opacity=".85"/>` : ""}
+    <line x1="${80 - torsoW / 2 - 8}" y1="96" x2="${80 - torsoW / 2 + 2}" y2="66" stroke="${skin}" stroke-width="${arm}" stroke-linecap="round"/>
+    <line x1="${80 + torsoW / 2 + 8}" y1="96" x2="${80 + torsoW / 2 - 2}" y2="66" stroke="${skin}" stroke-width="${arm}" stroke-linecap="round"/>
+    ${on("dumbbell") ? `<g stroke="${acc}" stroke-width="5" stroke-linecap="round">
+        <line x1="${80 + torsoW / 2 - 6}" y1="100" x2="${80 + torsoW / 2 + 22}" y2="100"/>
+        <line x1="${80 + torsoW / 2 - 4}" y1="90" x2="${80 + torsoW / 2 - 4}" y2="110"/>
+        <line x1="${80 + torsoW / 2 + 20}" y1="90" x2="${80 + torsoW / 2 + 20}" y2="110"/></g>` : ""}
+    <rect x="${80 - torsoW / 2}" y="58" width="${torsoW}" height="52" rx="14" fill="${suit}" stroke="${acc}" stroke-width="2"/>
+    ${on("compass") ? `<circle cx="80" cy="80" r="7" fill="#fbbf24"/><circle cx="80" cy="80" r="3" fill="${suit}"/>` : ""}
+    <line x1="${80 - 10}" y1="110" x2="${80 - 12}" y2="142" stroke="${suit}" stroke-width="12" stroke-linecap="round"/>
+    <line x1="${80 + 10}" y1="110" x2="${80 + 12}" y2="142" stroke="${suit}" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="80" cy="38" r="20" fill="${skin}"/>
+    ${on("headband") ? `<rect x="60" y="26" width="40" height="7" rx="3.5" fill="${acc}"/>` : ""}
+    <circle cx="73" cy="38" r="2" fill="#0b0d10"/><circle cx="87" cy="38" r="2" fill="#0b0d10"/>
+    <path d="M 74 47 Q 80 ${47 + s} 86 47" stroke="#0b0d10" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function renderChart(weights) {
+  const holder = $("chart-holder");
+  if (weights.length < 2) {
+    holder.innerHTML =
+      `<div class="empty">${weights.length === 1 ? "One weigh-in logged — one more and the chart unlocks." :
+        "No weigh-ins yet. Tell your coach <b>“weighed in at 185 this morning”</b> and it lands here."}</div>`;
+    return;
+  }
+  const W = 640, H = 190, P = 28;
+  const lbs = weights.map((w) => w.lb);
+  const min = Math.min(...lbs) - 1, max = Math.max(...lbs) + 1;
+  const x = (i) => P + (i * (W - 2 * P)) / (weights.length - 1);
+  const y = (v) => H - P - ((v - min) * (H - 2 * P)) / (max - min);
+  const pts = weights.map((w, i) => `${x(i)},${y(w.lb)}`).join(" ");
+  const first = weights[0], last = weights[weights.length - 1];
+
+  holder.innerHTML = `
+    <svg id="chart-svg" viewBox="0 0 ${W} ${H}">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#4ade80" stop-opacity=".25"/>
+        <stop offset="1" stop-color="#4ade80" stop-opacity="0"/>
+      </linearGradient></defs>
+      <polygon points="${P},${H - P} ${pts} ${W - P},${H - P}" fill="url(#g)"/>
+      <polyline points="${pts}" fill="none" stroke="#4ade80" stroke-width="2.5"
+        stroke-linejoin="round" stroke-linecap="round"/>
+      ${weights.map((w, i) => `<circle cx="${x(i)}" cy="${y(w.lb)}" r="3.4" fill="#0b0d10" stroke="#4ade80" stroke-width="2"/>`).join("")}
+      <text x="${P}" y="${H - 8}" fill="#8b93a1" font-size="11">${first.date.slice(5)}</text>
+      <text x="${W - P}" y="${H - 8}" fill="#8b93a1" font-size="11" text-anchor="end">${last.date.slice(5)}</text>
+      <text x="${x(weights.length - 1) - 8}" y="${y(last.lb) - 10}" fill="#e9ecef" font-size="13" font-weight="700" text-anchor="end">${last.lb} lb</text>
+    </svg>`;
+}
+
+/* Fresh-start button → jump to the coach with the reset on the table */
+$("fresh-btn").addEventListener("click", () => {
+  document.querySelector('nav button[data-tab="tab-coach"]').click();
+  sendMessage("I want a fresh start this week — help me plan the first small win.");
+});
+
+$("auto-info-btn").addEventListener("click", () => {
+  const el = $("auto-info");
+  el.style.display = el.style.display === "none" ? "block" : "none";
+});
+
+function renderRing(p, animate) {
+  const C = 2 * Math.PI * 52;
+  const frac = Math.min(p.today / p.target, 1);
+  const ring = document.querySelector("#ring-svg .fill");
+  ring.style.strokeDasharray = C;
+  if (animate) ring.style.strokeDashoffset = C;          // start empty…
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => { ring.style.strokeDashoffset = C * (1 - frac); })
+  );                                                     // …then animate to fill
+  $("ring-label").textContent = `${p.today} / ${p.target}g`;
+  $("ring-sub").textContent = p.today === 0
+    ? "log a meal to start the ring"
+    : frac >= 1 ? "target hit — nice work 💪" : "toward your " + p.target + "g target";
+  if (frac >= 1 && animate) {
+    const svg = $("ring-svg");
+    svg.classList.remove("hit"); void svg.offsetWidth; svg.classList.add("hit");
+    const r = svg.getBoundingClientRect();
+    setTimeout(() => burst(r.left + 60, r.top + 60), 900);
+  }
+}
+</script>
+</body>
+</html>
