@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "fleet": {
+      "type": "stdio",
+      "command": "${CLAUDE_PROJECT_DIR:-.}/apps/fleet-mcp/.venv/bin/python",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/apps/fleet-mcp/server.py"]
+    }
+  }
+}
