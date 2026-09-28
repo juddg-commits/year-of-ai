@@ -11,6 +11,8 @@ MAX_SUB_QUESTIONS = 4
 SEARCHES_PER_WORKER = 3          # web_search max_uses. One search ≈ 20k input tokens: THE cost driver
 MAX_PARALLEL_WORKERS = 4
 MAX_PAUSE_CONTINUATIONS = 3      # server-side tool loops can stop with pause_turn; resume at most this often
+MAX_PAGE_FETCHES = 12            # parallel page downloads to recover cut-off quotes (plain HTTP, no tokens)
+PAGE_FETCH_TIMEOUT = 10          # seconds per page; a slow page just keeps its API quote
 VALIDATION_BATCH = 40            # evidence items per validator call
 EVIDENCE_TOKEN_BUDGET = 20_000   # above this, compress validated evidence before synthesis (typical run: ~14k)
 

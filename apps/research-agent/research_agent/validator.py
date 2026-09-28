@@ -1,4 +1,4 @@
-"""Stage 3 — validation, the main hallucination defense before writing.
+"""Stage 4 — validation, the main hallucination defense before writing.
 
 Every evidence item pairs a CLAIM (the worker's sentence) with the QUOTE the API says
 backs it. A worker can still over-generalize, mix up numbers, or attach a citation to
@@ -33,7 +33,8 @@ class Validation(BaseModel):
 
 
 SYSTEM = """You audit research evidence before it goes into a brief. Each item has a CLAIM written by a
-research assistant and the QUOTE it cites (an excerpt of at most ~150 characters from the source).
+research assistant and the QUOTE it cites: usually a full sentence from the source. A quote that
+ends in "..." was cut off, and nothing after the cut counts as support.
 
 Judge only whether the quote supports the claim's KEY FACTS: the finding itself, every number,
 date and name, the direction of an effect, and its scope.

@@ -1,7 +1,7 @@
 """Evidence records, source numbering, de-duplication, and the context budget.
 
 Context management in one sentence: the orchestrator never sees raw search pages
-(~20k tokens per search), only compact evidence notes (claim + ≤150-char quote +
+(~20k tokens per search), only compact evidence notes (claim + one-sentence quote +
 source id). When even those outgrow the budget, they're condensed per sub-question
 while keeping which sources back each note, so citations survive compression."""
 
@@ -29,6 +29,7 @@ class Evidence:
     source_id: str = ""
     verdict: str = ""        # supported | partial | unsupported (set by the validator)
     reason: str = ""
+    api_quote: str = ""      # the API's cut-off excerpt, when pages.py replaced it with the full sentence
 
 
 @dataclass

@@ -54,6 +54,7 @@ def save(run) -> tuple:
                      "uncited": w.uncited, "search_errors": w.search_errors, "error": w.error}
                     for w in run.workers],
         "sources": {k: asdict(v) for k, v in run.sources.items()},
+        "quote_stats": asdict(run.quote_stats) if run.quote_stats else None,
         "evidence": [asdict(e) for e in run.evidence],
         "conflicts": [c.model_dump() for c in run.conflicts],
         "notes": [asdict(n) for n in run.notes],

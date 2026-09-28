@@ -14,13 +14,16 @@ question
 [2] RESEARCH    Sonnet 5 × N in parallel, server-side web search (≤3 searches each)
    │            → cited prose → CODE extracts evidence: {claim, ≤150-char quote, url}
    ▼
-[3] VALIDATE    free prechecks, then Opus 5 judges claim-vs-quote (parallel batches)
+[3] RECOVER     CODE downloads each source page (plain HTTP, no tokens) and extends
+   │            cut-off quotes to the end of their sentence
+   ▼
+[4] VALIDATE    free prechecks, then Opus 5 judges claim-vs-quote (parallel batches)
    │            → supported / partial / unsupported; unsupported is dropped
    ▼
-[4] FIT CONTEXT evidence → compact notes with source ids; condense if over budget
+[5] FIT CONTEXT evidence → compact notes with source ids; condense if over budget
    │
    ▼
-[5] WRITE       Opus 5, structured brief, [S#] citations
+[6] WRITE       Opus 5, structured brief, [S#] citations
    │
    ▼
    AUDIT        code strips citations to unknown sources, counts uncited sentences
@@ -63,7 +66,7 @@ The API attaches each citation to the exact quoted span, often a fragment ("incr
 
 ### 6. Context window management
 - A single search pulls ~17-20k tokens of page content. One run read **~194k tokens** of search results.
-- The orchestrator **never sees raw pages**, only compact notes (claim + ≤150-char quote + source id): **~11.6k tokens** for the same run, a 94% reduction.
+- The orchestrator **never sees raw pages**, only compact notes (claim + one-sentence quote + source id): **~11.6k tokens** for the same run, a 94% reduction.
 - If notes exceed the budget (20k tokens), they're condensed **per sub-question** by the cheap model, and each condensed note must list which sources it came from. Code rejects any source id the condenser invents, so **citations survive compression**. That's the difference from blindly summarizing old context.
 
 ### 7. Cost and latency engineering
@@ -87,21 +90,44 @@ What changed: validator effort `medium` → `low` (it's classification with a cl
 - Opus calls opt into server-side refusal **fallbacks** (`fallbacks: "default"`); refusals and `max_tokens` cut-offs raise clear errors instead of parsing garbage.
 - Every run writes a JSON **trace** (plan, queries, every evidence item + verdict, calls, cost). Failed runs still save what they did and what they cost.
 
+### 9. Measure before you build: the cut-off quote fix
+Too many claims came back "partial" (56%). The plan was to send the validator every quote for a claim at once. Before building that, I counted the causes across three runs:
+
+| why a claim was "partial" | share of partials |
+|---|---|
+| its quote was **cut off**: the API caps quotes at ~150 chars and ends them with "..." | **76-88%** |
+| its claim had 2+ quotes judged separately (the planned fix) | 34-54%, mostly *also* cut off |
+
+The planned fix would have barely moved the number. The worker had read the whole page; only our excerpt was short. So stage 3 downloads the source page with a plain HTTP request (no tokens, 3-9 s per run), finds the quote in it and completes the sentence (`quotes.py`).
+- **Matching on words, not characters.** The API's quote is markdown and the page isn't, so the quote's words must appear in order with anything non-word between them. The last word is skipped because it's often half a word ("documentatio").
+- **Real data found the edge cases the first tests missed:** Wikipedia quotes carry link targets and `[7]` markers, and the API sometimes glues two separate excerpts into one quote. Handling both raised recovery on one run from 61 to 73 of 81 cut-off quotes. What's left is mostly pages that can't be downloaded (403s, PDFs).
+- **Controlled replay** (`revalidate.py`): the same claims and validator prompt, API quotes vs recovered quotes, research not re-run.
+
+| | supported | partial | unsupported |
+|---|---|---|---|
+| AI scribes, API quotes → recovered | 31% → **54%** | 64% → **41%** | 5% → 5% |
+| open weights, API quotes → recovered | 32% → **46%** | 60% → **50%** | 8% → **4%** |
+
+The second replay separates claims whose quote was recovered from the rest: recovered quotes improved 30 verdicts and worsened 1. That one bundles a second fact the full sentence doesn't contain, so "partial" is right: the validator got *more* accurate, not less. (The first replay, run before that split existed: 31 improved, 4 worse, at least one of them noise.)
+- **The judge isn't independent per item.** In the second replay, 10 of the 48 claims whose quote didn't change still changed verdict, all toward stricter. A cut-off quote looks weaker next to complete ones in the same batch. So one replay's small differences are noise, and an eval harness has to repeat runs (Exercise 3).
+
 ## Known issues (honest list)
-- **Many "partial" verdicts (56%).** Quotes are capped at 150 chars, and a sentence with several numbers is often split across several citations, so no single quote shows every number. → Exercise 1.
+- **"Partial" is still 41-50%.** The main remaining cause: claims that bundle several facts from different sentences, each with its own quote. → Exercise 1. Pages that block downloads (403) or are PDFs keep their cut-off quote. → Exercise 4.
+- **The validator's verdicts depend on the batch** (see §9): a claim's verdict can change when its neighbors change.
 - **The brief ignores its length target** (asked for 600-900 words, wrote ~2,000). Length in a prompt is a soft constraint. → Exercise 2.
 - `len(text) // 4` is a rough token estimate; fine for a budget decision, not for billing (billing uses the API's usage numbers).
 
 ## Exercises: build these yourself
-1. **Claim-level validation.** Group evidence by claim and send the validator *all* quotes for a claim at once, returning which quote ids support it. Expect "partial" to drop sharply. (`validator.py`, `evidence.py`)
+1. **Claim-level validation.** Group evidence by claim and send the validator *all* quotes for a claim at once, returning which quote ids support it. Now that quotes are full sentences, this targets the main remaining cause of "partial". Measure it with `revalidate.py`. (`validator.py`, `evidence.py`)
 2. **Enforce brief length.** Put a word budget in the `Section.body` field description and add a post-check that re-asks once if it's over. Measure whether it works.
-3. **Eval harness (Phase 2, project 6).** Pick 10 questions, save their traces, and score them: citation precision (sample claims, check the source), coverage, cost, latency. Re-run after every change.
-4. **Fetch full pages for partial claims.** Add `web_fetch` for sources behind "partial" claims so the validator can see more than 150 characters.
+3. **Eval harness (Phase 2, project 6).** Pick 10 questions, save their traces, and score them: citation precision (sample claims, check the source), coverage, cost, latency. Re-run after every change, and run validation 3 times per trace so you know how big a change has to be before it's more than noise.
+4. **Recover quotes from PDFs.** arXiv and journal PDFs keep their cut-off quotes today. Extract the text (e.g. `pypdf`) in `pages.fetch_page` and reuse `extend_quote`.
 
 ## Likely interview questions
 - **Why not one agent with a search tool in a loop?** Predictability. Decomposition up front means parallel workers, a fixed cost ceiling (sub-questions × searches), and stages I can test and measure separately.
 - **How do you know it isn't hallucinating?** Four layers (above), plus numbers: 45/46 sentences cited, 6 misattributed claims caught and dropped, 0 invented citations, all in the trace.
 - **What was the hardest bug?** Zero evidence on the first run: the newest search tool routes results through a code sandbox and returns no citations. Found it by dumping raw response blocks for one worker.
+- **Tell me about measuring before building.** The plan to fix "partial" verdicts targeted multi-quote claims. Counting the causes first showed 76-88% came from the API's 150-char quote cap instead. Recovering the full sentence from the page, in plain code, cut "partial" from 64% to 41% on a controlled replay.
 - **How did you cut cost?** Per-stage ledger first. Validation was 32% of cost for a classification task: lower effort + parallel batches cut it 35% and 5x on latency.
 - **How do you manage context?** Workers are isolated; the orchestrator only sees compact evidence (~94% smaller than raw results); compression keeps provenance.
 - **What would you do next?** An eval harness (exercise 3) before any more prompt tuning: without it, every change is a vibe check.

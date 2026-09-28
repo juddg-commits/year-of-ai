@@ -1,4 +1,4 @@
-"""Stage 4 — synthesis, then a programmatic citation audit.
+"""Stage 6 — synthesis, then a programmatic citation audit.
 
 The writer sees only validated notes with source ids and must cite [S#] on every
 factual sentence. The model's output is structured (sections as fields), so code

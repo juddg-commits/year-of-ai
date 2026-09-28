@@ -1,4 +1,5 @@
-"""The pipeline: plan → research (parallel) → validate → fit context → write → audit.
+"""The pipeline: plan → research (parallel) → recover cut-off quotes → validate → fit context
+→ write → audit.
 
 This is a workflow with agentic steps, not one open-ended agent loop: the ORDER is
 fixed in code, and the model decides inside each step (what to search, what counts
@@ -8,7 +9,7 @@ and every stage is testable on its own."""
 import time
 from dataclasses import dataclass, field
 
-from . import config, evidence as ev_mod, planner, researcher, synthesizer, validator
+from . import config, evidence as ev_mod, pages, planner, researcher, synthesizer, validator
 from .llm import AgentError, Ledger
 
 
@@ -18,6 +19,7 @@ class Run:
     plan: object = None
     workers: list = field(default_factory=list)
     evidence: list = field(default_factory=list)
+    quote_stats: object = None
     sources: dict = field(default_factory=dict)
     conflicts: list = field(default_factory=list)
     notes: list = field(default_factory=list)
@@ -48,13 +50,13 @@ def _run(r: Run, max_sub_questions: int, searches: int, log) -> Run:
         t = time.time()
         return r.timings[stage]
 
-    log("[1/5] Planning…")
+    log("[1/6] Planning…")
     r.plan = planner.plan(r.ledger, question, max_sub_questions)
     log(f"      {len(r.plan.sub_questions)} sub-questions ({lap('plan')}s)")
     for sq in r.plan.sub_questions:
         log(f"      {sq.id}. {sq.question}")
 
-    log(f"[2/5] Researching in parallel (≤{searches} searches each)…")
+    log(f"[2/6] Researching in parallel (≤{searches} searches each)…")
 
     def done(sq, w):
         status = f"✗ {w.error}" if w.error and not w.evidence else f"✓ {len(w.evidence)} cited claims, {len(w.queries)} searches"
@@ -68,7 +70,15 @@ def _run(r: Run, max_sub_questions: int, searches: int, log) -> Run:
     r.evidence = ev_mod.dedupe(raw)
     log(f"      {len(raw)} citations → {len(r.evidence)} unique evidence items from {len(r.sources)} sources ({lap('research')}s)")
 
-    log(f"[3/5] Validating {len(r.evidence)} claims against their quotes…")
+    log("[3/6] Recovering cut-off quotes from source pages…")
+    qs = r.quote_stats = pages.extend_quotes(r.evidence)
+    failed = ", ".join(f"{n} {why}" for why, n in sorted(qs.page_failures.items(), key=lambda kv: -kv[1]))
+    log(f"      {qs.extended}/{qs.truncated} cut-off quotes extended to full sentences from {qs.pages} pages"
+        + (f" (not fetched: {failed})" if failed else "") + f" ({lap('quotes')}s)")
+    if qs.errors:
+        log(f"      ⚠ extend_quote failed on {len(qs.errors)} quote(s), first: {qs.errors[0]}")
+
+    log(f"[4/6] Validating {len(r.evidence)} claims against their quotes…")
     r.conflicts = validator.validate(r.ledger, r.evidence, r.sources)
     counts = {v: sum(e.verdict == v for e in r.evidence) for v in ("supported", "partial", "unsupported")}
     log(f"      {counts['supported']} supported, {counts['partial']} partial, "
@@ -82,10 +92,10 @@ def _run(r: Run, max_sub_questions: int, searches: int, log) -> Run:
     r.notes, r.compressed = ev_mod.compress(r.ledger, r.notes, r.plan.sub_questions)
     notes_text = ev_mod.render_notes(r.notes, r.plan.sub_questions)
     after = ev_mod.estimate_tokens(notes_text)
-    log(f"[4/5] Context: ~{before:,} tokens of notes (budget {config.EVIDENCE_TOKEN_BUDGET:,})"
+    log(f"[5/6] Context: ~{before:,} tokens of notes (budget {config.EVIDENCE_TOKEN_BUDGET:,})"
         + (f" → compressed to ~{after:,} ({lap('compress')}s)" if r.compressed else " → fits, no compression"))
 
-    log("[5/5] Writing the brief…")
+    log("[6/6] Writing the brief…")
     by_id = {e.id: e for e in r.evidence}
     conflicts_text = "\n".join(
         f"- {c.description} (sources: {', '.join(sorted({by_id[i].source_id for i in c.evidence_ids if i in by_id}))})"
