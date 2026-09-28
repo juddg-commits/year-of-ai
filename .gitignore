@@ -30,3 +30,6 @@ workflows/
 agents/
 deliverables/
 health/
+
+# Front door: real past requests stay local
+apps/front-door/data/

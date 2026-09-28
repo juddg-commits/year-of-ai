@@ -14,7 +14,7 @@ import json
 import os
 import re
 import sys
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import anthropic
@@ -22,15 +22,39 @@ import anthropic
 # --- Config ------------------------------------------------------------------
 MODEL = "claude-opus-5"
 MAX_TOKENS = 4096  # caps thinking + reply together, so leave headroom
+PROTEIN_TARGET_G = 175
+
+# $ per million tokens (input, output). Cache writes (5-minute TTL) cost 1.25x
+# input, cache reads 0.1x. Used for the cost trace and the simulation budget.
+PRICES = {"claude-opus-5": (5.00, 25.00)}
+CACHE_WRITE_MULT, CACHE_READ_MULT = 1.25, 0.10
 
 HERE = Path(__file__).parent
 DATA = Path(os.environ.get("DATA_DIR") or HERE / "data")   # deploys point this at a persistent volume
 PROFILE = DATA / "profile.md"
 WORKOUTS = DATA / "workouts.md"
 MEALS = DATA / "meals.md"
+WEIGHTS = DATA / "weight.md"   # the log_weight tool writes it; the Progress chart reads it
 PLANS = DATA / "plans.md"   # written by the save_plan tool; read by the coach + Journey tab
 LOG_DIR = DATA / "log"
 RECENT_LOGS_TO_LOAD = 3
+NOTES_SECTION = "Notes the coach saved"
+FOOD_DAYS_TO_LOAD = 7
+
+DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+WEIGHT_RE = re.compile(r"(\d{4}-\d{2}-\d{2}).*?(\d+(?:\.\d+)?)\s*lb")
+PROTEIN_RE = re.compile(r"~(\d+)\s*g protein")
+KCAL_RE = re.compile(r"~(\d+)\s*kcal")
+
+
+def call_cost(model: str, usage) -> float:
+    """Dollars for one API call. input_tokens excludes cached tokens, so the
+    three input buckets add up without double counting."""
+    price_in, price_out = PRICES.get(model, PRICES["claude-opus-5"])
+    cache_write = getattr(usage, "cache_creation_input_tokens", 0) or 0
+    cache_read = getattr(usage, "cache_read_input_tokens", 0) or 0
+    return (usage.input_tokens * price_in + cache_write * price_in * CACHE_WRITE_MULT
+            + cache_read * price_in * CACHE_READ_MULT + usage.output_tokens * price_out) / 1e6
 
 
 # --- Tiny .env loader ---------------------------------------------------------
@@ -65,6 +89,19 @@ def profile_gaps() -> list:
     """Which intake sections haven't been completed yet."""
     text = PROFILE.read_text() if PROFILE.exists() else ""
     return [s for s in INTAKE_SECTIONS if f"## {s}" not in text]
+
+
+def intake_status() -> str:
+    """Told to the model after every profile write. It used to say only "cover
+    ONE next time", so the coach kept asking about a knee it already knew about."""
+    remaining = profile_gaps()
+    if not remaining:
+        return "Intake complete — the full consultation is on file."
+    return (
+        f"Intake sections still open: {', '.join(remaining)}. If the profile or notes "
+        "already cover one, save that section now with save_profile instead of asking "
+        "him again. Otherwise cover ONE of them next time it fits naturally."
+    )
 
 
 def upsert_section(text: str, section: str, content: str) -> str:
@@ -193,6 +230,9 @@ TOOLS = [
 ]
 
 
+# "[log_meal] " markers that older session logs wrote into the coach's lines.
+TOOL_MARKER_RE = re.compile(r"\[(?:%s)\] ?" % "|".join(t["name"] for t in TOOLS))
+
 def execute_tool(name: str, tool_input: dict) -> str:
     """Actually run the function the model asked for. Returns a string the
     model will read as the result — tell it what happened."""
@@ -225,24 +265,20 @@ def execute_tool(name: str, tool_input: dict) -> str:
         return f"Meal logged: {entry.strip()}. (Give him today's running total if useful.)"
 
     if name == "save_note":
+        # Notes get their own section. Appending to the end of the file used to
+        # file them under whatever section came last (goals ended up under Safety).
         DATA.mkdir(parents=True, exist_ok=True)
-        if not PROFILE.exists():
-            PROFILE.write_text("# Judd's Profile\n\n## Notes the coach saved\n")
-        with PROFILE.open("a") as f:
-            f.write(f"- ({today}) {tool_input['note']}\n")
-        return "Note saved to Judd's profile — future sessions will see it."
+        text = PROFILE.read_text() if PROFILE.exists() else ""
+        notes = re.search(rf"## {NOTES_SECTION}\n(.*?)(?=\n## |\Z)", text, re.S)
+        lines = (notes.group(1).strip() + "\n" if notes else "") + f"- ({today}) {tool_input['note']}"
+        PROFILE.write_text(upsert_section(text, NOTES_SECTION, lines))
+        return "Note saved to Judd's profile — future sessions will see it. " + intake_status()
 
     if name == "save_profile":
         DATA.mkdir(parents=True, exist_ok=True)
         existing = PROFILE.read_text() if PROFILE.exists() else ""
         PROFILE.write_text(upsert_section(existing, tool_input["section"], tool_input["content"]))
-        remaining = profile_gaps()
-        return (
-            f"Section '{tool_input['section']}' saved. "
-            + (f"Intake sections still open: {', '.join(remaining)} — cover ONE of these "
-               f"next time it fits naturally, not all at once." if remaining
-               else "Intake complete — the full consultation is on file.")
-        )
+        return f"Section '{tool_input['section']}' saved. " + intake_status()
 
     if name == "mark_plan_kept":
         if not PLANS.exists():
@@ -257,14 +293,13 @@ def execute_tool(name: str, tool_input: dict) -> str:
 
     if name == "log_weight":
         DATA.mkdir(parents=True, exist_ok=True)
-        weight_file = DATA / "weight.md"        # the Progress chart reads data/weight.md
-        if not weight_file.exists():
-            weight_file.write_text("# Weight Log\n")
+        if not WEIGHTS.exists():
+            WEIGHTS.write_text("# Weight Log\n")
         pounds = float(tool_input["pounds"])
         if not 60 <= pounds <= 700:
             return f"That weight ({pounds} lb) looks like a typo. Ask him to confirm before logging."
         entry = f"- **{today}** — {pounds:g} lb\n"
-        with weight_file.open("a") as f:
+        with WEIGHTS.open("a") as f:
             f.write(entry)
         return f"Weigh-in logged: {pounds:g} lb on {today}. Name one thing today's number can't tell him (water, salt, timing) if he seems anxious about it."
 
@@ -283,6 +318,67 @@ def execute_tool(name: str, tool_input: dict) -> str:
 
 
 # --- Memory: load what the coach knows -----------------------------------------
+# The model is bad at calendar math and good at reading. So every date it sees
+# carries its weekday and how long ago it was, and every trend it might quote
+# (weight change, protein days) is computed here, not left for it to estimate.
+
+def dated(iso: str) -> str:
+    """'2026-09-14' -> 'Mon 2026-09-14 (9 days ago)'."""
+    try:
+        d = date.fromisoformat(iso)
+    except ValueError:
+        return iso
+    ago = (date.today() - d).days
+    when = {0: "today", 1: "yesterday"}.get(ago, f"{ago} days ago" if ago > 0 else f"in {-ago} days")
+    return f"{d:%a} {iso} ({when})"
+
+
+def with_dates(text: str) -> str:
+    return DATE_RE.sub(lambda m: dated(m.group(0)), text)
+
+
+def read_weights() -> list:
+    if not WEIGHTS.exists():
+        return []
+    found = [
+        {"date": m.group(1), "lb": float(m.group(2))}
+        for m in WEIGHT_RE.finditer(WEIGHTS.read_text())
+    ]
+    return sorted(found, key=lambda w: w["date"])
+
+
+def weights_between(weights: list, newest_days_ago: int, oldest_days_ago: int) -> list:
+    today = date.today()
+    lo, hi = today - timedelta(days=oldest_days_ago), today - timedelta(days=newest_days_ago)
+    return [w["lb"] for w in weights if lo <= date.fromisoformat(w["date"]) <= hi]
+
+
+def avg_weight(weights: list, newest_days_ago: int, oldest_days_ago: int):
+    vals = weights_between(weights, newest_days_ago, oldest_days_ago)
+    return round(sum(vals) / len(vals), 1) if vals else None
+
+
+def food_by_day() -> dict:
+    """{date: {meals, kcal, protein}} summed from the food log."""
+    out: dict = {}
+    if not MEALS.exists():
+        return out
+    for line in MEALS.read_text().splitlines():
+        d = DATE_RE.search(line)
+        if not d:
+            continue
+        day = out.setdefault(d.group(0), {"meals": 0, "kcal": 0, "protein": 0})
+        day["meals"] += 1
+        day["kcal"] += sum(int(k) for k in KCAL_RE.findall(line))
+        day["protein"] += sum(int(g) for g in PROTEIN_RE.findall(line))
+    return out
+
+
+def protein_by_day() -> dict:
+    """{date: grams}. Days with meals but no protein estimate count as 0."""
+    return {d: f["protein"] for d, f in food_by_day().items()}
+
+
 def load_profile() -> str:
     return PROFILE.read_text().strip() if PROFILE.exists() else ""
 
@@ -290,7 +386,108 @@ def load_profile() -> str:
 def load_recent_workouts() -> str:
     if not WORKOUTS.exists():
         return ""
-    return "\n".join(WORKOUTS.read_text().splitlines()[-10:])
+    return with_dates("\n".join(WORKOUTS.read_text().splitlines()[-10:]))
+
+
+# The main lifts, by the words the log uses for them. Anything else is left out:
+# better no line than a wrong one.
+MAIN_LIFTS = [
+    ("Incline press", r"incline"),
+    ("Bench press", r"bench"),
+    ("Squat", r"squat"),
+    ("RDL", r"\brdl\b|romanian"),
+    ("Deadlift", r"deadlift"),
+    ("Overhead press", r"overhead|\bohp\b"),
+    ("Lat pulldown", r"pulldown"),
+    ("Row", r"\brows?\b"),
+]
+SET_RE = re.compile(r"(\d{2,3})s?\s?x\s?(\d+)")   # "155x5x3", "50s x10x3" -> load, reps
+# How he types it himself: "3x8 @135 lb", "3x10 @ 40s" -> reps, load. Not "@ RPE 8" or "@ 70%".
+AT_LOAD_RE = re.compile(r"\d+\s?x\s?(\d+)\s*(?:@|\bat\b)\s*(\d{2,3})(?![\d%])")
+
+
+def lift_history() -> dict:
+    """{lift: [(date, load, reps), ...]} from every logged workout, oldest first.
+    The training log in the prompt shows only the last 10 workouts; this keeps
+    where he started once those roll out of view."""
+    out: dict = {}
+    if not WORKOUTS.exists():
+        return out
+    for line in WORKOUTS.read_text().splitlines():
+        d = DATE_RE.search(line)
+        if not d:
+            continue
+        for item in re.split(r"[;,]", line.split("—", 1)[-1]):
+            at = AT_LOAD_RE.search(item)
+            m = at or SET_RE.search(item)
+            name = item[:m.start()].lower().split(":")[-1] if m else ""   # skip a "Lower — squat focus:" title
+            lift = next((label for label, pattern in MAIN_LIFTS if re.search(pattern, name)), None)
+            if lift:
+                load, reps = (at.group(2), at.group(1)) if at else (m.group(1), m.group(2))
+                out.setdefault(lift, []).append((d.group(0), int(load), int(reps)))
+    return out
+
+
+def load_lift_history() -> str:
+    lines = []
+    for lift, sets in lift_history().items():
+        first, latest = sets[0], sets[-1]
+        if len(sets) == 1:
+            lines.append(f"- {lift}: {first[1]}x{first[2]} on {dated(first[0])}; 1 session logged")
+            continue
+        best = max(sets, key=lambda s: (s[1], s[2]))
+        lines.append(
+            f"- {lift}: first {first[1]}x{first[2]} on {dated(first[0])}; best {best[1]}x{best[2]} "
+            f"on {dated(best[0])}; latest {latest[1]}x{latest[2]} on {dated(latest[0])}; {len(sets)} sessions logged"
+        )
+    return "\n".join(lines)
+
+
+def load_weight_summary() -> str:
+    weights = read_weights()
+    if not weights:
+        return ""
+    lines = [f"- {dated(w['date'])}: {w['lb']:g} lb" for w in weights[-20:]]
+    first, last = weights[0], weights[-1]
+    span = (date.fromisoformat(last["date"]) - date.fromisoformat(first["date"])).days
+    lbs = [w["lb"] for w in weights]
+    lines.append(
+        f"First to latest: {first['lb']:g} -> {last['lb']:g} lb = {last['lb'] - first['lb']:+.1f} lb "
+        f"over {span} days ({len(weights)} weigh-ins). Range {min(lbs):g}-{max(lbs):g} lb."
+    )
+    this_week, last_week = weights_between(weights, 0, 6), weights_between(weights, 7, 13)
+    if this_week and last_week:
+        lines.append(
+            f"Average of the last 7 days: {sum(this_week) / len(this_week):.1f} lb ({len(this_week)} weigh-ins); "
+            f"the 7 days before: {sum(last_week) / len(last_week):.1f} lb ({len(last_week)})."
+        )
+    if span < 14:
+        lines.append("Under two weeks of weigh-ins: too early to call a trend. Single readings swing 1-3 lb with water.")
+    return "\n".join(lines)
+
+
+def load_food_summary(days: int = FOOD_DAYS_TO_LOAD) -> str:
+    food = food_by_day()
+    if not food:
+        return ""
+    lines, logged = [], []
+    for i in range(days):
+        d = (date.today() - timedelta(days=i)).isoformat()
+        f = food.get(d)
+        if f:
+            logged.append((d, f))
+            lines.append(f"- {dated(d)}: {f['meals']} meal(s), ~{f['kcal']} kcal, ~{f['protein']} g protein")
+        else:
+            lines.append(f"- {dated(d)}: nothing logged")
+    if logged:
+        hit = sum(1 for _, f in logged if f["protein"] >= PROTEIN_TARGET_G)
+        best_day, best = max(logged, key=lambda x: x[1]["protein"])
+        lines.append(
+            f"Protein target {PROTEIN_TARGET_G} g reached on {hit} of {len(logged)} logged days; "
+            f"best was ~{best['protein']} g on {dated(best_day)}. These are only the meals he "
+            "reported, so a low day may be a partly logged day."
+        )
+    return "\n".join(lines)
 
 
 def load_todays_meals() -> str:
@@ -310,14 +507,21 @@ def load_active_plan() -> str:
 
 
 def load_recent_logs() -> str:
+    """The last few session transcripts. The date lives only in the file name,
+    so it goes on as a heading; without it the model guessed which day was which."""
     if not LOG_DIR.exists():
         return ""
     files = sorted(LOG_DIR.glob("*.md"))[-RECENT_LOGS_TO_LOAD:]
-    return "\n\n".join(f.read_text().strip() for f in files)
+    return "\n\n".join(
+        f"### {dated(f.stem)}\n"
+        + TOOL_MARKER_RE.sub("", f.read_text().strip()).replace("### Session", "#### Session")
+        for f in files
+    )
 
 
-def build_system_prompt() -> str:
-    prompt = f"""You are Judd's personal health coach — a motivational-interviewing \
+# Frozen instructions: the same bytes on every call, so they're cached (see
+# chat() in app.py). Nothing that changes day to day goes in here, not even the date.
+COACH_INSTRUCTIONS = f"""You are Judd's personal health coach — a motivational-interviewing \
 practitioner: sharp, warm, evidence-based, zero fluff. You coach a real person over \
 time — you remember, you follow up, you keep it sustainable. Concise, conversational \
 replies; at most 1-3 small next actions.
@@ -338,6 +542,9 @@ TODAY (post-lift mood, satiety, better sleep tonight) — long-term outcomes alo
 don't drive habits; felt rewards do.
 - **Fresh starts:** after a below-target stretch, frame Monday or the new month as \
 a clean slate — a reset, never a make-up or a debt.
+- **Let skipped questions go:** if he doesn't answer something, ask again at most \
+once, in a later session, then drop it. Never count your asks ("third ask"). The \
+exception is a red-flag symptom (see Safety below).
 - **If-then plans:** close every session by locking exactly one implementation \
 intention — "If [time/context], then [specific action]" — concrete enough to \
 picture. Save it with the save_plan tool. Open each session by checking the previous plan: kept or missed, pure \
@@ -350,7 +557,7 @@ Sharp, not saccharine: you're a coach who respects him, not a hype machine.
 the loss is fat; CARDIO adds expenditure; daily STEPS quietly multiply it. Never \
 let him try to out-cardio a diet.
 - Protein: 1.6-2.4 g/kg bodyweight daily. When you know his weight, sanity-check \
-his 175g target against that range and say so.
+his {PROTEIN_TARGET_G} g target against that range and say so.
 - Sleep is a training variable: short sleep costs strength, drives hunger hormones \
 the wrong way, and blunts fat loss. Treat it like a lift.
 - Weekly floors (ACSM): ≥150 min moderate cardio + ≥2 resistance days. Program \
@@ -359,6 +566,8 @@ toward at least this; his week plan builds on it.
 ("Zone-2 today because it adds expenditure without stealing from tomorrow's lift").
 - Medical anything — symptoms, pain, meds, conditions: screen, keep programming \
 conservative, and refer out in plain language. You never diagnose.
+- Never suggest a movement his profile says aggravates an injury, in any variant \
+(a split squat to a box is still a split squat). Offer alternatives that avoid the pattern.
 
 You have tools: log workouts when he reports them, log meals (estimating calories \
 and protein yourself from his description), and save lasting facts to his profile. \
@@ -369,15 +578,40 @@ Safety — non-negotiable: you are a coach, not a doctor. Flag red-flag symptoms
 (chest pain, fainting, severe/persistent pain, disordered-eating signs) and tell \
 him to see a professional. Never prescribe extreme restriction or unsafe loads.
 
-Today is {date.today().strftime("%A, %Y-%m-%d")}."""
+## Getting facts right
+- Every number, date and trend you state comes from his logs below. If they don't \
+hold the answer, say so and ask. Never fill the gap with a guess.
+- Dates in the logs carry the weekday and how many days ago they were. Count spans \
+from those ("8 days", not "three weeks"), and do the arithmetic before you project \
+a goal date.
+- Weight: quote the computed change and averages in his weight log, not one \
+weigh-in. If it says it's too early to call a trend, say that.
+- He agreed to a plan only if it's the saved one under "His current if-then plan" \
+or he said yes in his own words. Anything you proposed that he never answered was \
+not agreed: ask again, don't say "we locked it".
+- When he asks about today's workout, go by "Today's session" below: it's what his \
+Workout tab shows. Don't write a different session in chat."""
 
+
+def build_system_prompt(todays_session: str = "") -> list:
+    """The system prompt as up to three blocks, ordered from never-changes to
+    changes-with-every-log, with a cache breakpoint after each of the first two:
+      1. the coaching instructions (frozen),
+      2. his profile and recent sessions (stable within a session),
+      3. today: date, plan, today's session card, and the training, weight and
+         food logs (changes whenever a tool logs something).
+    A change in one block only re-bills the blocks after it."""
+    cached = {"type": "ephemeral"}
+    blocks = [{"type": "text", "text": COACH_INSTRUCTIONS, "cache_control": cached}]
+
+    stable = ""
     profile = load_profile()
     if profile:
-        prompt += f"\n\n## What you know about Judd\n{profile}"
+        stable += f"## What you know about Judd\n{profile}"
 
     gaps = profile_gaps()
     if gaps:
-        prompt += (
+        stable += (
             f"\n\n## Intake still open — sections missing: {', '.join(gaps)}\n"
             "Run a real consultation, ONE topic per exchange, woven naturally into "
             "the conversation — never a question wall. After covering a topic, save "
@@ -400,26 +634,46 @@ Today is {date.today().strftime("%A, %Y-%m-%d")}."""
             "with Safety — and mention setup earns his first XP."
         )
 
+    logs = load_recent_logs()
+    if logs:
+        stable += f"\n\n## Recent sessions\n{logs}"
+    if stable.strip():
+        blocks.append({"type": "text", "text": stable.strip(), "cache_control": cached})
+
+    today = f"Today is {date.today().strftime('%A, %Y-%m-%d')}."
+
     plan = load_active_plan()
     if plan:
-        prompt += (
+        today += (
             f"\n\n## His current if-then plan (open the session by checking in on "
-            f"it — kept or missed, pure curiosity, zero judgment)\n{plan}"
+            f"it — kept or missed, pure curiosity, zero judgment)\n{with_dates(plan)}"
         )
+
+    if todays_session:
+        today += f"\n\n## Today's session (what his Workout tab shows)\n{todays_session}"
 
     workouts = load_recent_workouts()
     if workouts:
-        prompt += f"\n\n## Recent training log\n{workouts}"
+        today += f"\n\n## Recent training log\n{workouts}"
+
+    lifts = load_lift_history()
+    if lifts:
+        today += f"\n\n## Lift history (every logged session, not just the recent ones)\n{lifts}"
+
+    weights = load_weight_summary()
+    if weights:
+        today += f"\n\n## Weight log\n{weights}"
+
+    food = load_food_summary()
+    if food:
+        today += f"\n\n## Food log, last {FOOD_DAYS_TO_LOAD} days\n{food}"
 
     meals = load_todays_meals()
     if meals:
-        prompt += f"\n\n## Today's food log (keep the running calorie total in mind)\n{meals}"
+        today += f"\n\n## Today's meals (keep the running calorie total in mind)\n{meals}"
 
-    logs = load_recent_logs()
-    if logs:
-        prompt += f"\n\n## Recent sessions\n{logs}"
-
-    return prompt
+    blocks.append({"type": "text", "text": today})
+    return blocks
 
 
 # --- THE AGENT LOOP — the most important 30 lines in this file -----------------
@@ -438,6 +692,8 @@ def get_coach_reply(client: anthropic.Anthropic, system_prompt: str, history: li
             # briefly makes tool calls reliable. effort=low keeps it snappy/cheap.
             thinking={"type": "adaptive"},
             output_config={"effort": "low"},
+            # Caches the conversation so far; the next call re-reads it at 0.1x.
+            cache_control={"type": "ephemeral"},
         ) as stream:
             for text in stream.text_stream:
                 print(text, end="", flush=True)
@@ -477,16 +733,20 @@ def turn_to_text(turn: dict):
     parts = []
     for block in content:
         btype = getattr(block, "type", None) or (block.get("type") if isinstance(block, dict) else None)
+        # Tool calls are left out on purpose. Saved as "[log_workout] Logged…",
+        # the coach read them back next session and started typing the marker
+        # instead of calling the tool: it said "Logged" and saved nothing.
+        # What got saved is in the training, weight and food logs anyway.
         if btype == "text":
             parts.append(getattr(block, "text", "") or block.get("text", ""))
-        elif btype == "tool_use":
-            parts.append(f"[{getattr(block, 'name', '') or block.get('name', 'tool')}]")
         elif btype == "tool_result":
             return None  # machine chatter — skip in the human-readable log
     return " ".join(p for p in parts if p) or None
 
 
-def save_session(history: list) -> None:
+def save_session(history: list, ended: bool = True) -> None:
+    """Append the session to today's log. ended=False when the conversation is
+    only being rolled over and he's about to keep talking."""
     if not history:
         return
     LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -498,6 +758,10 @@ def save_session(history: list) -> None:
             continue
         who = "Judd" if turn["role"] == "user" else "Coach"
         lines.append(f"- **{who}:** {text}")
+    # Say it out loud: a proposal left hanging at the end of a session read as
+    # agreed the next day ("yesterday we locked yogurt + banana" — he never answered).
+    if ended and history[-1]["role"] == "assistant":
+        lines.append("- *(Session ended here: he didn't reply to the coach's last message.)*")
     with log_file.open("a") as f:
         f.write("\n".join(lines) + "\n")
     print(f"\n(Session saved to {log_file} — I'll remember this next time.)")   # DATA_DIR may sit outside HERE

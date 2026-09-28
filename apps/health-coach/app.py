@@ -40,19 +40,27 @@ from pydantic import BaseModel, Field
 
 from coach import (
     DATA,
+    DATE_RE,
     MAX_TOKENS,
     MEALS,
     MODEL,
     PLANS,
+    PROTEIN_TARGET_G,
     TOOLS,
+    WEIGHTS,
     WORKOUTS,
+    avg_weight,
     build_system_prompt,
+    call_cost,
     execute_tool,
     load_active_plan,
     load_dotenv,
     load_profile,
     load_recent_workouts,
+    protein_by_day,
+    read_weights,
     save_session,
+    with_dates,
 )
 
 load_dotenv()
@@ -134,9 +142,9 @@ def healthz() -> dict:
     return {"ok": True}
 
 HERE = Path(__file__).parent
-WEIGHT_FILE = DATA / "weight.md"   # Judd's log_weight tool writes this (his build)
+WEIGHT_FILE = WEIGHTS   # Judd's log_weight tool writes this (his build)
 GAME_FILE = DATA / "game.json"
-PROTEIN_TARGET_G = 175
+USAGE_FILE = DATA / "usage.jsonl"   # one line per API call: tokens, cache, dollars
 
 history: list = []
 workout_cache: dict = {}
@@ -177,38 +185,30 @@ def save_game(g: dict) -> None:
 
 
 # ── Parsing the logs (source of truth for everything) ─────────────────────────
-
-DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
-WEIGHT_RE = re.compile(r"(\d{4}-\d{2}-\d{2}).*?(\d+(?:\.\d+)?)\s*lb")
-PROTEIN_RE = re.compile(r"~(\d+)\s*g protein")
-
+# read_weights() and protein_by_day() live in coach.py: the coach's prompt and
+# the Journey tab must read the logs the same way.
 
 def dates_of(path: Path) -> list:
     return DATE_RE.findall(path.read_text()) if path.exists() else []
 
 
-def read_weights() -> list:
-    if not WEIGHT_FILE.exists():
-        return []
-    found = [
-        {"date": m.group(1), "lb": float(m.group(2))}
-        for m in WEIGHT_RE.finditer(WEIGHT_FILE.read_text())
-    ]
-    return sorted(found, key=lambda w: w["date"])
-
-
-def protein_by_day() -> dict:
-    """{date: grams} summed from the food log."""
-    out: dict = {}
-    if not MEALS.exists():
-        return out
-    for line in MEALS.read_text().splitlines():
-        d = DATE_RE.search(line)
-        if not d:
-            continue
-        for g in PROTEIN_RE.findall(line):
-            out[d.group(0)] = out.get(d.group(0), 0) + int(g)
-    return out
+def record_usage(kind: str, response) -> None:
+    """Append one API call's tokens and cost to data/usage.jsonl. Never raises:
+    the money is already spent, so bookkeeping must not break the reply."""
+    try:
+        u = response.usage
+        row = {
+            "date": date.today().isoformat(), "time": time.strftime("%H:%M:%S"), "kind": kind,
+            "input_tokens": u.input_tokens, "output_tokens": u.output_tokens,
+            "cache_write": getattr(u, "cache_creation_input_tokens", 0) or 0,
+            "cache_read": getattr(u, "cache_read_input_tokens", 0) or 0,
+            "cost_usd": round(call_cost(MODEL, u), 5),
+        }
+        DATA.mkdir(parents=True, exist_ok=True)
+        with USAGE_FILE.open("a") as f:
+            f.write(json.dumps(row) + "\n")
+    except Exception:
+        pass
 
 
 def plans_kept_count() -> int:
@@ -547,7 +547,7 @@ def chat(msg: ChatMessage) -> dict:
         if len(history) >= MAX_HISTORY:
             # Roll over rather than trim: the saved log feeds the next system
             # prompt, so the coach keeps its memory without an edited transcript.
-            save_session(history)
+            save_session(history, ended=False)
             history.clear()
         with game_lock:   # roll to today's quests BEFORE anything gets logged
             game = load_game()
@@ -555,7 +555,7 @@ def chat(msg: ChatMessage) -> dict:
             save_game(game)
         snapshot = len(history)
         history.append({"role": "user", "content": msg.message})
-        system_prompt = build_system_prompt()
+        system_prompt = build_system_prompt(todays_session_context())
         tools_used, texts = [], []
         try:
             for _ in range(MAX_TOOL_ROUNDS):
@@ -567,7 +567,11 @@ def chat(msg: ChatMessage) -> dict:
                     tools=TOOLS,
                     thinking={"type": "adaptive"},
                     output_config={"effort": "low"},
+                    # The system blocks carry their own breakpoints; this one
+                    # caches the conversation so the next round re-reads it at 0.1x.
+                    cache_control={"type": "ephemeral"},
                 )
+                record_usage("chat", response)
                 history.append({"role": "assistant", "content": response.content})
                 # Keep text from EVERY round ("Logging that now…" + the final
                 # reply) — /history shows all of it, so the live bubble must too.
@@ -659,13 +663,6 @@ def automaticity() -> list:
         reps_frac = min(reps, 66) / 66
         out.append({"habit": habit, "pct": round(100 * reps_frac * (0.7 + 0.3 * consistency)), "reps": reps})
     return out
-
-
-def avg_weight(weights: list, newest_days_ago: int, oldest_days_ago: int):
-    today = date.today()
-    lo, hi = today - timedelta(days=oldest_days_ago), today - timedelta(days=newest_days_ago)
-    vals = [w["lb"] for w in weights if lo <= date.fromisoformat(w["date"]) <= hi]
-    return round(sum(vals) / len(vals), 1) if vals else None
 
 
 def fresh_start() -> dict:
@@ -789,7 +786,7 @@ PROGRAM_SCHEMA = {
     "type": "object",
     "properties": {
         "week_focus": {"type": "string", "description": "one line: this week's intent"},
-        "rationale": {"type": "string", "description": "one line: why this structure, tied to the goal"},
+        "rationale": {"type": "string", "description": "one line: why this structure, tied to the goal and to what he logged last week"},
         "step_target": {"type": "integer", "description": "daily step target"},
         "days": {
             "type": "array",
@@ -804,7 +801,7 @@ PROGRAM_SCHEMA = {
                         "description": (
                             "cardio/hiit: modality + target zone + RPE + structure "
                             "(e.g. 'incline treadmill, zone 2, RPE 5-6, steady 35 min'). "
-                            "lift: the session focus. rest: recovery guidance."
+                            "lift: the session focus, exercises with sets x reps, no weights. rest: recovery guidance."
                         ),
                     },
                     "duration_minutes": {"type": "integer"},
@@ -828,31 +825,43 @@ def week_key() -> str:
     return f"{y}-W{w:02d}"
 
 
-def this_weeks_training_log() -> str:
-    """What's already been logged since Monday — the program engine and the
-    session generator both respect work already done."""
+def training_since(start: date, empty: str) -> str:
+    """Logged workouts on or after `start`, dates labelled with weekday and age."""
     if not WORKOUTS.exists():
-        return "(nothing logged yet this week)"
-    start = week_start()
+        return empty
     lines = [
         l for l in WORKOUTS.read_text().splitlines()
         if (m := DATE_RE.search(l)) and date.fromisoformat(m.group(0)) >= start
     ]
-    return "\n".join(lines) or "(nothing logged yet this week)"
+    return with_dates("\n".join(lines)) or empty
+
+
+def this_weeks_training_log() -> str:
+    """What's already been logged since Monday — the program engine and the
+    session generator both respect work already done."""
+    return training_since(week_start(), "(nothing logged yet this week)")
+
+
+def stored_program():
+    """This week's saved program, or None. Never calls the model."""
+    if not PROGRAM_FILE.exists():
+        return None
+    try:
+        stored = json.loads(PROGRAM_FILE.read_text())
+    except (json.JSONDecodeError, OSError):
+        return None
+    return stored if stored.get("week") == week_key() else None
 
 
 def get_program(new: int = 0) -> dict:
     """Build (or load) THIS WEEK's program from the completed profile.
     Persisted to data/program.json so the week survives server restarts."""
-    key = week_key()
-    if not new and PROGRAM_FILE.exists():
-        try:
-            stored = json.loads(PROGRAM_FILE.read_text())
-            if stored.get("week") == key:
-                return stored
-        except (json.JSONDecodeError, OSError):
-            pass
+    if not new and (stored := stored_program()):
+        return stored
     profile = load_profile() or "(no profile yet — program a conservative beginner week)"
+    # Last week too: on a Monday "this week" is empty, and a program that can't
+    # see last week just repeats it (the 10-day simulation showed exactly that).
+    recent = training_since(week_start() - timedelta(days=7), "(no training logged yet)")
     response = client.messages.create(
         model=MODEL,
         max_tokens=MAX_TOKENS,
@@ -866,16 +875,21 @@ def get_program(new: int = 0) -> dict:
             "- Fit his TRUE stated availability — never program days he said he "
             "doesn't have. Unnamed days are rest.\n"
             "- Any safety flags in the profile → conservative choices.\n"
+            "- Build on his logged training: keep what worked, drop or swap "
+            "anything that caused pain, and fit the days he actually showed up.\n"
+            "- Lift days: exercises with sets x reps, no weights. Today's session "
+            "sets loads from his latest logged sets, so the program never goes stale.\n"
             "- Cover all 7 days (rest days included). One line of rationale."
         ),
         messages=[{"role": "user", "content":
-                   f"## Client profile\n{profile}\n\n## Already logged this week\n"
-                   f"{this_weeks_training_log()}\n\nToday is {date.today().strftime('%A, %Y-%m-%d')}. "
+                   f"## Client profile\n{profile}\n\n## His training since last Monday (with loads)\n"
+                   f"{recent}\n\nToday is {date.today().strftime('%A, %Y-%m-%d')}. "
                    f"Build this week's program."}],
         output_config={"effort": "low", "format": {"type": "json_schema", "schema": PROGRAM_SCHEMA}},
     )
+    record_usage("program", response)
     program = json.loads(next(b.text for b in response.content if b.type == "text"))
-    program["week"] = key
+    program["week"] = week_key()
     DATA.mkdir(parents=True, exist_ok=True)
     PROGRAM_FILE.write_text(json.dumps(program, indent=2))
     return program
@@ -898,7 +912,10 @@ def write_session(slot_desc: str, ask: str) -> dict:
         system=(
             "You are Judd's strength coach writing out today's session from his "
             "weekly program. Apply progressive overload from his logged loads "
-            "where justified — reference actual numbers from his logs. Respect "
+            "where justified — reference actual numbers from his logs. Loads come "
+            "from his logged sets only, never the program slot, and any history you "
+            "cite ('up from 160 on Fri 9/18', 'second time at 50s') must match the "
+            "dated log lines exactly. Respect "
             "anything already trained this week: don't hit a muscle group "
             "trained in the last 48 hours. 5-7 exercises incl. warm-up for a "
             "lift; cardio sessions can be 2-4 blocks."
@@ -907,12 +924,39 @@ def write_session(slot_desc: str, ask: str) -> dict:
                    f"## Today's program slot\n{slot_desc}\n\n## Client profile\n{profile}\n\n"
                    f"## Already logged this week\n{this_weeks_training_log()}\n\n"
                    f"## Recent training (with loads)\n{load_recent_workouts() or '(none)'}\n\n"
-                   f"Today is {date.today().isoformat()}. {ask}"}],
+                   f"Today is {date.today().strftime('%A, %Y-%m-%d')}. {ask}"}],
         output_config={"effort": "low", "format": {"type": "json_schema", "schema": WORKOUT_SCHEMA}},
     )
+    record_usage("workout", response)
     plan = json.loads(next(b.text for b in response.content if b.type == "text"))
     plan["slot_type"] = plan.pop("kind")
     return plan
+
+
+def todays_session_context() -> str:
+    """Today's session as the Workout tab shows it, for the coach's prompt, so
+    chat can't describe a different workout than the card (the simulation caught
+    it doing that). Never calls the model: no card yet means the program slot.
+    Never raises either: it reads model-written JSON, and a bad file should cost
+    the coach this section, not the whole chat turn."""
+    try:
+        card = workout_cache.get(date.today().isoformat())
+        program = stored_program()
+        if card:
+            lines = [f"{card['title']} ({card.get('duration_minutes', '?')} min). {card.get('focus', '')}"]
+            lines += [f"- {e['exercise']}: {e['sets']} x {e['reps']}. {e['notes']}" for e in card.get("exercises", [])]
+        elif program:
+            slot = next((d for d in program["days"] if d["day"] == date.today().strftime("%A")), None)
+            lines = ["(No session card generated yet today.)"]
+            if slot:
+                lines.append(f"This week's program has: {slot['type']}, {slot['title']}: {slot['detail']}")
+        else:
+            return ""
+        if program:
+            lines.append("This week: " + "; ".join(f"{d['day'][:3]} {d['type']} ({d['title']})" for d in program["days"]))
+        return "\n".join(lines)
+    except Exception:
+        return ""
 
 
 @app.get("/workout")

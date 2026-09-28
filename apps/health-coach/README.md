@@ -33,6 +33,10 @@ cp .env.example .env          # paste your ANTHROPIC_API_KEY
 # open http://localhost:8000
 ```
 
+Offline tests (fake model, no cost): `.venv/bin/python -m unittest discover tests`.
+
+`simulate.py` plays 10 days of a fake user against the real app with a hard budget, so you can see what the coach remembers and what each call costs: `--dry-run` is free, `--budget 4` is a paid run.
+
 For in-app form videos, add a `YOUTUBE_API_KEY`: a Google Cloud **API key starting with `AIza`** with *YouTube Data API v3* enabled. Keys from Google AI Studio start with `AQ.` and YouTube rejects them.
 
 ## Put it on your phone (Railway)
@@ -50,6 +54,7 @@ Every `git push` redeploys. Railway's Hobby plan is $5/month including $5 of usa
 ## Cost and safety
 
 - Every coach message, "Different workout", and weekly program is a Claude Opus call. Set a monthly spend limit in the Anthropic console.
+- Every API call is logged to `data/usage.jsonl`: tokens, prompt-cache hits and dollars. The coach's instructions and your profile are prompt-cached, so repeat reads cost a tenth.
 - On a server, all routes sit behind the password (HttpOnly cookie, login rate limit). Every API call also requires an `X-Coach` header, so other sites can't trigger paid requests.
 - This is a coaching tool, not medical advice.
 
