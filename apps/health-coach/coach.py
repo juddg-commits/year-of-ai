@@ -389,21 +389,24 @@ def load_recent_workouts() -> str:
     return with_dates("\n".join(WORKOUTS.read_text().splitlines()[-10:]))
 
 
-# The main lifts, by the words the log uses for them. Anything else is left out:
-# better no line than a wrong one.
-MAIN_LIFTS = [
-    ("Incline press", r"incline"),
-    ("Bench press", r"bench"),
-    ("Squat", r"squat"),
-    ("RDL", r"\brdl\b|romanian"),
-    ("Deadlift", r"deadlift"),
-    ("Overhead press", r"overhead|\bohp\b"),
-    ("Lat pulldown", r"pulldown"),
-    ("Row", r"\brows?\b"),
+# The main lifts, by the words the log uses for them, minus variants that move a
+# different weight: a 40 lb split squat logged as his squat reads as a collapse
+# from 185. Anything else is left out: better no line than a wrong one.
+DB = r"dumbbell|\bdbs?\b|kettlebell|\bkb\b|machine|smith|cable|band"
+MAIN_LIFTS = [   # (label, matches, but not)
+    ("Incline press", r"incline", r"walk|treadmill|machine|smith|cable"),
+    ("Bench press", r"bench", DB + r"|incline|decline|close|dip|step"),
+    ("Squat", r"squat", DB + r"|split|bulgarian|goblet|front|hack|jump|pistol|wall|air|bodyweight"),
+    ("RDL", r"\brdl\b|romanian", DB + r"|single|one[- ]leg"),
+    ("Deadlift", r"deadlift", DB + r"|trap|hex|stiff|single|sumo"),
+    ("Overhead press", r"overhead|\bohp\b", DB + r"|landmine|seated|tricep|extension"),
+    ("Lat pulldown", r"pulldown", r"straight|single|one[- ]arm"),
+    ("Row", r"\brows?\b", DB + r"|chest|seated|t-bar|upright|inverted|single|one[- ]arm"),
 ]
 SET_RE = re.compile(r"(\d{2,3})s?\s?x\s?(\d+)")   # "155x5x3", "50s x10x3" -> load, reps
-# How he types it himself: "3x8 @135 lb", "3x10 @ 40s" -> reps, load. Not "@ RPE 8" or "@ 70%".
-AT_LOAD_RE = re.compile(r"\d+\s?x\s?(\d+)\s*(?:@|\bat\b)\s*(\d{2,3})(?![\d%])")
+# How he types it, and how the workout card logs it: "3x8 @140 lb", "4x8-10 @ 140 lb"
+# (bottom of the range), "3x10 each leg @40 lb" -> reps, load. Not "@ RPE 8" or "@ 70%".
+AT_LOAD_RE = re.compile(r"\d+\s?x\s?(\d+)(?:\s?[-–]\s?\d+)?[^;,@\d]*?(?:@|\bat\b)\s*(\d{2,3})(?![\d%])")
 
 
 def lift_history() -> dict:
@@ -421,7 +424,8 @@ def lift_history() -> dict:
             at = AT_LOAD_RE.search(item)
             m = at or SET_RE.search(item)
             name = item[:m.start()].lower().split(":")[-1] if m else ""   # skip a "Lower — squat focus:" title
-            lift = next((label for label, pattern in MAIN_LIFTS if re.search(pattern, name)), None)
+            lift = next((label for label, match, but_not in MAIN_LIFTS
+                         if re.search(match, name) and not re.search(but_not, name)), None)
             if lift:
                 load, reps = (at.group(2), at.group(1)) if at else (m.group(1), m.group(2))
                 out.setdefault(lift, []).append((d.group(0), int(load), int(reps)))

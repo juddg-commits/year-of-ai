@@ -14,7 +14,7 @@ The Year of AI: one repo, one shipped project at a time (`curriculum/README.md`,
 ## Rules learned the hard way
 - **Measure before building.** Count the causes before choosing a fix. The research agent's planned fix for "partial" verdicts targeted the wrong cause (76-88% were cut-off quotes).
 - **Only claim numbers that were measured**, in docs, write-ups and posts. Say which run or replay produced them.
-- **Test on real data, not just the tests you wrote.** The quote matcher passed its first tests and then failed on real Wikipedia quotes (link targets, `[7]` markers). A simulator only tests what it types: the coach's lift history passed every simulated run and read nothing from the real log, which writes "3x8 @135" where the simulator wrote "135x8x3".
+- **Test on real data, not just the tests you wrote.** The quote matcher passed its first tests and then failed on real Wikipedia quotes (link targets, `[7]` markers). A simulator only tests what it types: the coach's lift history passed every simulated run and read nothing from the real log, which writes "3x8 @140" where the simulator wrote "140x8x3".
 - **A paid run must never crash after the money is spent.** Code that touches the network or third-party text catches every error and degrades: a fetch that fails keeps what it had. (A malformed URL raised `httpx.InvalidURL`, which isn't an `httpx.HTTPError`, and would have crashed a run from inside a thread pool.)
 - **A cancelled or stuck job gets killed.** Subprocess cleanup goes in `finally`, not only in the timeout branch.
 - **Anything that spends money has a ceiling and a human in the loop.** The fleet server caps settings; paid tools aren't pre-approved in permissions.

@@ -188,20 +188,39 @@ class ContextTest(unittest.TestCase):
         self.assertEqual(coach.protein_by_day()["2026-09-16"], 75)
 
     def test_lift_history_reads_both_ways_he_logs(self):
-        # The simulation always typed "155x5x3"; his real log (2026-08-05) says
-        # "Bench 3x8 @135 lb", which the history first read as nothing at all.
+        # The simulation always typed "155x5x3"; the real app's log says "Bench 3x8 @140 lb"
+        # (sets x reps @ weight), which the history first read as nothing at all. Made-up numbers.
         (DATA_DIR / "workouts.md").write_text(
             "# Training Log\n"
-            "- **2026-08-05** — push day: Bench 3x8 @135 lb; incline DB press 3x10 @40s (effort 7/10)\n"
+            "- **2026-09-10** — push day: Bench 3x8 @140 lb; incline DB press 3x10 @45s (effort 7/10)\n"
             "- **2026-09-14** — Upper A — bench focus: Bench 155x5x3; barbell row 125x8x3\n"
             "- **2026-09-16** — Lower: Squat 3x5 @ RPE 8; RDL 3x8 @ 70%\n"   # no weight in either
             "- **2026-09-18** — Upper A: Barbell Bench Press 4x5; Barbell row 3x8 at 130\n")   # the Complete button's format
         h = coach.lift_history()
-        self.assertEqual(h["Bench press"], [("2026-08-05", 135, 8), ("2026-09-14", 155, 5)])
-        self.assertEqual(h["Incline press"], [("2026-08-05", 40, 10)])
+        self.assertEqual(h["Bench press"], [("2026-09-10", 140, 8), ("2026-09-14", 155, 5)])
+        self.assertEqual(h["Incline press"], [("2026-09-10", 45, 10)])
         self.assertEqual(h["Row"], [("2026-09-14", 125, 8), ("2026-09-18", 130, 8)])
         self.assertNotIn("Squat", h)
         self.assertNotIn("RDL", h)
+
+    def test_workout_card_logs_the_weight_used(self):
+        # The page builds this when the last box is ticked, with the weights he typed.
+        # It used to send "Barbell Bench Press 4x5" and the coach never saw a load.
+        details = ("Warm-up: easy bike 1x5 min; Barbell Bench Press 4x5 @165 lb; Barbell row 3x8-10 @135 lb; "
+                   "Front squat 3x6 @135 lb; Bulgarian split squat 3x10 each leg @40 lb; "
+                   "Dumbbell bench press 3x10 @60 lb; Chest-supported row 3x10 @45 lb; "
+                   "Lat pulldown 3x10 each set @120 lb; Romanian deadlift 3x8")   # no weight typed
+        r = TestClient(app.app).post("/workout/complete", json={"title": "Upper A — Bench Focus", "details": details},
+                                     headers={"X-Coach": "1"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn("Barbell Bench Press 4x5 @165 lb", (DATA_DIR / "workouts.md").read_text())
+        h = coach.lift_history()
+        self.assertEqual(h["Bench press"][-1], ("2026-09-23", 165, 5))    # not the 60 lb dumbbells
+        self.assertEqual(h["Row"][-1], ("2026-09-23", 135, 8))            # bottom of 8-10; not the 45 lb row
+        self.assertEqual(h["Squat"], [("2026-09-16", 185, 5)])            # front and split squats aren't his squat
+        self.assertEqual(h["Lat pulldown"], [("2026-09-23", 120, 10)])
+        self.assertNotIn("RDL", h)
+        self.assertIn("Squat: 185x5 on Wed 2026-09-16 (7 days ago); 1 session logged", coach.load_lift_history())
 
     # ── Prompt layout and caching ─────────────────────────────────────────────
     def test_prompt_blocks_go_from_frozen_to_volatile(self):

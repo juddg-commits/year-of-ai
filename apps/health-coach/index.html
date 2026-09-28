@@ -187,6 +187,12 @@
   .ex-name { font-weight: 750; font-size: 16px; line-height: 1.35; }
   .ex-scheme { color: var(--accent); font-size: 14px; font-weight: 650; margin: 2px 0 3px; }
   .ex-notes { color: var(--muted); font-size: 13.5px; line-height: 1.45; }
+  .ex-load { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; color: var(--muted); }
+  .ex-load input {
+    width: 76px; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--line-strong);
+    background: var(--card); color: inherit; font: inherit; font-size: 16px; font-weight: 700;
+  }
+  .ex-load input:disabled { opacity: .7; }
   .vid { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 13px; font-weight: 700;
          color: var(--accent); text-decoration: none; padding: 7px 14px; border-radius: 999px;
          border: 1px solid var(--accent-line); background: var(--accent-soft); }
@@ -708,6 +714,7 @@ function renderStakes() {
 function markLogged(chipText) {
   logged = true;
   document.querySelectorAll(".ex").forEach((r) => { r.classList.add("done"); r.setAttribute("aria-checked", "true"); });
+  document.querySelectorAll(".ex-load input").forEach((inp) => { inp.disabled = true; });
   $("wo-bar").firstElementChild.style.width = "100%";
   $("wo-new").style.display = "none";
   if (!$("wo-done-chip")) {
@@ -756,6 +763,17 @@ function renderWorkout() {
       });
       row.lastElementChild.appendChild(a);
     }
+    // Weight used, so the log reads "Bench 4x5 @165 lb" and the coach can program
+    // the next session from it. Not for timed work, warm-ups or non-lifting days.
+    const timed = /\d\s*(min|sec|s)\b/i.test(ex.reps) || /warm[- ]?up|cool[- ]?down/i.test(ex.exercise);
+    if (plan.slot_type === "lift" && !timed) {
+      const label = document.createElement("label");
+      label.className = "ex-load";
+      label.innerHTML = `<input type="number" inputmode="decimal" min="0" max="999" step="any" placeholder="—"> lb used`;
+      label.firstElementChild.dataset.i = i;
+      label.addEventListener("click", (e) => e.stopPropagation());   // typing a weight doesn't tick the box
+      row.lastElementChild.appendChild(label);
+    }
     row.tabIndex = 0;
     row.setAttribute("role", "checkbox");
     row.setAttribute("aria-checked", "false");
@@ -781,7 +799,14 @@ async function toggle(row) {
     // Final box ticked → tell the ENGINE, so the coach's memory knows you trained.
     const r = row.getBoundingClientRect();
     burst(r.left + 26, r.top + 20);
-    const details = plan.exercises.map((e) => `${e.exercise} ${e.sets}x${e.reps}`).join("; ");
+    const loads = {};
+    document.querySelectorAll(".ex-load input").forEach((inp) => {
+      const v = parseFloat(inp.value);
+      if (v > 0) loads[inp.dataset.i] = v;
+    });
+    // Commas and semicolons separate exercises in the log, so none inside a name.
+    const details = plan.exercises.map((e, i) =>
+      `${e.exercise.replace(/[;,]/g, " ")} ${e.sets}x${e.reps}` + (loads[i] ? ` @${loads[i]} lb` : "")).join("; ");
     try {
       const resp = await (await api("/workout/complete", {
         method: "POST", headers: { "Content-Type": "application/json" },
