@@ -9,8 +9,8 @@ Updated 2026-09-27. Code is publish-ready (bug fixes, UI polish, password gate, 
 - [x] Deploy-ready: password gate, `DATA_DIR` volume support, `TZ`, Procfile + railway.json, pinned requirements, iPhone icons (2026-09-27)
 - [x] **Signed in to GitHub** as juddg-commits (gh in ~/.local/bin, 2026-09-28)
 - [x] **Pushed**: https://github.com/juddg-commits/year-of-ai (public, 2026-09-28)
-- [ ] **Deploy on Railway** (README → "Put it on your phone"): root dir `apps/health-coach`, variables, volume at `/data`, generate domain
-- [ ] **Install on iPhone**: Safari → sign in → Share → Add to Home Screen
-- [ ] **Use the coach 3 days**: weigh in, log a meal, lock a plan each day
+- [ ] **Use the coach 3 days on the Mac**: `cd apps/health-coach && .venv/bin/uvicorn app:app --reload`, open http://localhost:8000. Weigh in, log meals, do the workout each day
+- [ ] **Set a monthly spend limit** in the Anthropic console (~$0.04–0.20 per message)
+- Phone access: deferred (2026-09-28). Options when wanted: Railway ($5/mo, always on) or Mac + Tailscale (free, Mac must be awake)
 - [ ] **Edit WRITEUP.md** in your voice, then post it (LinkedIn or X) with the repo link
 - [ ] **Log the ship** in `curriculum/log.md` (press Ship check on the HQ dashboard, or `/ship health-coach <repo url>`)
