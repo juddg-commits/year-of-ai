@@ -1,19 +1,27 @@
-# Ship #2 write-up: research agent (draft, Judd edits before posting)
+# Ship #2: a research agent that cites every sentence
 
-_What it is, one line:_ ask a hard question, get a brief where every sentence cites its source. Opus 5 plans the research and checks the evidence, Sonnet 5 researches the sub-questions in parallel with web search, and plain code keeps everyone honest. Built with Claude Code as my pair programmer.
+This is project #2 of my Year of AI, where I'm spending a year building AI projects in public.
+
+**What it does:** you ask it a hard question, like "are AI medical scribes actually reducing doctor burnout?" It breaks the question into smaller ones, researches them on the web at the same time, checks every claim against the exact quote it came from, and writes a short brief where every sentence has a source. One question costs about $1.25 and takes 2 to 3 minutes.
+
+I built it with Claude Code as my pair programmer. It wrote most of the code. I picked what to build, tested it on my own questions, and decided which problems were worth fixing.
 
 ## What broke
-- **The first run found zero evidence.** The newest version of the web search tool routes results through a code sandbox, and its answers came back with no citation objects at all. I only saw it by dumping the raw API response for one worker. The older search tool returned 18 cited claims in 29 seconds for the same question. For an agent whose whole point is provenance, I pinned the older tool.
-- **Most claims were only "partly" supported, and the fix I'd planned was the wrong one.** The plan was to judge each claim against all of its quotes at once. Before building it, I counted why claims failed: 76-88% of the time, the API had cut the quote off at 150 characters, often right before the number the claim was about. So the agent now downloads the source page and completes the sentence, in plain code with no extra tokens. On the same evidence, "partial" went from 64% to 41%.
-- **My first run cost $1.68 and took 6 minutes 40 seconds.** A per-stage cost ledger showed the validator was burning money on thinking tokens for what is really a classification task. Lower effort and parallel batches brought a run to $1.25 and 2.5 minutes.
+
+**It found zero evidence the first time.** The newest version of the web search tool routes everything through a code sandbox, and it came back with no citations at all. We only figured that out by looking at the raw response. The older search tool gave 18 cited claims in 29 seconds on the same test, so I switched back.
+
+**Most claims came back "partly supported," and my planned fix was wrong.** I was going to have it check each claim against all of its quotes at once. Before building that, we counted why claims were failing. 76 to 88% of the time, the quote had been cut off at 150 characters, usually right before the number the claim was about. So now the agent opens the actual web page and grabs the full sentence. Same evidence, and "partly supported" dropped from 64% to 41%.
+
+**The first run cost $1.68 and took almost 7 minutes.** Tracking the cost of every step showed something I didn't expect: the checking step, which is basically a grading job, was eating a third of the cost and most of the time. Turning down how hard it thinks and running the checks in parallel got a question to $1.25 and about 2 and a half minutes.
 
 ## What I learned
-- **Measure before you build.** Twice, the obvious fix wasn't where the problem was: the cost was in validation, not research, and the "partial" verdicts came from cut-off quotes, not multi-quote claims.
-- **A workflow isn't a weaker agent.** The order of steps is fixed in code and the model decides inside each step. That makes cost and failures predictable and every stage testable.
-- **An LLM judge isn't independent per item.** 10 of 48 claims whose evidence didn't change still got a different verdict, all stricter, when their neighbors in the batch got better quotes. One run's small differences are noise.
-- **Uncited text never reaches the reader.** 45 of 46 sentences cited, and zero citations to sources that don't exist, checked by code, not by trust.
+
+- **Look at the data before you fix anything.** My fix for the "partly supported" problem was aimed at the wrong cause, and I only found out because we counted first.
+- **AI grading isn't as consistent as it looks.** When I re-ran the checker, 10 claims whose evidence hadn't changed at all still got different grades, probably because the claims graded alongside them had changed. One run isn't proof of anything.
+- **A fixed step-by-step pipeline is easier to trust than letting the AI do whatever it wants.** I always know what a question costs and exactly which step broke.
 
 ## What's next
-- It becomes the first member of a fleet: a Mother orchestrator that calls each of my agents as a tool through an MCP server. Next ship: an agent that fixes code and proves it by running the tests in a sandbox.
 
-Repo: https://github.com/juddg-commits/year-of-ai/tree/main/apps/research-agent
+This agent is the first member of a small team. I'm connecting all my agents under one "Mother" agent that decides which one to use, and she can already call this one like a tool. Next up is an agent that fixes code and proves it worked by running the tests.
+
+Code: https://github.com/juddg-commits/year-of-ai/tree/main/apps/research-agent
