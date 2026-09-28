@@ -15,7 +15,8 @@ Format:
 
 ---
 
-## (pending) — Health Coach CLI (Phase 1, ship #1)
-- Repo: _create it — see apps/health-coach/README.md for Day-1 steps_
-- Target ship date: **within 14 days of Day 1**
-- Done means: runs end-to-end with real API key, remembers across sessions, on GitHub with README + write-up.
+## 2026-09-28 — Coach: AI personal trainer (Phase 1, ship #1)
+- Repo: https://github.com/juddg-commits/year-of-ai (`apps/health-coach/`)
+- What it does: a phone-first web app where you talk to a coach that logs workouts, meals, weigh-ins and plans through tools, programs your week from real logged loads, and pays XP only for what's in the logs.
+- What broke / what I learned: the agent loop is small (decide → call tool → read result → continue); the rest is plumbing. A YouTube key from AI Studio (`AQ.`) silently failed for a month, so now errors get logged, not swallowed. Two QA passes found 25 bugs, most in state that outlives one request (reloads, midnight, double-logging). A stakes preview has to use the exact same rules as the payout or it lies. Shipped a month late because nothing was committed until the end: commit on day one.
+- Post: _pending: edit WRITEUP.md and post it, then paste the link here_
