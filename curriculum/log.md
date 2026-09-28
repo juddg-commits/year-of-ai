@@ -15,6 +15,12 @@ Format:
 
 ---
 
+## 2026-09-28 — Research agent: question in, cited brief out (Phase 1, ship #2)
+- Repo: https://github.com/juddg-commits/year-of-ai (`apps/research-agent/`)
+- What it does: splits a question into sub-questions, researches them in parallel with web search, recovers each cut-off quote from its source page, checks every claim against its quote, and writes a brief where every sentence cites a source (~$1.25, ~2.5 min per question).
+- What broke / what I learned: the newest search tool returned zero citations, so I pinned the older one (found by dumping raw responses). Measuring before building, twice: cost was in validation, not research ($1.68 → $1.25), and "partial" verdicts came from the API's 150-char quote cap, not multi-quote claims (recovering the sentence: 64% → 41% partial). An LLM judge isn't independent per item: verdicts shift with batch context.
+- Post: _pending: edit WRITEUP.md and post it, then paste the link here_
+
 ## 2026-09-28 — Coach: AI personal trainer (Phase 1, ship #1)
 - Repo: https://github.com/juddg-commits/year-of-ai (`apps/health-coach/`)
 - What it does: a phone-first web app where you talk to a coach that logs workouts, meals, weigh-ins and plans through tools, programs your week from real logged loads, and pays XP only for what's in the logs.
