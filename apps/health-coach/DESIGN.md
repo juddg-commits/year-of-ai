@@ -10,7 +10,7 @@ Three guards around the loop. The last two were added after a run showed the fai
 
 - **Roll back a failed turn.** A turn that errors halfway would leave a tool call without its result in the history, and every later request would be refused. The turn's messages are removed before the error is returned.
 - **Log the error and recover from a refused conversation.** Run 14 lost most of day 1: after one reply, every chat turn failed within a second until the session reset, while the weekly program call in between worked. The app swallowed the error, so the cause is unknown. Now every failed call writes its type, status and message to stderr and `data/usage.jsonl`. When the API refuses a turn with earlier messages in the session and nothing saved yet, the app saves the session to the log and retries once from a fresh start.
-- **Catch "Logged" with no tool call.** In run 13 the coach replied "Logged: 3 slices pepperoni + a Monster" and called nothing. When a sentence opens with "Logged" and no tool ran that turn, the loop sends one hidden check asking for the call. On the 297 turns of runs 1 to 13, that rule would have fired 3 times: the real miss, plus 2 progress summaries ("Logged 3 weigh-ins"), where the check tells it to save nothing.
+- **Catch "Logged" with no tool call.** In run 13 the coach replied "Logged: 3 slices pepperoni + a Monster" and called nothing. When a sentence opens with "Logged" and no tool ran that turn, the loop sends one hidden check asking for the call. On the 297 turns of runs 1 to 13, that rule would have fired 3 times: the real miss, plus 2 recaps of data already saved ("Logged 3 days out of the last 7", "yesterday: logged the lift, marked it kept"), where the check tells it to save nothing.
 
 ## 2. What the model sees
 

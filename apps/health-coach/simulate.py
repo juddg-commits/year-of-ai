@@ -442,8 +442,8 @@ def no_injury_checks(run_dir: Path, turns: list, cards: list, replies: list, his
     asks = [f"day {t['day']}: {s.strip()[:120]!r}" for t in turns if t["day"] > 1
             for s in sentences(t["reply"]) if "?" in s and INJURY_Q_RE.search(s)]
     # Nagging about injuries only, like the knee user's check ("knee" in the sentence),
-    # so the two users are scored the same way. "Still need your bodyweight" isn't
-    # counted for either (all three final runs do it on day 1; a known issue).
+    # so the two users are scored the same way. Nagging about anything else, like
+    # "still need your bodyweight", is scored for both by skipped_question_repeats.
     nags = [f"day {d}: {s.strip()[:120]!r}" for d, r in replies for s in sentences(r)
             if NAG_RE.search(s) and INJURY_Q_RE.search(s)]
     check("asks about injuries at most twice after 'none', never nags about them", len(asks) <= 2 and not nags,

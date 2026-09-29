@@ -26,10 +26,10 @@ Project #1 of my Year of AI. Built with the Claude API, FastAPI and one HTML fil
 
 Chatting with the coach a few times tells you very little, so `simulate.py` plays 10 days of a fake user against the real app: 27 messages, a fake clock (day 8 really is "next Monday" to the app), its own data folder and a hard budget. A scorecard then reads the transcript and the saved logs and checks for every failure an earlier run showed. It's 13 string checks, free to re-run on any past run.
 
-| | First run | Latest runs |
+| | First run | Last 5 runs (12 to 16) |
 |---|---|---|
-| Scorecard | 7/13 | 13/13 (runs 12, 15 and 16) |
-| Cost of the 10 days | $2.07 | $1.28 to $1.35 |
+| Scorecard | 7/13 | 13/13 in 3 of them; the other two scored 12/13 and 9/13 |
+| Cost of the 10 days | $2.07 | $1.23 to $1.35 (run 14, which lost most of day 1, cost $0.81) |
 
 What the runs caught, and what fixed it:
 
