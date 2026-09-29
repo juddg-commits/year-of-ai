@@ -236,6 +236,20 @@ class ContextTest(unittest.TestCase):
         for heading in ("## Recent training log", "## Weight log", "## Food log, last 7 days"):
             self.assertIn(heading, blocks[2]["text"])
 
+    def test_missing_numbers_say_nothing_waits_on_them(self):
+        # Runs 8, 9 and 11: with no weight section, it chased his bodyweight in 4-5 replies.
+        (DATA_DIR / "weight.md").unlink()
+        (DATA_DIR / "workouts.md").unlink()
+        today = coach.build_system_prompt()[-1]["text"]
+        self.assertIn(f"## Weight log\n{coach.NO_WEIGHT_YET}", today)
+        self.assertIn(coach.NO_LIFTS_YET, today)
+        self.assertIn("175 g protein target stands", coach.NO_WEIGHT_YET)
+        (DATA_DIR / "weight.md").write_text(WEIGHTS)
+        (DATA_DIR / "workouts.md").write_text(WORKOUTS)
+        today = coach.build_system_prompt()[-1]["text"]
+        self.assertNotIn(coach.NO_WEIGHT_YET, today)
+        self.assertNotIn(coach.NO_LIFTS_YET, today)
+
     def test_cached_blocks_do_not_change_from_day_to_day(self):
         # Any byte that changes in a cached block turns every call into a cache miss.
         (DATA_DIR / "profile.md").write_text("# Judd's Profile\n\n## Injuries\n- left knee")
@@ -275,6 +289,75 @@ class ContextTest(unittest.TestCase):
         self.assertEqual(sent["cache_control"], {"type": "ephemeral"})
         self.assertIn("165 for 4 sets of 5", sent["system"][-1]["text"])
         self.assertEqual(json.loads(app.USAGE_FILE.read_text().splitlines()[0])["kind"], "chat")
+
+    def test_logged_with_no_tool_call_gets_one_check(self):
+        # Control run 13, day 4: "Logged: 3 slices pepperoni + a Monster", no log_meal, nothing saved.
+        tool_use = SimpleNamespace(type="tool_use", id="t1", name="log_meal", input={
+            "description": "3 slices pepperoni pizza + Monster", "estimated_calories": 1060, "estimated_protein_g": 40})
+        script = [
+            SimpleNamespace(content=[SimpleNamespace(type="text", text="Logged: 3 slices pepperoni + a Monster.")],
+                            stop_reason="end_turn", usage=usage()),
+            SimpleNamespace(content=[tool_use], stop_reason="tool_use", usage=usage()),
+            SimpleNamespace(content=[SimpleNamespace(type="text", text="Saved.")], stop_reason="end_turn", usage=usage()),
+        ]
+        calls = []
+        app.client = SimpleNamespace(messages=SimpleNamespace(create=lambda **kw: (calls.append(kw), script[len(calls) - 1])[1]))
+        client = TestClient(app.app, headers={"X-Coach": "1"})
+        reply = client.post("/chat", json={"message": "3 slices of pizza and a monster"}).json()
+        self.assertEqual(len(calls), 3)
+        checks = [t for t in app.history if t["role"] == "user" and isinstance(t["content"], list)
+                  and isinstance(t["content"][0], dict) and t["content"][0].get("text") == coach.LOG_CHECK]
+        self.assertEqual(len(checks), 1)
+        self.assertEqual(reply["tools_used"], ["log_meal"])
+        self.assertIn("3 slices pepperoni pizza + Monster", (DATA_DIR / "meals.md").read_text())
+        # He never sees the check: not in the chat view, not in the saved log.
+        history = json.dumps(client.get("/history").json())
+        self.assertNotIn("App check", history)
+        coach.save_session(app.history)
+        self.assertNotIn("App check", (coach.LOG_DIR / "2026-09-23.md").read_text())
+
+    def test_no_check_when_logged_describes_his_data(self):
+        fake = FakeMessages("Four logged days this week, and you logged 3 weigh-ins.")
+        app.client = SimpleNamespace(messages=fake)
+        TestClient(app.app, headers={"X-Coach": "1"}).post("/chat", json={"message": "how am I doing?"})
+        self.assertEqual(len(fake.calls), 1)
+        self.assertTrue(coach.LOG_CLAIM_RE.search("Nice.\n\nLogged — ~450 kcal"))
+        self.assertTrue(coach.LOG_CLAIM_RE.search("Rough night. I've logged the pizza."))
+
+    def test_rejected_conversation_starts_fresh_once(self):
+        # Run 14, day 1: after one reply, every later turn was refused until the session
+        # ended, and the app kept no reason. Now it logs why and retries from a fresh start.
+        import anthropic, httpx
+        refused = anthropic.BadRequestError("messages: bad block", body=None, response=httpx.Response(
+            400, request=httpx.Request("POST", "https://api.anthropic.com/v1/messages")))
+        app.history.extend([{"role": "user", "content": "no injuries"},
+                            {"role": "assistant", "content": [{"type": "text", "text": "Clean screen."}]}])
+        calls = []
+
+        def create(**kw):
+            calls.append(len(kw["messages"]))
+            if len(kw["messages"]) > 1:
+                raise refused
+            return SimpleNamespace(content=[SimpleNamespace(type="text", text="Got it, exams are the risk.")],
+                                   stop_reason="end_turn", usage=usage())
+        app.client = SimpleNamespace(messages=SimpleNamespace(create=create))
+        reply = TestClient(app.app, headers={"X-Coach": "1"}).post("/chat", json={"message": "lifted in high school"}).json()
+        self.assertEqual(calls, [3, 1])
+        self.assertEqual(reply["reply"], "Got it, exams are the risk.")
+        self.assertEqual([t["content"] for t in app.history if t["role"] == "user"], ["lifted in high school"])
+        self.assertIn("Clean screen.", (coach.LOG_DIR / "2026-09-23.md").read_text())   # the memory kept
+        error = json.loads(app.USAGE_FILE.read_text().splitlines()[0])
+        self.assertEqual((error["kind"], error["status"]), ("chat-error", 400))
+
+    def test_other_errors_roll_back_without_retry(self):
+        calls = []
+        app.client = SimpleNamespace(messages=SimpleNamespace(create=lambda **kw: (calls.append(1), 1 / 0)))
+        app.history.extend([{"role": "user", "content": "hi"}, {"role": "assistant", "content": [{"type": "text", "text": "Hey."}]}])
+        reply = TestClient(app.app, headers={"X-Coach": "1"}).post("/chat", json={"message": "lunch was rice"}).json()
+        self.assertTrue(reply["error"])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(app.history), 2)
+        self.assertIn("ZeroDivisionError", app.USAGE_FILE.read_text())
 
     # ── Weekly program ────────────────────────────────────────────────────────
     def test_program_sees_last_weeks_training(self):

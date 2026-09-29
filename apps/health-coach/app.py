@@ -24,6 +24,7 @@ import json
 import os
 import random
 import re
+import sys
 import threading
 import time
 
@@ -41,6 +42,8 @@ from pydantic import BaseModel, Field
 from coach import (
     DATA,
     DATE_RE,
+    LOG_CHECK,
+    LOG_CLAIM_RE,
     MAX_TOKENS,
     MEALS,
     MODEL,
@@ -204,6 +207,21 @@ def record_usage(kind: str, response) -> None:
             "cache_read": getattr(u, "cache_read_input_tokens", 0) or 0,
             "cost_usd": round(call_cost(MODEL, u), 5),
         }
+        DATA.mkdir(parents=True, exist_ok=True)
+        with USAGE_FILE.open("a") as f:
+            f.write(json.dumps(row) + "\n")
+    except Exception:
+        pass
+
+
+def record_error(kind: str, error: Exception) -> None:
+    """Say why a call failed, on stderr and in data/usage.jsonl. The chat used to
+    swallow errors, so a run where every turn failed left no reason. Never raises."""
+    try:
+        row = {"date": date.today().isoformat(), "time": time.strftime("%H:%M:%S"), "kind": f"{kind}-error",
+               "error": type(error).__name__, "status": getattr(error, "status_code", None),
+               "message": str(error)[:500]}
+        print(f"[{kind}] {row['error']} {row['status'] or ''}: {row['message']}", file=sys.stderr)
         DATA.mkdir(parents=True, exist_ok=True)
         with USAGE_FILE.open("a") as f:
             f.write(json.dumps(row) + "\n")
@@ -553,11 +571,10 @@ def chat(msg: ChatMessage) -> dict:
             game = load_game()
             events = refresh_quests(game)
             save_game(game)
-        snapshot = len(history)
-        history.append({"role": "user", "content": msg.message})
-        system_prompt = build_system_prompt(todays_session_context())
         tools_used, texts = [], []
-        try:
+
+        def run_turn(system_prompt: list) -> None:
+            checked = False
             for _ in range(MAX_TOOL_ROUNDS):
                 response = client.messages.create(
                     model=MODEL,
@@ -575,9 +592,15 @@ def chat(msg: ChatMessage) -> dict:
                 history.append({"role": "assistant", "content": response.content})
                 # Keep text from EVERY round ("Logging that now…" + the final
                 # reply) — /history shows all of it, so the live bubble must too.
-                texts += [b.text.strip() for b in response.content if b.type == "text" and b.text.strip()]
+                texts.extend(b.text.strip() for b in response.content if b.type == "text" and b.text.strip())
                 if response.stop_reason != "tool_use":
-                    break
+                    # "Logged" with no tool call saved nothing: ask once for the call.
+                    # A list, not a string, so /history and the saved log skip it.
+                    if not checked and not tools_used and LOG_CLAIM_RE.search("\n".join(texts)):
+                        checked = True
+                        history.append({"role": "user", "content": [{"type": "text", "text": LOG_CHECK}]})
+                        continue
+                    return
                 tool_results = []
                 for block in response.content:
                     if block.type == "tool_use":
@@ -587,15 +610,32 @@ def chat(msg: ChatMessage) -> dict:
                             {"type": "tool_result", "tool_use_id": block.id, "content": result}
                         )
                 history.append({"role": "user", "content": tool_results})
-        except Exception:
-            # Roll back so a failed turn can't leave dangling tool_use blocks
-            # that would poison every future request.
-            del history[snapshot:]
-            pending_events.extend(events)   # the day-rollover quests still happened
-            return {
-                "reply": "Hit a snag reaching the model — give it a second and try again.",
-                "tools_used": [], "events": events, "error": True,
-            }
+
+        for attempt in (1, 2):
+            snapshot = len(history)
+            history.append({"role": "user", "content": msg.message})
+            try:
+                run_turn(build_system_prompt(todays_session_context()))
+                break
+            except Exception as e:
+                # Roll back so a failed turn can't leave dangling tool_use blocks
+                # that would poison every future request.
+                del history[snapshot:]
+                record_error("chat", e)
+                # Rejected with earlier messages in the session and nothing saved yet this
+                # turn: the conversation itself was refused. Seen once (simulation run 14,
+                # day 1): every later turn failed until the session ended. Save the session
+                # so its log carries the memory, and retry once from a fresh start.
+                if attempt == 1 and isinstance(e, anthropic.BadRequestError) and snapshot and not tools_used:
+                    save_session(history, ended=False)
+                    history.clear()
+                    texts.clear()
+                    continue
+                pending_events.extend(events)   # the day-rollover quests still happened
+                return {
+                    "reply": "Hit a snag reaching the model — give it a second and try again.",
+                    "tools_used": [], "events": events, "error": True,
+                }
 
         reply = "\n\n".join(texts) or "I logged what I could. Tell me if anything's missing."
         if set(tools_used) & LOGGING_TOOLS:

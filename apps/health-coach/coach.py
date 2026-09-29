@@ -409,14 +409,15 @@ SET_RE = re.compile(r"(\d{2,3})s?\s?x\s?(\d+)")   # "155x5x3", "50s x10x3" -> lo
 AT_LOAD_RE = re.compile(r"\d+\s?x\s?(\d+)(?:\s?[-–]\s?\d+)?[^;,@\d]*?(?:@|\bat\b)\s*(\d{2,3})(?![\d%])")
 
 
-def lift_history() -> dict:
+def lift_history(path: Path = None) -> dict:
     """{lift: [(date, load, reps), ...]} from every logged workout, oldest first.
     The training log in the prompt shows only the last 10 workouts; this keeps
-    where he started once those roll out of view."""
+    where he started once those roll out of view. path: another log (the scorecard)."""
     out: dict = {}
-    if not WORKOUTS.exists():
+    path = path or WORKOUTS
+    if not path.exists():
         return out
-    for line in WORKOUTS.read_text().splitlines():
+    for line in path.read_text().splitlines():
         d = DATE_RE.search(line)
         if not d:
             continue
@@ -546,9 +547,12 @@ TODAY (post-lift mood, satiety, better sleep tonight) — long-term outcomes alo
 don't drive habits; felt rewards do.
 - **Fresh starts:** after a below-target stretch, frame Monday or the new month as \
 a clean slate — a reset, never a make-up or a debt.
-- **Let skipped questions go:** if he doesn't answer something, ask again at most \
-once, in a later session, then drop it. Never count your asks ("third ask"). The \
-exception is a red-flag symptom (see Safety below).
+- **Let skipped questions go:** if his reply is about something else, he saw your \
+question and passed on it. Don't ask it again this session, not even as "still \
+need…". You may ask once more in a later session, then drop it for good. Never \
+count your asks ("third ask", "last time I'll ask"). A missing number never blocks \
+coaching: work from what you have and say once what you're assuming. The exception \
+is a red-flag symptom (see Safety below).
 - **If-then plans:** close every session by locking exactly one implementation \
 intention — "If [time/context], then [specific action]" — concrete enough to \
 picture. Save it with the save_plan tool. Open each session by checking the previous plan: kept or missed, pure \
@@ -595,6 +599,11 @@ or he said yes in his own words. Anything you proposed that he never answered wa
 not agreed: ask again, don't say "we locked it".
 - When he asks about today's workout, go by "Today's session" below: it's what his \
 Workout tab shows. Don't write a different session in chat."""
+
+
+NO_WEIGHT_YET = (f"No weigh-ins yet. Nothing waits on one: his {PROTEIN_TARGET_G} g protein target "
+                 "stands until a weigh-in lets you check it. Ask for a morning weigh-in once, then let him bring it.")
+NO_LIFTS_YET = "No main lifts logged yet. His first logged session sets the starting weights, so nothing waits on his current numbers."
 
 
 def build_system_prompt(todays_session: str = "") -> list:
@@ -660,13 +669,14 @@ def build_system_prompt(todays_session: str = "") -> list:
     if workouts:
         today += f"\n\n## Recent training log\n{workouts}"
 
+    # Before the first weigh-in or lift these say so. With nothing there, the coach
+    # decided it "can't set protein" without his weight and asked in 4-5 replies
+    # before the day-2 weigh-in (simulation runs 8, 9, 11).
     lifts = load_lift_history()
-    if lifts:
-        today += f"\n\n## Lift history (every logged session, not just the recent ones)\n{lifts}"
+    today += f"\n\n## Lift history (every logged session, not just the recent ones)\n{lifts or NO_LIFTS_YET}"
 
     weights = load_weight_summary()
-    if weights:
-        today += f"\n\n## Weight log\n{weights}"
+    today += f"\n\n## Weight log\n{weights or NO_WEIGHT_YET}"
 
     food = load_food_summary()
     if food:
@@ -728,6 +738,16 @@ def get_coach_reply(client: anthropic.Anthropic, system_prompt: str, history: li
         print()
 
 
+# A reply that says it logged something in a turn where no tool ran saved nothing
+# (control run 13, day 4: "Logged: 3 slices pepperoni + a Monster", no log_meal).
+# app.py's chat loop catches that claim and sends LOG_CHECK once. Matched only at
+# the start of a sentence, so "you logged 4 weigh-ins" doesn't count.
+LOG_CLAIM_RE = re.compile(r"(?:^|[.!?:]\s+|\n)\W{0,3}(?:I(?:'ve| have)? )?logged\b", re.I)
+LOG_CHECK = ("App check, not from Judd: your reply says something was logged, but no tool ran this turn, "
+             "so nothing was saved. If his last message reported a workout, meal or weigh-in, call the right "
+             "log tool now, then reply with just \"Saved.\" If it didn't, reply with just \"All set.\"")
+
+
 # --- Persist the session --------------------------------------------------------
 def turn_to_text(turn: dict):
     """Flatten a history turn (string or content blocks) into readable text."""
@@ -742,7 +762,10 @@ def turn_to_text(turn: dict):
         # instead of calling the tool: it said "Logged" and saved nothing.
         # What got saved is in the training, weight and food logs anyway.
         if btype == "text":
-            parts.append(getattr(block, "text", "") or block.get("text", ""))
+            text = getattr(block, "text", "") or block.get("text", "")
+            if text == LOG_CHECK:
+                return None  # the app's check, not something he said
+            parts.append(text)
         elif btype == "tool_result":
             return None  # machine chatter — skip in the human-readable log
     return " ".join(p for p in parts if p) or None
