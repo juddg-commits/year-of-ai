@@ -34,6 +34,9 @@ The Year of AI: one repo, one shipped project at a time (`curriculum/README.md`,
 - **When a model keeps breaking a phrasing rule inside lists, change what it volunteers.** A credit line kept attaching to projects it didn't belong to until project lists stopped volunteering it; a code guard catches the rest.
 - **Check a README's claims against its own data before repeating them.** A data project's README headlined a finding its own data contradicted.
 - **Measure a layout where it will be used.** A page that fit on screen overflowed when printed: measure a printout at the printed width.
+- **Run the paid path against a fake client before the first real call.** A scripted-model test found the code fixer's cost ledger reading `.type` off the API's top-level usage object, which has none: the first paid call would have crashed the run after spending.
+- **Verify an eval case before it counts.** The code fixer runs each case without the bug (every test must pass) and with it (a visible test must fail) before using it. That first check caught two broken tests in the hand-written cases.
+- **Check what a commit leaves out, not just what it adds.** An unanchored `sandbox/` in the root .gitignore, meant for one local folder, silently dropped the code fixer's Dockerfile; `git add -n` showed it missing.
 - **Commit on day one.** Ship #1 sat uncommitted for a month.
 
 ## Public repo: keep private things out
