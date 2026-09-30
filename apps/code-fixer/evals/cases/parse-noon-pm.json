@@ -1,0 +1,18 @@
+{
+  "id": "parse-noon-pm",
+  "source": "parse",
+  "split": "dev",
+  "kind": "planted",
+  "category": "missed edge case",
+  "note": "date_convert() adds 12 hours to every PM time, including 12 PM itself, so '12:45 PM' becomes hour 24 and datetime() raises. The noon exception (12 PM stays 12) is missing.",
+  "bug": [
+    {
+      "file": "parse/__init__.py",
+      "find": "            H -= 12\n        elif am == \"PM\" and H == 12:\n            # no correction needed: 12PM is midday, 12:00 by 24 hour clock\n            pass\n        elif am == \"PM\":\n",
+      "replace": "            H -= 12\n        elif am == \"PM\":\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_noon_midnight.py"
+  ]
+}

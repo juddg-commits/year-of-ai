@@ -1,0 +1,18 @@
+{
+  "id": "timesheet-overnight",
+  "source": "timesheet",
+  "split": "dev",
+  "kind": "handwritten",
+  "category": "wrong assumption",
+  "note": "clock.minutes_between() assumes both times are on the same day, so a shift past midnight gets a negative length and Shift.minutes raises a misleading 'the break is longer than the shift'. The failing test is in pay; the cause is two modules down, in clock.",
+  "bug": [
+    {
+      "file": "timesheet/clock.py",
+      "find": "    \"\"\"Minutes from `start` to `end`. An end at or before the start is on the next day.\"\"\"\n    if end <= start:\n        end += MINUTES_PER_DAY\n    return end - start\n",
+      "replace": "    \"\"\"Minutes from `start` to `end`.\"\"\"\n    return end - start\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_overnight.py"
+  ]
+}

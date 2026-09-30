@@ -14,6 +14,7 @@ One repo, one mission: **12 months, 8 hours a day, become a real AI engineer by 
 | `curriculum/log.md` | The shipping log — the only metric that matters |
 | `apps/health-coach/` | **Project #1**: Coach, an AI personal trainer web app (phone PWA) with memory, tools and a game layer. See its README |
 | `apps/research-agent/` | **Project #2**: research agent. Question in, validated and cited brief out (parallel web-search workers, claim-vs-quote validation, cost ledger) |
+| `apps/code-fixer/` | **Project #3** (in progress): code fixer. A repo with failing tests in, a patch checked in a sandboxed container out, plus an eval of planted bugs graded with hidden tests |
 | `apps/fleet-mcp/` + `.mcp.json` | The fleet's MCP server: every agent exposed as a tool for the Mother orchestrator. First tool: `research` |
 | `brain/` | The agent fleet's shared memory: goals, registry, learnings (local only, not pushed) |
 | `.claude/agents/` | The fleet: `mother` (orchestrator), `outreach-agent` (local only) |

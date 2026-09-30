@@ -1,0 +1,18 @@
+{
+  "id": "timesheet-week-start",
+  "source": "timesheet",
+  "split": "dev",
+  "kind": "handwritten",
+  "category": "flipped sign",
+  "note": "weeks.week_start() adds the start day's index instead of subtracting it, which only works for weeks that start on Monday (index 0). Pay weeks start on Sunday by default, so shifts land in the wrong weeks and overtime disappears. The week tests that are visible only use Monday weeks.",
+  "bug": [
+    {
+      "file": "timesheet/weeks.py",
+      "find": "    offset = (day.weekday() - WEEKDAYS.index(starts_on.lower())) % 7\n",
+      "replace": "    offset = (day.weekday() + WEEKDAYS.index(starts_on.lower())) % 7\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_week_start.py"
+  ]
+}

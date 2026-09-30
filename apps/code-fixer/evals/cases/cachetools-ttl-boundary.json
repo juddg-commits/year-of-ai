@@ -1,0 +1,19 @@
+{
+  "id": "cachetools-ttl-boundary",
+  "source": "cachetools",
+  "split": "dev",
+  "kind": "planted",
+  "category": "off-by-one",
+  "note": "TTLCache.expire() keeps items whose expiry time equals the current time (> instead of >=), so an item at exactly its TTL is still counted, iterated and evicted late, while `in` already says it's gone.",
+  "bug": [
+    {
+      "file": "src/cachetools/__init__.py",
+      "find": "        while curr is not root and not (time < curr.expires):\n",
+      "replace": "        while curr is not root and time > curr.expires:\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_func.py",
+    "tests/test_ttl_boundary.py"
+  ]
+}

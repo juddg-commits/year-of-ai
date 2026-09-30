@@ -1,0 +1,19 @@
+{
+  "id": "cachetools-resize-update",
+  "source": "cachetools",
+  "split": "dev",
+  "kind": "planted",
+  "category": "wrong variable",
+  "note": "Cache.__setitem__ counts an updated item's full new size instead of the difference from its old size, so currsize drifts upward on every update and the cache evicts too early.",
+  "bug": [
+    {
+      "file": "src/cachetools/__init__.py",
+      "find": "            diffsize = size - self.__size[key]\n",
+      "replace": "            diffsize = size\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_lfu.py",
+    "tests/test_rr.py"
+  ]
+}
