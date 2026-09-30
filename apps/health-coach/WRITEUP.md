@@ -3,7 +3,7 @@
 _What it is, one line:_ a personal trainer that remembers you between sessions and takes real actions (logs workouts, meals, weigh-ins, saves if-then plans) — one Python engine file, a FastAPI skin, a PWA face.
 
 ## What broke
-- **I typed a chat message into the source file.** "i weigh 185" went into `coach.py` at line 103 instead of into the coach. Lesson: the file is the kitchen, the chat is the dining room. The fix became the `log_weight` tool.
+- **I typed a chat message into the source file.** A weigh-in meant for the coach went into `coach.py` at line 103 instead. Lesson: the file is the kitchen, the chat is the dining room. The fix became the `log_weight` tool.
 - **The YouTube key was the wrong kind of credential.** I'd made it in Google AI Studio, which now issues `AQ.` keys; the YouTube Data API rejects those outright ("API keys are not supported by this API") and only takes classic `AIza` keys from Cloud Console. The app silently fell back to search links for a month. Lesson: test the integration once with a real call, not by eyeballing the UI, and log the real error instead of swallowing it.
 - **Ship window blown.** Built to v8 in a week, then didn't push for a month. The repo had zero commits. Lesson: commit on day one; "done" is on GitHub, not on my laptop.
 

@@ -26,10 +26,18 @@ The Year of AI: one repo, one shipped project at a time (`curriculum/README.md`,
 - **An error handler that hides the error hides the bug.** The coach's chat caught every exception and said "Hit a snag", so a run that lost all of day 1 to rejected requests left no reason why. Log the type, status and message of every failed call.
 - **Check in code that a claimed action happened.** A coach reply said "Logged: 3 slices pepperoni" with no tool call, and nothing was saved (1 of 5 runs on the final code). The chat loop now catches "Logged" with no tool in the turn and asks once for the call.
 - **Cache the prompt, frozen part first.** Nothing that changes goes in the cached part, not even today's date. Order the system prompt from frozen to volatile and check `cache_read_input_tokens`. On the coach, this plus the extra context cut the same 10-day run from $2.07 to $1.34.
+- **With sparse traffic, the cache write is the cost.** On the site's assistant, the first question after five quiet minutes cost about $0.14 on Opus 5, and the ones right after it about $0.02.
+- **Keep network failures out of the score.** Count them apart, retry them, and never grade them as the bot's failures. A 60-second timeout turned API stalls into fake failures; patient timeouts plus a second pass over dropped cases fixed it.
+- **A long paid run on a laptop needs power and an open lid.** `caffeinate -i` doesn't stop lid-close or low-battery sleep. Two eval runs were cut short in one day, their in-flight calls lost as connection errors.
+- **Read a script as text; never import it to inspect it.** Its top-level code runs: importing an eval to count its cases started the paid eval.
+- **Before paying for a bigger model, check whether the prompt causes the problem.** The assistant's stiff hiring answers came from its prompt's template, which a stronger model follows just the same. Re-tune after a switch: Opus 5's hiring answers ran about 150 words until the prompt capped them (median answer 53 words after, with a length check in the eval).
+- **When a model keeps breaking a phrasing rule inside lists, change what it volunteers.** A credit line kept attaching to projects it didn't belong to until project lists stopped volunteering it; a code guard catches the rest.
+- **Check a README's claims against its own data before repeating them.** A data project's README headlined a finding its own data contradicted.
+- **Measure a layout where it will be used.** A page that fit on screen overflowed when printed: measure a printout at the printed width.
 - **Commit on day one.** Ship #1 sat uncommitted for a month.
 
 ## Public repo: keep private things out
-This repo is public on GitHub. Never commit `.env`, `runs/`, data folders, or anything about Judd's jobs, internships, school work or personal life. Local-only folders (`brain/`, `outreach/`, `content/`, `.claude/`…) are gitignored for that reason. Before a push, check the diff for secrets and personal details.
+This repo is public on GitHub. Never commit `.env`, `runs/`, data folders, or anything about Judd's jobs, internships, school work or personal life. Local-only folders (`brain/`, `outreach/`, `content/`, `.claude/`…) are gitignored for that reason. Before a push, check the diff for secrets and personal details. Test files are public too: an eval's never-say terms spell out what they protect, so they live in a git-ignored list.
 
 ## Review loop
 After each build: run the tests, review the diff for real bugs (not style), fold any lesson into this file, and let Judd explain the build back in his own words.
