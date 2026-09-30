@@ -50,6 +50,14 @@ class Parsing(unittest.TestCase):
         self.assertIn("49,988 characters cut", out)
         self.assertEqual(sandbox.trim("short", 10, 10), "short")
 
+    def test_a_docker_that_hangs_is_reported_not_raised(self):
+        from unittest import mock
+        with mock.patch("subprocess.run", side_effect=subprocess.TimeoutExpired(["docker"], 30)):
+            self.assertIsNone(sandbox.image_id())
+            proc = mock.Mock()
+            proc.poll.return_value = 0
+            sandbox._kill("docker", "code-fixer-x", proc)   # must not raise from a `finally`
+
     def test_summaries(self):
         self.assertEqual(TestRun([], exit_code=1, outcomes={"a": "failed", "b": "passed"}).summary(), "1 failed, 1 passed (exit 1)")
         self.assertEqual(TestRun([], exit_code=4).summary(), "exit 4")

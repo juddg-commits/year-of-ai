@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from code_fixer import cases, workspace
+from code_fixer import cases, machine, workspace
 from code_fixer.sandbox import TestRun
 
 from tests.fakes import BUGGY, FIXED, TESTS, calc_runner
@@ -72,6 +72,15 @@ class Materialize(unittest.TestCase):
         self.assertTrue(c.is_hidden("tests/test_x.py::T::test_a"))
         self.assertTrue(c.is_hidden("tests/extra/test_y.py::test_b"))
         self.assertFalse(c.is_hidden("tests/test_xy.py::test_c"))
+
+
+class PowerCheck(unittest.TestCase):
+    def test_battery_and_a_closed_lid_block_a_paid_run(self):
+        on_ac = "Now drawing from 'AC Power'\n -InternalBattery-0\t80%; charging"
+        on_battery = "Now drawing from 'Battery Power'\n -InternalBattery-0\t4%; discharging"
+        self.assertIn("battery", machine.power_problem_from(on_battery, '"AppleClamshellState" = No'))
+        self.assertIn("lid is closed", machine.power_problem_from(on_ac, '  |   "AppleClamshellState" = Yes'))
+        self.assertIsNone(machine.power_problem_from(on_ac, '  |   "AppleClamshellState" = No'))
 
 
 class CommittedCases(unittest.TestCase):

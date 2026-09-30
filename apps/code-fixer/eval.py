@@ -21,7 +21,7 @@ import time
 from collections import Counter
 from pathlib import Path
 
-from code_fixer import agent, cases, config, llm, report, sandbox
+from code_fixer import agent, cases, config, llm, machine, report, sandbox
 
 
 def cmd_verify(args) -> int:
@@ -92,10 +92,15 @@ def cmd_run(args) -> int:
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print("No ANTHROPIC_API_KEY: copy .env.example to .env and add your key.")
         return 1
-    if not sandbox.image_id():
-        print(f"The sandbox isn't ready: open OrbStack, then docker build -t {config.IMAGE} sandbox")
+    problem = machine.power_problem()
+    if problem and not args.ignore_power:
+        print(f"Not started: {problem}. (--ignore-power runs it anyway.)")
         return 1
-    print("A long paid run needs the Mac plugged in with the lid open.\n")
+    if not sandbox.image_id():
+        print(f"The sandbox isn't answering: open OrbStack (or run orbctl start). If the image is missing: "
+              f"docker build -t {config.IMAGE} sandbox")
+        return 1
+    print()
     out_dir = config.RUNS_DIR / f"eval-{time.strftime('%Y%m%d-%H%M%S')}"
     out_dir.mkdir(parents=True)
     rows = []
@@ -132,6 +137,7 @@ def main() -> int:
     run.add_argument("--effort", default=config.EFFORT, choices=["low", "medium", "high", "xhigh", "max"])
     run.add_argument("--max-usd", type=float, default=config.MAX_USD, help="ceiling per case")
     run.add_argument("--yes", action="store_true", help="actually run (it costs money)")
+    run.add_argument("--ignore-power", action="store_true", help="run on battery or with the lid closed")
     args = p.parse_args()
     return cmd_verify(args) if args.command == "verify" else cmd_run(args)
 

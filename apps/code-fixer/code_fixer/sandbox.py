@@ -173,18 +173,30 @@ def run_tests(workspace: Path, command: list, timeout: float = config.TEST_TIMEO
 
 
 def _kill(docker: str, name: str, proc: subprocess.Popen) -> None:
-    subprocess.run([docker, "rm", "--force", name], capture_output=True, timeout=30)
+    """Remove the container, then stop the client. Runs from `finally`, so it never raises:
+    a docker that doesn't answer (the engine paused while the Mac sleeps) must not mask the run."""
+    try:
+        subprocess.run([docker, "rm", "--force", name], capture_output=True, timeout=30)
+    except (subprocess.TimeoutExpired, OSError):
+        pass
     if proc.poll() is None:
         proc.kill()
-        proc.wait(timeout=10)
+        try:
+            proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            pass
 
 
-def image_id() -> str | None:
+def image_id(timeout: float = 30) -> str | None:
+    """The sandbox image's id, or None when docker is missing, not answering, or the image isn't built."""
     docker = docker_bin()
     if not docker:
         return None
-    r = subprocess.run([docker, "image", "inspect", "--format", "{{.Id}}", config.IMAGE],
-                       capture_output=True, text=True, timeout=30)
+    try:
+        r = subprocess.run([docker, "image", "inspect", "--format", "{{.Id}}", config.IMAGE],
+                           capture_output=True, text=True, timeout=timeout)
+    except (subprocess.TimeoutExpired, OSError):
+        return None
     if r.returncode != 0:
         return None
     return r.stdout.strip() or None
