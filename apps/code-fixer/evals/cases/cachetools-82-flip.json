@@ -1,0 +1,29 @@
+{
+  "id": "cachetools-82-flip",
+  "source": "cachetools",
+  "split": "test",
+  "kind": "planted",
+  "category": "flipped comparison",
+  "note": "Generated mutant (flip) in Cache.__setitem__, src/cachetools/__init__.py line 82: `if size > maxsize:` became `if size < maxsize:`. Visible: 2 failed, 10 passed (exit 1); hidden failing: 227.",
+  "bug": [
+    {
+      "file": "src/cachetools/__init__.py",
+      "find": "        if size > maxsize:\n",
+      "replace": "        if size < maxsize:\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_cache.py",
+    "tests/test_cached.py",
+    "tests/test_cachedmethod.py",
+    "tests/test_classmethod.py",
+    "tests/test_fifo.py",
+    "tests/test_func.py",
+    "tests/test_lfu.py",
+    "tests/test_lru.py",
+    "tests/test_rr.py",
+    "tests/test_tlru.py",
+    "tests/test_ttl.py"
+  ],
+  "test_command": "python -m pytest -q"
+}

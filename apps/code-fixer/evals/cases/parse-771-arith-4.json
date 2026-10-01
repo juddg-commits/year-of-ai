@@ -1,0 +1,20 @@
+{
+  "id": "parse-771-arith-4",
+  "source": "parse",
+  "split": "dev",
+  "kind": "planted",
+  "category": "wrong operator",
+  "note": "Generated mutant (arith) in Parser._handle_field, parse/__init__.py line 771: `date_convert, dmy=n + 1, hms=n + 5, am=n + 8, tz=n + 9` became `date_convert, dmy=n - 1, hms=n + 5, am=n + 8, tz=n + 9`. Visible: 1 failed, 36 passed (exit 1); hidden failing: 6.",
+  "bug": [
+    {
+      "file": "parse/__init__.py",
+      "find": "                date_convert, dmy=n + 1, hms=n + 5, am=n + 8, tz=n + 9\n",
+      "replace": "                date_convert, dmy=n - 1, hms=n + 5, am=n + 8, tz=n + 9\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_bugs.py",
+    "tests/test_parse.py"
+  ],
+  "test_command": "python -m pytest -q"
+}

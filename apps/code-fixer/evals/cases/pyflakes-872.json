@@ -1,0 +1,34 @@
+{
+  "id": "pyflakes-872",
+  "source": "pyflakes@52cb7296b4",
+  "split": "dev",
+  "kind": "real",
+  "category": "evaluation order",
+  "note": "PyCQA/pyflakes#872, merged 2026-09-02: honor dict key / value iteration order. A walrus name bound in a dict value and used in a later key is reported undefined: the checker visits all keys, then all values.",
+  "bug": [
+    {
+      "file": "pyflakes/checker.py",
+      "find": "import sys\nimport warnings\nfrom collections.abc import Iterable\n\nfrom pyflakes import messages\n",
+      "replace": "import sys\nimport warnings\n\nfrom pyflakes import messages\n"
+    },
+    {
+      "file": "pyflakes/checker.py",
+      "find": "                if isinstance(item, ast.AST):\n                    yield item\n\n\ndef iter_dict_children(node: ast.Dict) -> Iterable[tuple[ast.AST, ast.AST]]:\n    return zip(node.keys, node.values)\n\n\n",
+      "replace": "                if isinstance(item, ast.AST):\n                    yield item\n\n\n"
+    },
+    {
+      "file": "pyflakes/checker.py",
+      "find": "            # TypedDict(\"a\", {\"a\": int})\n            if len(node.args) > 1 and isinstance(node.args[1], ast.Dict):\n                for k, v in iter_dict_children(node.args[1]):\n                    _non_annotation(k)\n                    _annotation(v)\n            _non_annotations(node.args[2:])\n\n",
+      "replace": "            # TypedDict(\"a\", {\"a\": int})\n            if len(node.args) > 1 and isinstance(node.args[1], ast.Dict):\n                _non_annotations(node.args[1].keys)\n                _annotations(node.args[1].values)\n            _non_annotations(node.args[2:])\n\n"
+    },
+    {
+      "file": "pyflakes/checker.py",
+      "find": "                            key,\n                        )\n\n        for k, v in iter_dict_children(node):\n            self.handleNode(k, node)\n            self.handleNode(v, node)\n\n    def IF(self, node):\n",
+      "replace": "                            key,\n                        )\n        self.handleChildren(node)\n\n    def IF(self, node):\n"
+    }
+  ],
+  "hidden": [
+    "pyflakes/test/test_type_annotations.py"
+  ],
+  "test_command": "python -m pytest -q"
+}

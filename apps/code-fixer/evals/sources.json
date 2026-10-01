@@ -1,0 +1,161 @@
+{
+  "boltons@b5c495bec2": {
+    "repo": "mahmoud/boltons",
+    "commit": "b5c495bec206741ec25cd82ecc869e0b59bb0d10",
+    "keep": [
+      "boltons",
+      "tests",
+      "LICENSE"
+    ],
+    "drop": [],
+    "files": {
+      "pyproject.toml": "[tool.pytest.ini_options]\n"
+    }
+  },
+  "boltons@d0a284fc7e": {
+    "repo": "mahmoud/boltons",
+    "commit": "d0a284fc7ef1aebceb54798600d73be4eeb76ed8",
+    "keep": [
+      "boltons",
+      "tests",
+      "LICENSE"
+    ],
+    "drop": [],
+    "files": {
+      "pyproject.toml": "[tool.pytest.ini_options]\n"
+    }
+  },
+  "lark@b974caecc8": {
+    "repo": "lark-parser/lark",
+    "commit": "b974caecc8fcffa014afa22ee15b1fdb4a24e489",
+    "keep": [
+      "lark",
+      "tests",
+      "LICENSE"
+    ],
+    "drop": [
+      "tests/test_nearley",
+      "tests/test_typing.py"
+    ],
+    "files": {
+      "pyproject.toml": "[tool.pytest.ini_options]\n"
+    }
+  },
+  "more-itertools@3ea9b009b1": {
+    "repo": "more-itertools/more-itertools",
+    "commit": "3ea9b009b19db0e01a83d51cee43e9935c0d657f",
+    "keep": [
+      "more_itertools",
+      "tests",
+      "LICENSE"
+    ],
+    "drop": [],
+    "files": {
+      "pyproject.toml": "[tool.pytest.ini_options]\n"
+    }
+  },
+  "more-itertools@926acab4ae": {
+    "repo": "more-itertools/more-itertools",
+    "commit": "926acab4ae876eea0697a885996efdf3a32bf0ac",
+    "keep": [
+      "more_itertools",
+      "tests",
+      "LICENSE"
+    ],
+    "drop": [],
+    "files": {
+      "pyproject.toml": "[tool.pytest.ini_options]\n"
+    }
+  },
+  "more-itertools@bc8be1013a": {
+    "repo": "more-itertools/more-itertools",
+    "commit": "bc8be1013ac90fe3c1df8aae646b02605d578818",
+    "keep": [
+      "more_itertools",
+      "tests",
+      "LICENSE"
+    ],
+    "drop": [],
+    "files": {
+      "pyproject.toml": "[tool.pytest.ini_options]\n"
+    }
+  },
+  "networkx@56c7b0d0b6": {
+    "repo": "networkx/networkx",
+    "commit": "56c7b0d0b6141ec0ffa6a9ebb5494417120b7f50",
+    "keep": [
+      "networkx",
+      "LICENSE.txt"
+    ],
+    "drop": [],
+    "files": {
+      "pyproject.toml": "[tool.pytest.ini_options]\n"
+    }
+  },
+  "networkx@d8081795e1": {
+    "repo": "networkx/networkx",
+    "commit": "d8081795e1344c576590b214c2e4f264b5e87244",
+    "keep": [
+      "networkx",
+      "LICENSE.txt"
+    ],
+    "drop": [],
+    "files": {
+      "pyproject.toml": "[tool.pytest.ini_options]\n"
+    }
+  },
+  "pyflakes@52cb7296b4": {
+    "repo": "PyCQA/pyflakes",
+    "commit": "52cb7296b4bb52c0a0e8b51c7729a55fa0d0a808",
+    "keep": [
+      "pyflakes",
+      "bin",
+      "LICENSE"
+    ],
+    "drop": [],
+    "files": {
+      "pyproject.toml": "[tool.pytest.ini_options]\n"
+    }
+  },
+  "tinydb@bd034d0e95": {
+    "repo": "msiemens/tinydb",
+    "commit": "bd034d0e95d64a1da0e86387daa950eed3534fff",
+    "keep": [
+      "tinydb",
+      "tests",
+      "LICENSE"
+    ],
+    "drop": [],
+    "files": {
+      "pyproject.toml": "[tool.pytest.ini_options]\n"
+    }
+  },
+  "tomlkit@495a42ecc9": {
+    "repo": "python-poetry/tomlkit",
+    "commit": "495a42ecc9119eaaeb895def0fd025a71cd1cf60",
+    "keep": [
+      "tomlkit",
+      "tests",
+      "LICENSE"
+    ],
+    "drop": [
+      "tests/test_toml_tests.py"
+    ],
+    "files": {
+      "pyproject.toml": "[tool.pytest.ini_options]\n"
+    }
+  },
+  "xmltodict@6e29fba282": {
+    "repo": "martinblech/xmltodict",
+    "commit": "6e29fba282e68631034dd2722a413b4e35276584",
+    "keep": [
+      "xmltodict.py",
+      "tests",
+      "LICENSE"
+    ],
+    "drop": [],
+    "files": {
+      "pyproject.toml": "[tool.pytest.ini_options]\n"
+    }
+  }
+}

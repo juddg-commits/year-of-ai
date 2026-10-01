@@ -1,0 +1,19 @@
+{
+  "id": "parse-88-flip",
+  "source": "parse",
+  "split": "dev",
+  "kind": "planted",
+  "category": "flipped comparison",
+  "note": "Generated mutant (flip) in int_convert.__call__, parse/__init__.py line 88: `if string[number_start] == \"0\" and len(string) - number_start > 2:` became `if string[number_start] == \"0\" and len(string) - number_start < 2:`. Visible: 1 failed, 85 passed (exit 1); hidden failing: 1.",
+  "bug": [
+    {
+      "file": "parse/__init__.py",
+      "find": "            if string[number_start] == \"0\" and len(string) - number_start > 2:\n",
+      "replace": "            if string[number_start] == \"0\" and len(string) - number_start < 2:\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_parsetype.py"
+  ],
+  "test_command": "python -m pytest -q"
+}

@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from code_fixer import cases, machine, workspace
+from code_fixer import cases, machine, realbugs, workspace
 from code_fixer.sandbox import TestRun
 
 from tests.fakes import BUGGY, FIXED, TESTS, calc_runner
@@ -93,9 +93,15 @@ class CommittedCases(unittest.TestCase):
     def test_every_case_is_consistent(self):
         found = cases.load()
         self.assertGreaterEqual(len(found), 5)
+        specs = realbugs.manifest()
         for c in found:
             src = cases.SOURCES_DIR / c.source
-            self.assertTrue((src / "LICENSE").exists() or c.kind == "handwritten", f"{c.id}: third-party source without a LICENSE")
+            if realbugs.is_fetched(c.source):
+                self.assertIn(c.source, specs, f"{c.id}: fetched source missing from {realbugs.MANIFEST.name}")
+                self.assertEqual(c.kind, "real", c.id)
+                if not src.exists():
+                    continue   # a fresh clone: eval.py fetch gets it
+            self.assertTrue(any(src.glob("LICENSE*")) or c.kind == "handwritten", f"{c.id}: third-party source without a LICENSE")
             self.assertIn(c.split, ("dev", "test"))
             for edit in c.bug:
                 self.assertFalse(workspace.is_protected(edit["file"]), c.id)

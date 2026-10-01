@@ -1,0 +1,22 @@
+{
+  "id": "lark-1641",
+  "source": "lark@b974caecc8",
+  "split": "test",
+  "kind": "real",
+  "category": "shared state",
+  "note": "lark-parser/lark#1641, merged 2026-08-27: Fix InteractiveParser.copy() sharing the lexer thread with the original. InteractiveParser.copy() shares lexer state with the original; the cause is in a different file from the copy.",
+  "bug": [
+    {
+      "file": "lark/parsers/lalr_interactive_parser.py",
+      "find": "\n    def copy(self, deepcopy_values=True):\n        parser_state = self.parser_state.copy(deepcopy_values=deepcopy_values)\n        return type(self)(self.parser, parser_state, parser_state.lexer)\n\n    def __eq__(self, other):\n",
+      "replace": "\n    def copy(self, deepcopy_values=True):\n        return type(self)(\n            self.parser,\n            self.parser_state.copy(deepcopy_values=deepcopy_values),\n            copy(self.lexer_thread),\n        )\n\n    def __eq__(self, other):\n"
+    },
+    {
+      "file": "lark/parsers/lalr_parser_state.py",
+      "find": "        return type(self)(\n            self.parse_conf,\n            copy(self.lexer),\n            copy(self.state_stack),\n            deepcopy(self.value_stack) if deepcopy_values else copy(self.value_stack),\n",
+      "replace": "        return type(self)(\n            self.parse_conf,\n            self.lexer, # XXX copy\n            copy(self.state_stack),\n            deepcopy(self.value_stack) if deepcopy_values else copy(self.value_stack),\n"
+    }
+  ],
+  "hidden": [],
+  "test_command": "python -m pytest -q"
+}

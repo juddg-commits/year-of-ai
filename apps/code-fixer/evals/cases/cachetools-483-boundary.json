@@ -1,0 +1,19 @@
+{
+  "id": "cachetools-483-boundary",
+  "source": "cachetools",
+  "split": "test",
+  "kind": "planted",
+  "category": "off-by-one",
+  "note": "Generated mutant (boundary) in TTLCache.__contains__, src/cachetools/__init__.py line 483: `return self.timer() < link.expires` became `return self.timer() <= link.expires`. Visible: 1 failed, 307 passed (exit 1); hidden failing: 3.",
+  "bug": [
+    {
+      "file": "src/cachetools/__init__.py",
+      "find": "            return self.timer() < link.expires\n",
+      "replace": "            return self.timer() <= link.expires\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_ttl.py"
+  ],
+  "test_command": "python -m pytest -q"
+}

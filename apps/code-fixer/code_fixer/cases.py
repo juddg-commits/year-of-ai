@@ -5,6 +5,8 @@ code keeps its LICENSE). Materializing a case copies the source, plants the bug 
 `find` must occur exactly once) and leaves out the hidden test files; only the grader adds them
 back. The agent never sees evals/: its tools can't leave the workspace.
 
+A real bug's source is fetched, not committed: see realbugs.py.
+
 A case is usable only once verify() passes: the source without the bug passes every test,
 visible and hidden, and the bug fails at least one visible test."""
 
@@ -16,7 +18,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Callable
 
-from . import config, sandbox, workspace
+from . import config, realbugs, sandbox, workspace
 
 CASES_DIR = config.EVALS_DIR / "cases"
 SOURCES_DIR = config.EVALS_DIR / "sources"
@@ -27,7 +29,7 @@ class Case:
     id: str
     source: str            # a directory in evals/sources/
     split: str             # "dev" (tune on it) or "test" (held out: report only this)
-    kind: str              # "planted" (a bug put into third-party code) or "handwritten"
+    kind: str              # "planted" (a bug put into third-party code), "handwritten", or "real" (a merged fix, undone)
     category: str          # off-by-one, flipped comparison, wrong variable, missed edge case, wrong assumption
     note: str              # what the bug is: for the grader and the write-up, never shown to the agent
     bug: list              # [{"file", "find", "replace"}]
@@ -60,8 +62,10 @@ def load(ids: list | None = None, split: str | None = None, cases_dir: Path = CA
 
 def materialize(case: Case, dest: Path, *, bug: bool = True, hidden: bool = False,
                 sources_dir: Path = SOURCES_DIR) -> Path:
-    dest = Path(dest)
-    shutil.copytree(Path(sources_dir) / case.source, dest,
+    dest, origin = Path(dest), Path(sources_dir) / case.source
+    if not origin.exists():
+        raise FileNotFoundError(f"{case.id}: source {case.source} isn't here yet: python eval.py fetch gets it")
+    shutil.copytree(origin, dest,
                     ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"))
     if not hidden:
         for rel in case.hidden:
@@ -83,8 +87,21 @@ def materialize(case: Case, dest: Path, *, bug: bool = True, hidden: bool = Fals
     return dest
 
 
+def ensure_sources(chosen: list, sources_dir: Path = SOURCES_DIR, log: Callable = print) -> None:
+    """Fetch every real-bug source these cases need that isn't on this machine yet. Network, so it
+    runs before any paid call."""
+    specs = realbugs.manifest()
+    for name in sorted({c.source for c in chosen if realbugs.is_fetched(c.source)}):
+        if (Path(sources_dir) / name).exists():
+            continue
+        if name not in specs:
+            raise ValueError(f"source {name} isn't in {realbugs.MANIFEST.name}")
+        log(f"Fetching {name} from github.com/{specs[name]['repo']}…")
+        realbugs.fetch(name, specs[name], sources_dir)
+
+
 def verify(case: Case, runner: Callable = sandbox.run_tests, sources_dir: Path = SOURCES_DIR) -> dict:
-    """Free (no API calls): three sandbox runs. Returns the verdict with the evidence."""
+    """Free (no API calls): four sandbox runs. Returns the verdict with the evidence."""
     problems = []
     for edit in case.bug:
         if workspace.is_protected(edit["file"]):
@@ -95,10 +112,13 @@ def verify(case: Case, runner: Callable = sandbox.run_tests, sources_dir: Path =
     with tempfile.TemporaryDirectory(prefix="code-fixer-case-") as tmp:
         tmp = Path(tmp)
         reference = runner(materialize(case, tmp / "reference", bug=False, hidden=True, sources_dir=sources_dir), case.command)
+        clean = runner(materialize(case, tmp / "clean", bug=False, sources_dir=sources_dir), case.command)
         visible = runner(materialize(case, tmp / "visible", sources_dir=sources_dir), case.command)
         full = runner(materialize(case, tmp / "full", hidden=True, sources_dir=sources_dir), case.command)
     if not reference.passed:
         problems.append(f"without the bug, the tests don't all pass: {reference.summary()}")
+    elif not clean.passed:   # the visible tests must fail because of the bug, not because a file was hidden
+        problems.append(f"without the bug and the hidden files, the visible tests don't all pass: {clean.summary()}")
     if visible.passed:
         problems.append("the bug doesn't fail any visible test")
     failing = [t for t, o in full.outcomes.items() if o in ("failed", "error")]

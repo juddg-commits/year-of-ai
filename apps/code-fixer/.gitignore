@@ -1,2 +1,6 @@
 # Run outputs (traces, patches, eval results) stay local
 runs/
+
+# Real-bug sources are fetched from GitHub at a pinned commit (evals/sources.json), never committed
+evals/sources/*@*/
+evals/sources/*.partial/

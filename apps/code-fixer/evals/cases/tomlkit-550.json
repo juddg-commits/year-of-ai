@@ -1,0 +1,17 @@
+{
+  "id": "tomlkit-550",
+  "source": "tomlkit@495a42ecc9",
+  "split": "test",
+  "kind": "real",
+  "category": "missed edge case",
+  "note": "python-poetry/tomlkit#550, merged 2026-07-15: Fix top-level scalar captured by a table rendered from a dotted key. A new top-level key is rendered inside a preceding dotted-key table; needs a recursive check of what the table renders.",
+  "bug": [
+    {
+      "file": "tomlkit/container.py",
+      "find": "            if isinstance(v, (Table, AoT)) and k is not None and not k.is_dotted():\n                break\n\n            if (\n                isinstance(v, Table)\n                and k is not None\n                and k.is_dotted()\n                and self._renders_table_header(v)\n            ):\n                # A dotted-key super table renders inline (`a.b = 1`) only as\n                # long as none of its children render a `[table]` header; once\n                # one does, anything appended after it would land inside that\n                # table's scope.\n                break\n            last_index = i\n        return last_index + 1\n\n    def _renders_table_header(self, table: Table) -> bool:\n        for k, v in table.value.body:\n            if isinstance(v, AoT):\n                return True\n            if isinstance(v, Table):\n                if k is not None and k.is_dotted() and v.is_super_table():\n                    if self._renders_table_header(v):\n                        return True\n                else:\n                    return True\n        return False\n\n    def _validate_out_of_order_table(self, key: Key | None = None) -> None:\n",
+      "replace": "            if isinstance(v, (Table, AoT)) and k is not None and not k.is_dotted():\n                break\n            last_index = i\n        return last_index + 1\n\n    def _validate_out_of_order_table(self, key: Key | None = None) -> None:\n"
+    }
+  ],
+  "hidden": [],
+  "test_command": "python -m pytest -q"
+}

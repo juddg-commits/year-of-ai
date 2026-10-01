@@ -1,0 +1,17 @@
+{
+  "id": "xmltodict-421",
+  "source": "xmltodict@6e29fba282",
+  "split": "dev",
+  "kind": "real",
+  "category": "stale state",
+  "note": "martinblech/xmltodict#421, merged 2026-08-19: fix(streaming): preserve #text on streamed items. Streaming mode (item_depth) drops the text of items that have attributes or children: handler state at the end of an item.",
+  "bug": [
+    {
+      "file": "xmltodict.py",
+      "find": "        # streamed items in memory when using item_depth > 0.\n        if len(self.path) == self.item_depth:\n            data = (None if not self.data\n                    else self.cdata_separator.join(self.data))\n            item = self.item\n            if self.strip_whitespace and data:\n                data = data.strip() or None\n            if data and self._should_force_cdata(name, data) and item is None:\n                item = self.dict_constructor()\n            if item is not None:\n                if data:\n                    self.push_data(item, self.cdata_key, data)\n            else:\n                item = data\n\n            should_continue = self.item_callback(self.path, item)\n",
+      "replace": "        # streamed items in memory when using item_depth > 0.\n        if len(self.path) == self.item_depth:\n            item = self.item\n            if item is None:\n                item = (None if not self.data\n                        else self.cdata_separator.join(self.data))\n\n            should_continue = self.item_callback(self.path, item)\n"
+    }
+  ],
+  "hidden": [],
+  "test_command": "python -m pytest -q"
+}

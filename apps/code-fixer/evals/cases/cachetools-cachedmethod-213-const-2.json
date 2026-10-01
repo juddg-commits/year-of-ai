@@ -1,0 +1,19 @@
+{
+  "id": "cachetools-cachedmethod-213-const-2",
+  "source": "cachetools",
+  "split": "dev",
+  "kind": "planted",
+  "category": "off-by-one",
+  "note": "Generated mutant (const) in _locked_info.Descriptor.Wrapper.__call__, src/cachetools/_cachedmethod.py line 213: `self.__misses += 1` became `self.__misses += 2`. Visible: 1 failed, 292 passed (exit 1); hidden failing: 2.",
+  "bug": [
+    {
+      "file": "src/cachetools/_cachedmethod.py",
+      "find": "                    except KeyError:\n                        self.__misses += 1\n",
+      "replace": "                    except KeyError:\n                        self.__misses += 2\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_cachedmethod.py"
+  ],
+  "test_command": "python -m pytest -q"
+}

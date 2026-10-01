@@ -1,0 +1,22 @@
+{
+  "id": "tinydb-633",
+  "source": "tinydb@bd034d0e95",
+  "split": "dev",
+  "kind": "real",
+  "category": "stale state",
+  "note": "msiemens/tinydb#633, merged 2026-09-18: Don't reuse IDs in mixed insert_multiple batches. insert_multiple() with a Document carrying an explicit doc_id, then plain dicts: the next ID came from storage, not the batch, so later documents overwrote it.",
+  "bug": [
+    {
+      "file": "tinydb/table.py",
+      "find": "            = self.query_cache_class(capacity=cache_size)\n\n        self._next_id: Optional[int] = None\n        if persist_empty:\n            self._update_table(lambda table: table.clear())\n",
+      "replace": "            = self.query_cache_class(capacity=cache_size)\n\n        self._next_id = None\n        if persist_empty:\n            self._update_table(lambda table: table.clear())\n"
+    },
+    {
+      "file": "tinydb/table.py",
+      "find": "                    doc_ids.append(doc_id)\n                    table[doc_id] = dict(document)\n                    # Same as insert(): don't reuse this ID for later\n                    # auto-assigned documents in this batch.\n                    self._next_id = None\n                    continue\n\n                # Generate new document ID for this document.\n                # Allocate from the in-progress table, not storage, so a\n                # Document inserted earlier in this batch is visible.\n                next_id = self._next_id\n                if next_id is None:\n                    if table:\n                        next_id = max(\n                            self.document_id_class(i) for i in table.keys()\n                        ) + 1\n                    else:\n                        next_id = 1\n                self._next_id = next_id\n                doc_id = self._get_next_id()\n                doc_ids.append(doc_id)\n",
+      "replace": "                    doc_ids.append(doc_id)\n                    table[doc_id] = dict(document)\n                    continue\n\n                # Generate new document ID for this document\n                # Store the doc_id, so we can return all document IDs\n                # later, then save the document with the new doc_id\n                doc_id = self._get_next_id()\n                doc_ids.append(doc_id)\n"
+    }
+  ],
+  "hidden": [],
+  "test_command": "python -m pytest -q"
+}

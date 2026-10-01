@@ -1,0 +1,20 @@
+{
+  "id": "cachetools-396-arith",
+  "source": "cachetools",
+  "split": "dev",
+  "kind": "planted",
+  "category": "wrong operator",
+  "note": "Generated mutant (arith) in _TimedCache._Timer.__exit__, src/cachetools/__init__.py line 396: `self.__nesting -= 1` became `self.__nesting += 1`. Visible: 1 failed, 273 passed (exit 1); hidden failing: 11.",
+  "bug": [
+    {
+      "file": "src/cachetools/__init__.py",
+      "find": "            self.__nesting -= 1\n",
+      "replace": "            self.__nesting += 1\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_tlru.py",
+    "tests/test_ttl.py"
+  ],
+  "test_command": "python -m pytest -q"
+}

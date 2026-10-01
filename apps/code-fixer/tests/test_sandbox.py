@@ -5,7 +5,9 @@ import subprocess
 import tempfile
 import time
 import unittest
+import uuid
 from pathlib import Path
+from unittest import mock
 
 from code_fixer import config, sandbox
 from code_fixer.sandbox import TestRun
@@ -111,10 +113,12 @@ class Live(unittest.TestCase):
         repo.mkdir()
         (repo / "test_hang.py").write_text("import time\n\ndef test_hang():\n    time.sleep(60)\n")
         start = time.monotonic()
-        run = sandbox.run_tests(repo, self.CMD, timeout=3)
+        known = uuid.UUID(int=0xC0DEF1)   # this run's container name, so a scan running alongside can't fail the test
+        with mock.patch("uuid.uuid4", return_value=known):
+            run = sandbox.run_tests(repo, self.CMD, timeout=3)
         self.assertTrue(run.timed_out)
         self.assertLess(time.monotonic() - start, 20)
-        left = subprocess.run([sandbox.docker_bin(), "ps", "-aq", "--filter", "name=code-fixer-"],
+        left = subprocess.run([sandbox.docker_bin(), "ps", "-aq", "--filter", f"name=code-fixer-{known.hex[:12]}"],
                               capture_output=True, text=True).stdout.split()
         self.assertEqual(left, [])
 

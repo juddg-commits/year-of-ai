@@ -1,0 +1,19 @@
+{
+  "id": "parse-980-const",
+  "source": "parse",
+  "split": "dev",
+  "kind": "planted",
+  "category": "off-by-one",
+  "note": "Generated mutant (const) in search, parse/__init__.py line 980: `pos=0,` became `pos=1,`. Visible: 1 failed, 86 passed (exit 1); hidden failing: 2.",
+  "bug": [
+    {
+      "file": "parse/__init__.py",
+      "find": "def search(\n    format,\n    string,\n    pos=0,\n    endpos=None,\n    extra_types=None,\n",
+      "replace": "def search(\n    format,\n    string,\n    pos=1,\n    endpos=None,\n    extra_types=None,\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_bugs.py"
+  ],
+  "test_command": "python -m pytest -q"
+}

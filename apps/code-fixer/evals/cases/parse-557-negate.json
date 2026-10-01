@@ -1,0 +1,21 @@
+{
+  "id": "parse-557-negate",
+  "source": "parse",
+  "split": "dev",
+  "kind": "planted",
+  "category": "flipped comparison",
+  "note": "Generated mutant (negate) in Parser._expand_named_fields, parse/__init__.py line 557: `if n == -1:` became `if n != -1:`. Visible: 3 failed, 22 passed (exit 1); hidden failing: 28.",
+  "bug": [
+    {
+      "file": "parse/__init__.py",
+      "find": "            if n == -1:\n",
+      "replace": "            if n != -1:\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_parse.py",
+    "tests/test_parsetype.py",
+    "tests/test_pattern.py"
+  ],
+  "test_command": "python -m pytest -q"
+}

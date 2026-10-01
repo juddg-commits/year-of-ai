@@ -1,0 +1,27 @@
+{
+  "id": "more-itertools-1248",
+  "source": "more-itertools@bc8be1013a",
+  "split": "test",
+  "kind": "real",
+  "category": "float rounding",
+  "note": "more-itertools/more-itertools#1248, merged 2026-09-02: Issue 1247: Keep numeric_range consistent with the items it produces. numeric_range with float steps: len(), 'in' and index() disagree with the items it yields; rounding across three methods.",
+  "bug": [
+    {
+      "file": "more_itertools/more.py",
+      "find": "\n    def __contains__(self, elem):\n        try:\n            self.index(elem)\n        except ValueError:\n            return False\n        return True\n\n    def __eq__(self, other):\n",
+      "replace": "\n    def __contains__(self, elem):\n        if self._growing:\n            if self._start <= elem < self._stop:\n                return (elem - self._start) % self._step == self._zero\n        else:\n            if self._start >= elem > self._stop:\n                return (self._start - elem) % (-self._step) == self._zero\n\n        return False\n\n    def __eq__(self, other):\n"
+    },
+    {
+      "file": "more_itertools/more.py",
+      "find": "        else:  # distance > 0 and step > 0: regular euclidean division\n            q, r = divmod(distance, step)\n            n = int(q) + int(r != self._zero)\n            # The division above measures the distance to cover, but the items\n            # are produced by repeated multiplication (see `__iter__`). With\n            # inexact arithmetic the two disagree at the boundary, so settle\n            # the count against the items themselves.\n            while n and not self._before_stop(n - 1):\n                n -= 1\n            while self._before_stop(n):\n                n += 1\n            return n\n\n    def _before_stop(self, i):\n        value = self._start + i * self._step\n        return value < self._stop if self._growing else value > self._stop\n\n    def __reduce__(self):\n",
+      "replace": "        else:  # distance > 0 and step > 0: regular euclidean division\n            q, r = divmod(distance, step)\n            return int(q) + int(r != self._zero)\n\n    def __reduce__(self):\n"
+    },
+    {
+      "file": "more_itertools/more.py",
+      "find": "        if self._growing:\n            if self._start <= value < self._stop:\n                q, _ = divmod(value - self._start, self._step)\n                return self._index_near(int(q), value)\n        else:\n            if self._start >= value > self._stop:\n                q, _ = divmod(self._start - value, -self._step)\n                return self._index_near(int(q), value)\n\n        raise ValueError(f\"{value} is not in numeric range\")\n\n    def _index_near(self, i, value):\n        # `i` is the quotient of the division of `value` by the step, which\n        # locates the value on the grid of items this range produces. For\n        # exact types that quotient is the index. For inexact ones (floats)\n        # it can land one short, and the remainder of the division is not a\n        # reliable membership test either: `numeric_range(0.0, 1.0, 0.1)`\n        # yields 0.30000000000000004, which leaves a non-zero remainder.\n        # So compare against the item the range actually produces there.\n        for candidate in (i, i + 1):\n            if 0 <= candidate < self._len:\n                if self._start + candidate * self._step == value:\n                    return candidate\n\n        raise ValueError(f\"{value} is not in numeric range\")\n",
+      "replace": "        if self._growing:\n            if self._start <= value < self._stop:\n                q, r = divmod(value - self._start, self._step)\n                if r == self._zero:\n                    return int(q)\n        else:\n            if self._start >= value > self._stop:\n                q, r = divmod(self._start - value, -self._step)\n                if r == self._zero:\n                    return int(q)\n\n        raise ValueError(f\"{value} is not in numeric range\")\n"
+    }
+  ],
+  "hidden": [],
+  "test_command": "python -m pytest -q"
+}

@@ -1,0 +1,19 @@
+{
+  "id": "parse-214-bool",
+  "source": "parse",
+  "split": "test",
+  "kind": "planted",
+  "category": "wrong operator",
+  "note": "Generated mutant (bool) in date_convert, parse/__init__.py line 214: `if hms is not None and groups[hms]:` became `if hms is not None or groups[hms]:`. Visible: 1 failed, 48 passed (exit 1); hidden failing: 3.",
+  "bug": [
+    {
+      "file": "parse/__init__.py",
+      "find": "    if hms is not None and groups[hms]:\n",
+      "replace": "    if hms is not None or groups[hms]:\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_parse.py"
+  ],
+  "test_command": "python -m pytest -q"
+}

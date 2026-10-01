@@ -1,0 +1,17 @@
+{
+  "id": "more-itertools-1261",
+  "source": "more-itertools@926acab4ae",
+  "split": "test",
+  "kind": "real",
+  "category": "sentinel collision",
+  "note": "more-itertools/more-itertools#1261, merged 2026-09-08: Fix/simplify `combination_with_replacement_index`. combination_with_replacement_index fails when the pool contains None: None doubles as the sentinel.",
+  "bug": [
+    {
+      "file": "more_itertools/more.py",
+      "find": "    element = tuple(element)\n    l = len(element)\n    pool = tuple(iterable)\n    n = len(pool)\n\n    occupations = [0] * n\n    try:\n        i = 0\n        for e in element:\n            i = pool.index(e, i)\n            occupations[i] += 1\n    except ValueError:\n        raise ValueError(\n            'element is not a combination with replacement of iterable'\n        )\n\n    index = 0\n",
+      "replace": "    element = tuple(element)\n    l = len(element)\n    element = enumerate(element)\n\n    k, y = next(element, (None, None))\n    if k is None:\n        return 0\n\n    indexes = []\n    pool = tuple(iterable)\n    for n, x in enumerate(pool):\n        while x == y:\n            indexes.append(n)\n            tmp, y = next(element, (None, None))\n            if tmp is None:\n                break\n            else:\n                k = tmp\n        if y is None:\n            break\n    else:\n        raise ValueError(\n            'element is not a combination with replacement of iterable'\n        )\n\n    n = len(pool)\n    occupations = [0] * n\n    for p in indexes:\n        occupations[p] += 1\n\n    index = 0\n"
+    }
+  ],
+  "hidden": [],
+  "test_command": "python -m pytest -q"
+}

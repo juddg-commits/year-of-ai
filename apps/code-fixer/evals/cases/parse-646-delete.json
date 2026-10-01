@@ -1,0 +1,21 @@
+{
+  "id": "parse-646-delete",
+  "source": "parse",
+  "split": "dev",
+  "kind": "planted",
+  "category": "missing statement",
+  "note": "Generated mutant (delete) in Parser._to_group_name, parse/__init__.py line 646: `self._group_to_name_map[group] = field` was deleted. Visible: 3 failed, 22 passed (exit 1); hidden failing: 28.",
+  "bug": [
+    {
+      "file": "parse/__init__.py",
+      "find": "        self._group_to_name_map[group] = field\n",
+      "replace": ""
+    }
+  ],
+  "hidden": [
+    "tests/test_parse.py",
+    "tests/test_parsetype.py",
+    "tests/test_pattern.py"
+  ],
+  "test_command": "python -m pytest -q"
+}

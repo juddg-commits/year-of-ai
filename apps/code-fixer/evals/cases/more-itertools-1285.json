@@ -1,0 +1,32 @@
+{
+  "id": "more-itertools-1285",
+  "source": "more-itertools@3ea9b009b1",
+  "split": "dev",
+  "kind": "real",
+  "category": "side effect",
+  "note": "more-itertools/more-itertools#1285, merged 2026-09-17: Issue 1284: don't let a bucket lookup invent a key. 'c' in bucket(...) creates bucket 'c': a defaultdict lookup with a side effect.",
+  "bug": [
+    {
+      "file": "more_itertools/more.py",
+      "find": "        self._it = iter(iterable)\n        self._key = key\n        self._cache = {}\n        self._validator = validator or (lambda x: True)\n\n",
+      "replace": "        self._it = iter(iterable)\n        self._key = key\n        self._cache = defaultdict(deque)\n        self._validator = validator or (lambda x: True)\n\n"
+    },
+    {
+      "file": "more_itertools/more.py",
+      "find": "            # If we've cached some items that match the target value, emit\n            # the first one and evict it from the cache.\n            if self._cache.get(value):\n                yield self._cache[value].popleft()\n            # Otherwise we need to advance the parent iterator to search for\n",
+      "replace": "            # If we've cached some items that match the target value, emit\n            # the first one and evict it from the cache.\n            if self._cache[value]:\n                yield self._cache[value].popleft()\n            # Otherwise we need to advance the parent iterator to search for\n"
+    },
+    {
+      "file": "more_itertools/more.py",
+      "find": "                    item_value = self._key(item)\n                    if item_value == value:\n                        # This item goes straight to the caller rather than\n                        # through the cache, but the key is a real one and\n                        # __iter__ must still report it.\n                        self._cache.setdefault(value, deque())\n                        yield item\n                        break\n                    elif self._validator(item_value):\n                        items = self._cache.setdefault(item_value, deque())\n                        items.append(item)\n\n    def __iter__(self):\n",
+      "replace": "                    item_value = self._key(item)\n                    if item_value == value:\n                        yield item\n                        break\n                    elif self._validator(item_value):\n                        self._cache[item_value].append(item)\n\n    def __iter__(self):\n"
+    },
+    {
+      "file": "more_itertools/more.py",
+      "find": "            item_value = self._key(item)\n            if self._validator(item_value):\n                self._cache.setdefault(item_value, deque()).append(item)\n\n        return iter(self._cache)\n",
+      "replace": "            item_value = self._key(item)\n            if self._validator(item_value):\n                self._cache[item_value].append(item)\n\n        return iter(self._cache)\n"
+    }
+  ],
+  "hidden": [],
+  "test_command": "python -m pytest -q"
+}

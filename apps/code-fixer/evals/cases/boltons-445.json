@@ -1,0 +1,32 @@
+{
+  "id": "boltons-445",
+  "source": "boltons@b5c495bec2",
+  "split": "dev",
+  "kind": "real",
+  "category": "wrong assumption",
+  "note": "mahmoud/boltons#445, merged 2026-08-07: funcutils: forward target-keyword-only args as keywords in wraps invocations. funcutils.wraps passes the wrapped function's keyword-only arguments by position. The issue (#261) has been public since 2020: possible contamination.",
+  "bug": [
+    {
+      "file": "boltons/funcutils.py",
+      "find": "        fb.add_arg(arg, default)  # may raise ExistingArgument\n\n    invocation_str = fb.get_invocation_str(target=wrapper)\n    if fb.is_async:\n        fb.body = 'return await _call(%s)' % invocation_str\n    else:\n        fb.body = 'return _call(%s)' % invocation_str\n\n    execdict = dict(_call=wrapper, _func=func)\n",
+      "replace": "        fb.add_arg(arg, default)  # may raise ExistingArgument\n\n    if fb.is_async:\n        fb.body = 'return await _call(%s)' % fb.get_invocation_str()\n    else:\n        fb.body = 'return _call(%s)' % fb.get_invocation_str()\n\n    execdict = dict(_call=wrapper, _func=func)\n"
+    },
+    {
+      "file": "boltons/funcutils.py",
+      "find": "                                     annotations)\n\n    def get_invocation_str(self, target=None):\n        # Regular args with defaults (and keyword-only args) are forwarded\n        # as keywords (name=name), so values callers pass by keyword reach\n",
+      "replace": "                                     annotations)\n\n    def get_invocation_str(self):\n        # Regular args with defaults (and keyword-only args) are forwarded\n        # as keywords (name=name), so values callers pass by keyword reach\n"
+    },
+    {
+      "file": "boltons/funcutils.py",
+      "find": "        # when *varargs is present (a keyword-forwarded arg that precedes\n        # *varargs collides with non-empty varargs).\n        #\n        # When *target* -- the callable the generated invocation will\n        # actually call -- is provided, any argument that target only\n        # accepts as a keyword is forwarded as a keyword regardless of\n        # the rules above, since positional forwarding could never bind\n        # it (#261). Targets without introspectable signatures fall\n        # back to signature-based forwarding alone.\n        target_kwonly = frozenset()\n        if target is not None:\n            try:\n                target_params = inspect.signature(target).parameters\n            except (ValueError, TypeError):\n                pass\n            else:\n                target_kwonly = frozenset(\n                    p.name for p in target_params.values()\n                    if p.kind is inspect.Parameter.KEYWORD_ONLY)\n        defaults = self.defaults or ()\n        args = list(self.args or ())\n",
+      "replace": "        # when *varargs is present (a keyword-forwarded arg that precedes\n        # *varargs collides with non-empty varargs).\n        defaults = self.defaults or ()\n        args = list(self.args or ())\n"
+    },
+    {
+      "file": "boltons/funcutils.py",
+      "find": "        parts, kw_parts = [], []\n        for i, arg in enumerate(args):\n            if arg in target_kwonly:\n                kw_parts.append(arg + '=' + arg)\n            elif (i >= n_positional and not self.varargs\n                    and arg not in self.posonlyargs):\n                kw_parts.append(arg + '=' + arg)\n",
+      "replace": "        parts, kw_parts = [], []\n        for i, arg in enumerate(args):\n            if (i >= n_positional and not self.varargs\n                    and arg not in self.posonlyargs):\n                kw_parts.append(arg + '=' + arg)\n"
+    }
+  ],
+  "hidden": [],
+  "test_command": "python -m pytest -q"
+}

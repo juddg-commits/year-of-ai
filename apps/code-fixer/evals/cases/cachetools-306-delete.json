@@ -1,0 +1,19 @@
+{
+  "id": "cachetools-306-delete",
+  "source": "cachetools",
+  "split": "test",
+  "kind": "planted",
+  "category": "missing statement",
+  "note": "Generated mutant (delete) in LRUCache.__delitem__, src/cachetools/__init__.py line 306: `del self.__order[key]` was deleted. Visible: 1 failed, 311 passed (exit 1); hidden failing: 2.",
+  "bug": [
+    {
+      "file": "src/cachetools/__init__.py",
+      "find": "\n    def __delitem__(self, key, cache_delitem=Cache.__delitem__):\n        cache_delitem(self, key)\n        del self.__order[key]\n\n    def popitem(self):\n        \"\"\"Remove and return the `(key, value)` pair least recently used.\"\"\"\n",
+      "replace": "\n    def __delitem__(self, key, cache_delitem=Cache.__delitem__):\n        cache_delitem(self, key)\n\n    def popitem(self):\n        \"\"\"Remove and return the `(key, value)` pair least recently used.\"\"\"\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_lru.py"
+  ],
+  "test_command": "python -m pytest -q"
+}

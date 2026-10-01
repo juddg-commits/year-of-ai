@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""The code fixer's eval: planted and hand-written bugs, graded with tests the agent never sees.
+"""The code fixer's eval: planted, hand-written and real bugs, graded with tests the agent never sees.
 
+    .venv/bin/python eval.py fetch                     # free: downloads the real bugs' sources (pinned commits)
     .venv/bin/python eval.py verify                    # free: checks every case in the sandbox
     .venv/bin/python eval.py run --split dev           # PAID: prints the most it can spend, then stops
     .venv/bin/python eval.py run --split dev --yes     # ...and this spends it
@@ -16,6 +17,7 @@ import argparse
 import json
 import os
 import sys
+import tarfile
 import tempfile
 import time
 from collections import Counter
@@ -24,8 +26,23 @@ from pathlib import Path
 from code_fixer import agent, cases, config, llm, machine, report, sandbox
 
 
+def fetch_sources(chosen: list) -> bool:
+    try:
+        cases.ensure_sources(chosen)
+        return True
+    except (OSError, ValueError, tarfile.TarError) as e:   # network, GitHub, a bad tarball: nothing spent yet
+        print(f"Couldn't fetch a source: {type(e).__name__}: {e}")
+        return False
+
+
+def cmd_fetch(args) -> int:
+    return 0 if fetch_sources(cases.load(args.cases, args.split)) else 1
+
+
 def cmd_verify(args) -> int:
     chosen = cases.load(args.cases, args.split)
+    if not fetch_sources(chosen):
+        return 1
     bad = 0
     for c in chosen:
         v = cases.verify(c)
@@ -41,7 +58,7 @@ def run_case(c: cases.Case, args, out_dir: Path) -> dict:
     row = {"id": c.id, "split": c.split, "kind": c.kind, "category": c.category, "model": args.model,
            "effort": args.effort, "solved": False, "api_failure": False}
     with tempfile.TemporaryDirectory(prefix="code-fixer-eval-") as tmp:
-        repo = cases.materialize(c, Path(tmp) / c.source)   # the agent sees a repo named after its source
+        repo = cases.materialize(c, Path(tmp) / c.source.split("@")[0])   # named after its project, no commit
         res = agent.fix(repo, c.command, limits=agent.Limits(max_usd=args.max_usd), model=args.model,
                         effort=args.effort, log=lambda msg: print("   " + msg.strip()))
     graded = cases.grade(c, res.changed) if res.changed else None
@@ -100,6 +117,8 @@ def cmd_run(args) -> int:
         print(f"The sandbox isn't answering: open OrbStack (or run orbctl start). If the image is missing: "
               f"docker build -t {config.IMAGE} sandbox")
         return 1
+    if not fetch_sources(chosen):
+        return 1
     print()
     out_dir = config.RUNS_DIR / f"eval-{time.strftime('%Y%m%d-%H%M%S')}"
     out_dir.mkdir(parents=True)
@@ -126,9 +145,9 @@ def cmd_run(args) -> int:
 
 
 def main() -> int:
-    p = argparse.ArgumentParser(description="Verify or run the code fixer's eval cases.")
+    p = argparse.ArgumentParser(description="Fetch, verify or run the code fixer's eval cases.")
     sub = p.add_subparsers(dest="command", required=True)
-    for name in ("verify", "run"):
+    for name in ("fetch", "verify", "run"):
         sp = sub.add_parser(name)
         sp.add_argument("--split", choices=["dev", "test"], help="only this split")
         sp.add_argument("--cases", type=lambda s: [x for x in s.split(",") if x], help="comma-separated case ids")
@@ -139,7 +158,7 @@ def main() -> int:
     run.add_argument("--yes", action="store_true", help="actually run (it costs money)")
     run.add_argument("--ignore-power", action="store_true", help="run on battery or with the lid closed")
     args = p.parse_args()
-    return cmd_verify(args) if args.command == "verify" else cmd_run(args)
+    return {"fetch": cmd_fetch, "verify": cmd_verify, "run": cmd_run}[args.command](args)
 
 
 if __name__ == "__main__":

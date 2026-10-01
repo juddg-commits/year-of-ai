@@ -1,0 +1,24 @@
+{
+  "id": "networkx-8895",
+  "source": "networkx@56c7b0d0b6",
+  "split": "dev",
+  "kind": "real",
+  "category": "missed edge case",
+  "note": "networkx/networkx#8895, merged 2026-09-09: BUG: Fix vf2 handling of isomorphism_iter with isolated subgraph nodes. GraphMatcher.isomorphisms_iter yields matches between graphs of different sizes: the size checks lived only in is_isomorphic.",
+  "bug": [
+    {
+      "file": "networkx/algorithms/isomorphism/isomorphvf2.py",
+      "find": "    def is_isomorphic(self):\n        \"\"\"Returns True if G1 and G2 are isomorphic graphs.\"\"\"\n        try:\n            x = next(self.isomorphisms_iter())\n",
+      "replace": "    def is_isomorphic(self):\n        \"\"\"Returns True if G1 and G2 are isomorphic graphs.\"\"\"\n\n        # Let's do two very quick checks!\n        # QUESTION: Should we call faster_graph_could_be_isomorphic(G1,G2)?\n        # For now, I just copy the code.\n\n        # Check global properties\n        if self.G1.order() != self.G2.order():\n            return False\n\n        # Check local properties\n        d1 = sorted(d for n, d in self.G1.degree())\n        d2 = sorted(d for n, d in self.G2.degree())\n        if d1 != d2:\n            return False\n\n        try:\n            x = next(self.isomorphisms_iter())\n"
+    },
+    {
+      "file": "networkx/algorithms/isomorphism/isomorphvf2.py",
+      "find": "        # Declare that we are looking for a graph-graph isomorphism.\n        self.test = \"graph\"\n        self.initialize()  # clears self.mapping and/or sets up\n\n        # Let's do two very quick checks!\n        # QUESTION: Should we call faster_graph_could_be_isomorphic(G1,G2)?\n        # For now, we just copy the code from there.\n\n        # Check global properties\n        if self.G1.order() != self.G2.order():\n            return\n\n        # Check local properties\n        d1 = sorted(d for n, d in self.G1.degree)\n        d2 = sorted(d for n, d in self.G2.degree)\n        if d1 != d2:\n            return\n\n        yield from self.match()\n\n",
+      "replace": "        # Declare that we are looking for a graph-graph isomorphism.\n        self.test = \"graph\"\n        self.initialize()\n        yield from self.match()\n\n"
+    }
+  ],
+  "hidden": [
+    "networkx/algorithms/isomorphism/tests/test_common.py"
+  ],
+  "test_command": "python -m pytest -q networkx/algorithms/isomorphism"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "boltons-424",
+  "source": "boltons@d0a284fc7e",
+  "split": "test",
+  "kind": "real",
+  "category": "two index spaces",
+  "note": "mahmoud/boltons#424, merged 2026-07-17: Fix IndexedSet slicing after removals and out-of-range negative indexing. IndexedSet slicing after removals: confuses indexes with and without the dead slots.",
+  "bug": [
+    {
+      "file": "boltons/setutils.py",
+      "find": "        if index < 0:\n            index += len(self)\n        if index < 0 or index >= len(self):\n            raise IndexError('IndexedSet index out of range')\n        if not self.dead_indices:\n            return index\n",
+      "replace": "        if index < 0:\n            index += len(self)\n        if not self.dead_indices:\n            return index\n"
+    },
+    {
+      "file": "boltons/setutils.py",
+      "find": "            iter_slice = self.iter_slice(start, stop, step)\n            return self.from_iterable(iter_slice)\n        real_index = self._get_real_index(index)\n        return self.item_list[real_index]\n\n    def pop(self, index=None):\n",
+      "replace": "            iter_slice = self.iter_slice(start, stop, step)\n            return self.from_iterable(iter_slice)\n        if index < 0:\n            index += len(self)\n        real_index = self._get_real_index(index)\n        try:\n            ret = self.item_list[real_index]\n        except IndexError:\n            raise IndexError('IndexedSet index out of range')\n        return ret\n\n    def pop(self, index=None):\n"
+    }
+  ],
+  "hidden": [],
+  "test_command": "python -m pytest -q"
+}

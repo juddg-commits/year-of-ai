@@ -1,0 +1,20 @@
+{
+  "id": "cachetools-cached-241-bool",
+  "source": "cachetools",
+  "split": "dev",
+  "kind": "planted",
+  "category": "wrong operator",
+  "note": "Generated mutant (bool) in _wrapper, src/cachetools/_cached.py line 241: `elif cond is not None and lock is not None:` became `elif cond is not None or lock is not None:`. Visible: 2 failed, 260 passed (exit 1); hidden failing: 40.",
+  "bug": [
+    {
+      "file": "src/cachetools/_cached.py",
+      "find": "            wrapper = _uncached_info(func, info)\n        elif cond is not None and lock is not None:\n",
+      "replace": "            wrapper = _uncached_info(func, info)\n        elif cond is not None or lock is not None:\n"
+    }
+  ],
+  "hidden": [
+    "tests/test_cached.py",
+    "tests/test_func.py"
+  ],
+  "test_command": "python -m pytest -q"
+}
