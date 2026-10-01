@@ -39,6 +39,7 @@ The Year of AI: one repo, one shipped project at a time (`curriculum/README.md`,
 - **Read what the model was shown, even when it succeeds.** The code fixer solved all 5 dev cases while 59-95% of the test output it read was pytest's PASSED lines, which pushed failure tracebacks out of the trimmed tail (30,122 characters cut from a 26-failure run). It now reads a count instead; grading still parses the full output.
 - **Check what a commit leaves out, not just what it adds.** An unanchored `sandbox/` in the root .gitignore, meant for one local folder, silently dropped the code fixer's Dockerfile; `git add -n` showed it missing.
 - **Commit on day one.** Ship #1 sat uncommitted for a month.
+- **One chat per working tree.** A second chat opened while the first was still building: the handoff was hours stale, and a test failed on the other chat's container. Before editing, check `git status` and for another running session.
 
 ## Public repo: keep private things out
 This repo is public on GitHub. Never commit `.env`, `runs/`, data folders, or anything about Judd's jobs, internships, school work or personal life. Local-only folders (`brain/`, `outreach/`, `content/`, `.claude/`…) are gitignored for that reason. Before a push, check the diff for secrets and personal details. Test files are public too: an eval's never-say terms spell out what they protect, so they live in a git-ignored list.
