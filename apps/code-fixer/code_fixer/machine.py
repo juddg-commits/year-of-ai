@@ -5,17 +5,24 @@ import subprocess
 import sys
 
 
+MIN_BATTERY = 30   # percent: a short run on a charged battery is fine; macOS sleeps a nearly empty one
+
+
 def power_problem_from(battery: str, lid: str) -> str | None:
     if "Battery Power" in battery:
-        return "the Mac is on battery: plug it in"
+        m = re.search(r"(\d+)%", battery)
+        charge = int(m[1]) if m else 0
+        if charge < MIN_BATTERY:
+            return f"the battery is at {charge}%: plug the Mac in"
     if re.search(r'"AppleClamshellState" = Yes', lid):
         return "the lid is closed, and macOS sleeps with it closed unless an external display is attached"
     return None
 
 
 def power_problem() -> str | None:
-    """Why this Mac could sleep mid-run, or None. Paid runs have been cut short three times by a
-    low battery or a closed lid (in-flight calls lost). macOS only; elsewhere it can't tell."""
+    """Why this Mac could sleep mid-run, or None: a closed lid, or a low battery when unplugged.
+    Paid runs have been cut short three times by exactly these (in-flight calls lost).
+    macOS only; elsewhere it can't tell."""
     if sys.platform != "darwin":
         return None
     try:

@@ -75,12 +75,16 @@ class Materialize(unittest.TestCase):
 
 
 class PowerCheck(unittest.TestCase):
-    def test_battery_and_a_closed_lid_block_a_paid_run(self):
-        on_ac = "Now drawing from 'AC Power'\n -InternalBattery-0\t80%; charging"
-        on_battery = "Now drawing from 'Battery Power'\n -InternalBattery-0\t4%; discharging"
-        self.assertIn("battery", machine.power_problem_from(on_battery, '"AppleClamshellState" = No'))
-        self.assertIn("lid is closed", machine.power_problem_from(on_ac, '  |   "AppleClamshellState" = Yes'))
-        self.assertIsNone(machine.power_problem_from(on_ac, '  |   "AppleClamshellState" = No'))
+    def test_a_low_battery_or_a_closed_lid_blocks_a_paid_run(self):
+        lid_open, lid_closed = '  |   "AppleClamshellState" = No', '  |   "AppleClamshellState" = Yes'
+        on_ac = "Now drawing from 'AC Power'\n -InternalBattery-0 (id=1)\t12%; charging; present: true"
+        low = "Now drawing from 'Battery Power'\n -InternalBattery-0 (id=1)\t4%; discharging; present: true"
+        full = "Now drawing from 'Battery Power'\n -InternalBattery-0 (id=1)\t100%; discharging; present: true"
+        self.assertEqual(machine.power_problem_from(low, lid_open), "the battery is at 4%: plug the Mac in")
+        self.assertIsNone(machine.power_problem_from(full, lid_open))
+        self.assertIsNone(machine.power_problem_from(on_ac, lid_open))
+        self.assertIn("lid is closed", machine.power_problem_from(on_ac, lid_closed))
+        self.assertIn("lid is closed", machine.power_problem_from(full, lid_closed))
 
 
 class CommittedCases(unittest.TestCase):
