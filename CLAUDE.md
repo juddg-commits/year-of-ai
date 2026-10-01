@@ -36,6 +36,7 @@ The Year of AI: one repo, one shipped project at a time (`curriculum/README.md`,
 - **Measure a layout where it will be used.** A page that fit on screen overflowed when printed: measure a printout at the printed width.
 - **Run the paid path against a fake client before the first real call.** A scripted-model test found the code fixer's cost ledger reading `.type` off the API's top-level usage object, which has none: the first paid call would have crashed the run after spending.
 - **Verify an eval case before it counts.** The code fixer runs each case without the bug (every test must pass) and with it (a visible test must fail) before using it. That first check caught two broken tests in the hand-written cases.
+- **Read what the model was shown, even when it succeeds.** The code fixer solved all 5 dev cases while 59-95% of the test output it read was pytest's PASSED lines, which pushed failure tracebacks out of the trimmed tail (30,122 characters cut from a 26-failure run). It now reads a count instead; grading still parses the full output.
 - **Check what a commit leaves out, not just what it adds.** An unanchored `sandbox/` in the root .gitignore, meant for one local folder, silently dropped the code fixer's Dockerfile; `git add -n` showed it missing.
 - **Commit on day one.** Ship #1 sat uncommitted for a month.
 

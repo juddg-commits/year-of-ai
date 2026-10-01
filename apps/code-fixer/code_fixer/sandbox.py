@@ -31,7 +31,7 @@ class TestRun:
     exit_code: int | None = None
     seconds: float = 0.0
     timed_out: bool = False
-    output: str = ""                 # head + tail of stdout/stderr, see trim()
+    output: str = ""                 # what the model reads: see hide_passed() and trim()
     output_chars: int = 0            # before trimming
     outcomes: dict = field(default_factory=dict)   # pytest node id -> passed/failed/error/xfailed/xpassed
     error: str | None = None         # the sandbox itself failed (no docker, no image); the tests never ran
@@ -86,6 +86,24 @@ def parse_outcomes(output: str) -> dict:
             if m:
                 outcomes[m[2]] = OUTCOME[m[1]]
     return outcomes
+
+
+def hide_passed(text: str) -> str:
+    """The summary's PASSED lines, collapsed into one count. In the first eval runs they were 59-95%
+    of the test output the model read, and they pushed failure tracebacks out of the trimmed tail.
+    Outcomes are still parsed from the full text."""
+    kept, at, passed, in_summary = [], None, 0, False
+    for line in text.split("\n"):
+        if in_summary and line.startswith("PASSED "):
+            passed += 1
+            at = len(kept) if at is None else at
+            continue
+        if SUMMARY_HEADER.match(line.strip()):
+            in_summary = True
+        kept.append(line)
+    if passed:
+        kept.insert(at, f"[{passed} PASSED line{'s' if passed > 1 else ''} not shown]")
+    return "\n".join(kept)
 
 
 def trim(text: str, head: int = config.TEST_OUTPUT_HEAD, tail: int = config.TEST_OUTPUT_TAIL) -> str:
@@ -163,7 +181,7 @@ def run_tests(workspace: Path, command: list, timeout: float = config.TEST_TIMEO
         if proc is not None and proc.stdout:
             proc.stdout.close()
     run.output_chars = len(text)
-    run.output = trim(text)
+    run.output = trim(hide_passed(text))
     run.outcomes = parse_outcomes(text)
     if run.exit_code == 125:   # docker itself failed (no image, daemon down); the tests never ran
         run.error = text.strip()[-500:] or "docker run failed (exit 125)"

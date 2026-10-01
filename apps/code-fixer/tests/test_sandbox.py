@@ -42,6 +42,14 @@ class Parsing(unittest.TestCase):
         self.assertEqual(sandbox.with_summary_flag(["pytest", "-rA"]), ["pytest", "-rA"])
         self.assertEqual(sandbox.with_summary_flag(["python", "-m", "unittest"]), ["python", "-m", "unittest"])
 
+    def test_the_model_reads_a_count_of_passing_tests_not_their_names(self):
+        out = sandbox.hide_passed(PYTEST_OUTPUT)
+        self.assertNotIn("PASSED tests/test_a.py::test_one", out)
+        self.assertIn("=\n[2 PASSED lines not shown]\nFAILED tests/test_a.py::test_two", out)
+        self.assertIn("PASSED tests/test_fake.py::looks_like_a_summary_but_is_in_a_traceback", out)   # not the summary
+        self.assertIn("SKIPPED [1] tests/test_a.py:30: needs network", out)
+        self.assertEqual(sandbox.hide_passed("no summary\nPASSED x\n"), "no summary\nPASSED x\n")
+
     def test_trim_keeps_both_ends(self):
         text = "HEAD" + "x" * 50_000 + "TAIL"
         out = sandbox.trim(text, head=10, tail=10)
