@@ -4,7 +4,9 @@ Point it at a small Python repo whose tests fail. It copies the repo, runs the t
 
 Project #3 of my Year of AI. Python, Claude API (Opus 5.5), Docker (OrbStack).
 
-**Status: built and tested offline. The first paid eval run hasn't happened yet; results and a DESIGN.md with measured numbers come after it.**
+**Held-out result: 10 of 10 by the eval**, run once at the end after all tuning: runs/eval-20261002-131217 (9 cases) and runs/eval-20261002-155904 (tomlkit-550, rerun alone after a stalled API call ended the first run before that case was graded). Both ran on the code at commit b5f812f. The stall fix that came after changes only each API call's timeout, not what the agent does. $0.078 and 43 s per fix.
+
+Read 10 of 10 as an upper bound, for two reasons: 6 of the 10 are real bugs with no hidden tests, so they're graded only by tests the agent could read, and none of the held-out patches has been hand-checked against upstream's fix. Baselines (no test loop, Sonnet 5.5), the failure taxonomy and that hand-check on the dev set are in [DESIGN.md](DESIGN.md).
 
 ## How it works
 
@@ -13,7 +15,7 @@ Project #3 of my Year of AI. Python, Claude API (Opus 5.5), Docker (OrbStack).
 3. **Fix loop.** Claude gets the failing output and the file list, then works with five tools: `list_files`, `read_file`, `search`, `edit_file` (exact-string replace) and `run_tests`. There is no tool to create or delete files.
 4. **Guards in code, not trust in the model.**
    - Test files and pytest's config are read-only: an edit to them is refused and logged.
-   - Before every call, its output limit is cut to what the remaining budget can pay for, so the dollar ceiling holds (default $0.50 a fix). Tool calls, test runs, turns and time are capped too.
+   - Before every call, its output limit is cut to what the remaining budget can pay for, so the dollar ceiling holds (default $0.50 a fix). Tool calls, test runs, turns and time are capped too, and each API call's timeout is the time the fix has left.
    - "Fixed" is decided by a fresh sandbox run with the test files restored from the pristine copy, never by the model's word. Every test that ran before must pass after; a test that disappears counts as unresolved.
    - The conversation is append-only: Opus 5.5 ties its thinking to the exact history, and the prompt cache needs it too.
 5. **Output.** A patch that `git apply` or `patch -p1` applies, the before/after test results, the cost, and a JSON trace of every call, tool result and guard event (failed runs too).
@@ -24,17 +26,18 @@ Every test run is a fresh container: no network, 512 MB of memory, one CPU, 256 
 
 ## The eval
 
-Bugs planted in real code, graded with tests the agent never sees:
+29 cases, each verified for free before it counts (`eval.py verify`): without the bug every test passes, visible and hidden, and with it at least one visible test fails.
 
-| Case | Source | Bug |
-|---|---|---|
-| `cachetools-ttl-boundary` | cachetools 7.2.0 (MIT) | Off by one: an item at exactly its TTL isn't expired |
-| `cachetools-resize-update` | cachetools 7.2.0 (MIT) | Wrong variable: updating an item counts its full size |
-| `parse-noon-pm` | parse 1.22.2 (MIT) | Missed edge case: 12 PM becomes hour 24 |
-| `timesheet-overnight` | timesheet (hand-written) | The failing test is in pay; the cause is two modules down |
-| `timesheet-week-start` | timesheet (hand-written) | A sign error that only weeks starting on Sunday expose |
+| | planted | real | hand-written | total |
+|---|---|---|---|---|
+| dev (tune on it) | 11 | 6 | 2 | 19 |
+| test (held out, run once) | 4 | 6 | 0 | 10 |
 
-Each case is checked before use, for free (`eval.py verify`): without the bug every test passes, visible and hidden; with it, at least one visible test fails. A case counts as solved only when the fix passes the visible tests and the hidden ones, applied to the broken repo with only the agent's changed files on top. Sources and licenses: [evals/README.md](evals/README.md). The plan is about 30 cases, with a dev split for tuning and a held-out split for the reported number.
+- **Real** bugs are fixes merged on GitHub after the model's training data, undone; the fix's own tests are the bug report.
+- **Planted** bugs are one-token slips generated in well-tested MIT code and screened in the sandbox.
+- A case counts as solved only when the fix passes the visible tests and the hidden ones, applied to the broken repo with only the agent's changed files on top. 10 of the 12 real cases have no hidden tests.
+
+Sources and licenses: [evals/README.md](evals/README.md). Results by setup: [DESIGN.md](DESIGN.md).
 
 ## Run it
 
@@ -57,6 +60,9 @@ Tests and the eval:
 .venv/bin/python -m unittest discover tests         # free: a scripted model and a fake sandbox (+ real containers if OrbStack is up)
 .venv/bin/python eval.py verify                     # free: checks every eval case in the sandbox
 .venv/bin/python eval.py run --split dev            # paid: prints the most it can spend; add --yes to run
+.venv/bin/python eval.py run --split dev --max-total 2.50 --yes   # with a ceiling for the whole run
+.venv/bin/python eval.py run --split dev --no-test-loop --yes     # baseline: no run_tests tool
+.venv/bin/python evals/handcheck/handcheck.py tinydb-633 runs/eval-<time>   # free: a patch against upstream's fix
 ```
 
 ## Known limits
@@ -78,5 +84,12 @@ Tests and the eval:
 | `code_fixer/workspace.py` | What gets copied, which files are read-only, the diff |
 | `code_fixer/llm.py` | The API call, the cost ledger, the budget cap |
 | `code_fixer/cases.py` | Eval cases: plant the bug, hide tests, verify, grade |
+| `code_fixer/config.py` | Every knob: the model, the ceilings, the sandbox, the prices |
+| `code_fixer/report.py`, `machine.py` | What a run leaves behind; whether the Mac could sleep mid-run |
+| `mutants.py`, `code_fixer/mutate.py` | Generate and screen planted bugs (free) |
+| `real_bugs.py`, `code_fixer/realbugs.py` | Turn a merged GitHub fix into a case (free) |
+| `evals/handcheck/` | Compare a passing patch with upstream's fix on random inputs (free) |
+| `DESIGN.md` | How it works and why, with every number and its run |
+| `WRITEUP.md` | The short version, for people who don't read code |
 | `sandbox/` | The container image: Python 3.12 and pytest |
 | `evals/` | The cases and their source projects |
