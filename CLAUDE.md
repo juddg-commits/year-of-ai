@@ -40,9 +40,10 @@ The Year of AI: one repo, one shipped project at a time (`curriculum/README.md`,
 - **Check what a commit leaves out, not just what it adds.** An unanchored `sandbox/` in the root .gitignore, meant for one local folder, silently dropped the code fixer's Dockerfile; `git add -n` showed it missing.
 - **Commit on day one.** Ship #1 sat uncommitted for a month.
 - **One chat per working tree.** A second chat opened while the first was still building: the handoff was hours stale, and a test failed on the other chat's container. Before editing, check `git status` and for another running session.
+- **A handoff is a state file, not a log.** Rewrite `brain/state.md` at the end of each session and move what's history to `brain/history/`. Appended to session after session, one handoff reached 85 KB with five "START HERE" sections, and the older ones contradicted the newer ones.
 
 ## Public repo: keep private things out
 This repo is public on GitHub. Never commit `.env`, `runs/`, data folders, or anything about Judd's jobs, internships, school work or personal life. Local-only folders (`brain/`, `outreach/`, `content/`, `.claude/`…) are gitignored for that reason. Before a push, check the diff for secrets and personal details. Test files are public too: an eval's never-say terms spell out what they protect, so they live in a git-ignored list.
 
 ## Review loop
-After each build: run the tests, review the diff for real bugs (not style), fold any lesson into this file, and let Judd explain the build back in his own words.
+After each build: run the tests, review the diff for real bugs (not style), fold any lesson into this file, and let Judd explain the build back in his own words. At the end of every session, rewrite `brain/state.md`; a new session starts there.
