@@ -49,6 +49,11 @@ class RunAgent(unittest.TestCase):
             run(fake_agent(stdout=json.dumps(OK), sleep=30), timeout=0.5)
         self.assertLess(time.time() - start, 5)       # killed, not waited out
 
+    def test_a_failed_run_names_its_trace(self):
+        failed = {**OK, "status": "error", "error": "Not fixed (the model finished).", "cost_usd": 0.08, "output": None}
+        with self.assertRaisesRegex(ToolError, r"Not fixed \(the model finished\)\. \(spent \$0\.08\)\ntrace: /runs/x\.json"):
+            run(fake_agent(stdout=json.dumps(failed), code=1))
+
     def test_missing_venv_says_how_to_fix_it(self):
         with self.assertRaisesRegex(ToolError, "isn't installed"):
             asyncio.run(server.run_agent(Path("/nonexistent/some-agent"), ["x.py"]))
@@ -69,8 +74,48 @@ class Tools(unittest.TestCase):
 
     def test_the_client_never_sees_the_context_parameter(self):
         tools = {t.name: t for t in asyncio.run(server.mcp.list_tools())}
-        self.assertEqual(set(tools), {"research", "recent_research"})
+        self.assertEqual(set(tools), {"research", "recent_research", "fix_code"})
         self.assertEqual(set(tools["research"].inputSchema["properties"]), {"question", "sub_questions", "searches"})
+        self.assertEqual(set(tools["fix_code"].inputSchema["properties"]), {"repo_path", "test_command", "max_usd"})
+        self.assertEqual(tools["fix_code"].inputSchema["required"], ["repo_path"])
+
+    def call_fix(self, repo, **kw):
+        seen = {}
+
+        async def fake_run_agent(app, args, ctx=None, **opts):
+            seen.update(app=app, args=args, **opts)
+            return {**OK, "agent": "code-fixer", "artifacts": {"trace": "/runs/f.json", "patch": "/runs/f.patch"}}
+
+        with mock.patch.object(server, "run_agent", fake_run_agent):
+            text = asyncio.run(server.fix_code(str(repo), ctx=None, **kw))
+        return seen, text
+
+    def test_fix_code_enforces_the_dollar_ceiling(self):
+        with tempfile.TemporaryDirectory() as d:
+            for asked, sent in [(5, "0.50"), (0.5, "0.50"), (0.2, "0.20"), (0.001, "0.01")]:
+                seen, _ = self.call_fix(d, max_usd=asked)
+                self.assertEqual(seen["args"][seen["args"].index("--max-usd") + 1], sent, f"asked for {asked}")
+            seen, text = self.call_fix(d)
+        self.assertEqual(seen["app"], server.CODE_FIXER)
+        self.assertEqual(seen["timeout"], server.FIX_TIMEOUT)
+        self.assertEqual(seen["args"], ["fix.py", "--json", "--test", "python -m pytest -q", "--max-usd", "0.50",
+                                        str(Path(d).resolve())])
+        self.assertTrue(text.startswith("code-fixer · $0.42 · 12s\ntrace: /runs/f.json\npatch: /runs/f.patch\n\n"))
+
+    def test_fix_code_passes_the_test_command_as_one_argument(self):
+        with tempfile.TemporaryDirectory() as d:
+            seen, _ = self.call_fix(d, test_command="python -m pytest -q tests/unit; rm -rf /")
+        self.assertIn("python -m pytest -q tests/unit; rm -rf /", seen["args"])   # fix.py splits it; no shell runs it
+
+    def test_fix_code_refuses_bad_input_before_running_anything(self):
+        with tempfile.TemporaryDirectory() as d:
+            for bad in [0, -1, float("nan"), float("inf")]:
+                with self.assertRaisesRegex(ToolError, "max_usd"):
+                    self.call_fix(d, max_usd=bad)
+            with self.assertRaisesRegex(ToolError, "not a directory"):
+                self.call_fix(Path(d) / "missing")
+        with self.assertRaisesRegex(ToolError, "absolute"):
+            self.call_fix("relative/repo")
 
     def test_long_output_is_cut_and_points_to_the_file(self):
         text = server.as_text({**OK, "output": "x" * (server.MAX_OUTPUT_CHARS + 500)})

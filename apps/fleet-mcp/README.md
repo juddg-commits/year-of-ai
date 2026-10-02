@@ -6,6 +6,7 @@ My agents are standalone apps, each with its own folder, dependencies, tests and
 |---|---|---|
 | `research(question, sub_questions=4, searches=3)` | Runs the [research agent](../research-agent/): a brief where every sentence cites its source | ~$1.25 and 2-3 min (≈$0.35 at 2 × 1) |
 | `recent_research(limit=10)` | Lists past briefs and their files, so a caller can reuse one instead of paying again | free |
+| `fix_code(repo_path, test_command="python -m pytest -q", max_usd=0.50)` | Runs the [code fixer](../code-fixer/): a Python repo with failing tests in, a patch checked in a fresh sandbox out. It never edits the repo | ~$0.06 a fix on the dev eval; the server caps it at $0.50 |
 
 ## How it works
 
@@ -19,7 +20,7 @@ Every agent follows one **result contract**: run its CLI with `--json`, and it p
 The server runs that CLI in the agent's own venv and relays the result. So:
 - **Agents never share dependencies.** A new agent is one more tool function here, nothing else changes.
 - **Progress streams to the client.** The agent's `[3/6]` stage lines become MCP progress notifications.
-- **Money is guarded.** The server caps the settings a caller can ask for (4 sub-questions × 3 searches). A cancelled or stuck call kills the agent process, so it stops spending. Every failure comes back as a tool error that says what was spent.
+- **Money is guarded.** The server caps the settings a caller can ask for (4 sub-questions × 3 searches; $0.50 a fix). A cancelled or stuck call kills the agent process, so it stops spending. Every failure comes back as a tool error that says what was spent.
 - **Big results don't overflow the caller.** Claude Code caps a tool result at ~25k tokens, so long output is cut and points to the saved file.
 - **stdout is off limits.** It carries the MCP protocol itself, so the server never prints to it.
 
