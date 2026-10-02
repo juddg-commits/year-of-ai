@@ -31,6 +31,18 @@ SYSTEM = """You fix bugs in Python repositories. The repo's tests fail. Find the
 - If you run out of budget or can't find the cause, stop and say what you found."""
 SYSTEM_BLOCKS = [{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}]
 
+# The eval's baseline without the test loop: the same prompt, tools and limits, minus run_tests.
+# The model gets one patch, checked once after it stops. Measures what running the tests buys.
+_RUN_LINE = ("- After editing, run the tests. When they all pass, stop and reply in two or three sentences: "
+             "what was wrong and what you changed.")
+_NO_RUN_LINE = ("- You can't run the tests: your fix is checked once, after you stop. Read until you're sure of "
+                "the cause, make the edit, then stop and reply in two or three sentences: what was wrong and what "
+                "you changed.")
+assert _RUN_LINE in SYSTEM
+SYSTEM_NO_TESTS = SYSTEM.replace(_RUN_LINE, _NO_RUN_LINE)
+SYSTEM_NO_TESTS_BLOCKS = [{"type": "text", "text": SYSTEM_NO_TESTS, "cache_control": {"type": "ephemeral"}}]
+TOOLS_NO_TESTS = [t for t in TOOLS if t["name"] != "run_tests"]
+
 MAX_FILES_LISTED = 200
 TRACE_TEXT = 2_000   # characters of each tool result / thinking summary kept in the trace
 
@@ -82,14 +94,17 @@ class FixResult:
     trace: dict = field(default_factory=dict)
 
 
-def task_message(repo_name: str, command: list, before: sandbox.TestRun, files: list, limits: Limits) -> str:
+def task_message(repo_name: str, command: list, before: sandbox.TestRun, files: list, limits: Limits,
+                 test_loop: bool = True) -> str:
     listed = [f + (" [read-only]" if workspace.is_protected(f) else "") for f in files[:MAX_FILES_LISTED]]
     if len(files) > MAX_FILES_LISTED:
         listed.append(f"[… {len(files) - MAX_FILES_LISTED} more: use list_files]")
+    budget = (f"{limits.max_test_runs} test runs and {limits.max_tool_calls} tool calls." if test_loop else
+              f"{limits.max_tool_calls} tool calls, and no test runs.")
     return (f"Repository: {repo_name}\nTest command: {shlex.join(command)}\n\n"
             f"The tests fail ({before.summary()}). Output:\n```\n{before.output}\n```\n\n"
             f"Files:\n" + "\n".join(listed) + "\n\n"
-            f"Budget for this fix: {limits.max_test_runs} test runs and {limits.max_tool_calls} tool calls.")
+            f"Budget for this fix: {budget}")
 
 
 def unresolved_tests(before: sandbox.TestRun, after: sandbox.TestRun) -> list:
@@ -121,8 +136,9 @@ def _clip_input(value):
 
 def fix(repo, command: list, *, limits: Limits | None = None, model: str = config.MODEL,
         effort: str = config.EFFORT, client=None, runner: Callable = sandbox.run_tests,
-        log: Callable = lambda msg: None) -> FixResult:
-    """Try to fix the repo at `repo` so `command` passes. Never modifies `repo`."""
+        log: Callable = lambda msg: None, test_loop: bool = True) -> FixResult:
+    """Try to fix the repo at `repo` so `command` passes. Never modifies `repo`.
+    test_loop=False is the eval's baseline: no run_tests tool, one patch, checked once."""
     limits = limits or Limits()
     repo = Path(repo).resolve()
     if not repo.is_dir():
@@ -131,6 +147,7 @@ def fix(repo, command: list, *, limits: Limits | None = None, model: str = confi
     ledger = llm.Ledger()
     res = FixResult(repo=str(repo), command=list(command), model=model)
     res.trace = {"repo": str(repo), "command": list(command), "model": model, "effort": effort,
+                 "test_loop": test_loop,
                  "limits": asdict(limits), "image": sandbox.image_id() if runner is sandbox.run_tests else None,
                  "started": time.strftime("%Y-%m-%dT%H:%M:%S"), "turns": [], "refused_edits": []}
 
@@ -154,12 +171,16 @@ def fix(repo, command: list, *, limits: Limits | None = None, model: str = confi
             return _finish(res, ledger, started, "bad_command",
                            error=f"pytest exit {res.before.exit_code}: " + res.before.output.strip()[-300:])
 
-        box = ToolBox(work, copied.files, list(command), runner, limits.max_test_runs)
-        messages = [{"role": "user", "content": task_message(repo.name, command, res.before, copied.files, limits)}]
-        log(f"[2/3] Fixing with {model} (effort {effort}, up to ${limits.max_usd:.2f})…")
+        box = ToolBox(work, copied.files, list(command), runner, limits.max_test_runs if test_loop else 0)
+        messages = [{"role": "user", "content": task_message(repo.name, command, res.before, copied.files, limits,
+                                                             test_loop)}]
+        log(f"[2/3] Fixing with {model} (effort {effort}, up to ${limits.max_usd:.2f})"
+            + ("" if test_loop else ", no test runs") + "…")
         try:
             client = client or llm.make_client()
-            stop, summary = _loop(client, ledger, box, messages, model, effort, limits, started, res, log)
+            system, tools = (SYSTEM_BLOCKS, TOOLS) if test_loop else (SYSTEM_NO_TESTS_BLOCKS, TOOLS_NO_TESTS)
+            stop, summary = _loop(client, ledger, box, messages, model, effort, limits, started, res, log,
+                                  system, tools)
         except KeyboardInterrupt:
             stop, summary = "interrupted", ""
         except Exception as e:   # a paid run must not crash: keep what was done, check it, save the trace
@@ -205,9 +226,10 @@ def _finish(res: FixResult, ledger: llm.Ledger, started: float, stop: str, error
 
 
 def _loop(client, ledger: llm.Ledger, box: ToolBox, messages: list, model: str, effort: str,
-          limits: Limits, started: float, res: FixResult, log: Callable) -> tuple:
+          limits: Limits, started: float, res: FixResult, log: Callable,
+          system: list = SYSTEM_BLOCKS, tools: list = TOOLS) -> tuple:
     """Returns (stop reason, the model's closing text)."""
-    cached, new = 0, llm.estimate_tokens(len(SYSTEM) + len(json.dumps(TOOLS)) + len(messages[0]["content"]))
+    cached, new = 0, llm.estimate_tokens(len(system[0]["text"]) + len(json.dumps(tools)) + len(messages[0]["content"]))
     cache_hit = True
     for turn in range(1, limits.max_turns + 1):
         if time.monotonic() - started > limits.max_seconds:
@@ -218,7 +240,7 @@ def _loop(client, ledger: llm.Ledger, box: ToolBox, messages: list, model: str, 
             return "budget", ""
         t0 = time.monotonic()
         try:
-            response = llm.call(client, model=model, effort=effort, system=SYSTEM_BLOCKS, tools=TOOLS,
+            response = llm.call(client, model=model, effort=effort, system=system, tools=tools,
                                 messages=messages, max_tokens=max_tokens)
         except Exception as e:   # after the SDK's own retries. Log what failed: a hidden error hides the bug
             status = getattr(e, "status_code", None)

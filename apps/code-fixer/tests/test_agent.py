@@ -178,6 +178,70 @@ class Loop(unittest.TestCase):
         self.assertTrue(res.fixed)
 
 
+class NoTestLoop(unittest.TestCase):
+    """The baseline that measures what the test loop buys: same prompt, tools and limits, minus run_tests."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.repo = make_repo(Path(self.tmp.name) / "repo")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def run_fix(self, script, runner=None):
+        self.client = FakeClient(script)
+        return fix(self.repo, CMD, limits=Limits(), client=self.client, runner=runner or calc_runner(), test_loop=False)
+
+    def test_the_model_never_gets_run_tests_and_the_patch_is_still_checked(self):
+        calls = []
+        res = self.run_fix([response(tool("edit_file", EDIT)), response(text("add() subtracted."))],
+                           runner=calc_runner(calls))
+        self.assertTrue(res.fixed)
+        self.assertEqual(res.test_runs, 0)
+        self.assertEqual(len(calls), 2)   # the run before and the final check: nothing in between
+        self.assertFalse(res.trace["test_loop"])
+        first = self.client.requests[0]
+        self.assertNotIn("run_tests", [t["name"] for t in first["tools"]])
+        self.assertEqual([t["name"] for t in first["tools"]], [t["name"] for t in agent.TOOLS if t["name"] != "run_tests"])
+        self.assertIn("You can't run the tests", first["system"][0]["text"])
+        self.assertIn("no test runs", first["messages"][0]["content"])
+
+    def test_a_wrong_patch_fails_the_final_check(self):
+        wrong = {"path": "calc.py", "old_string": "return a - b", "new_string": "return a * b"}
+        res = self.run_fix([response(tool("edit_file", wrong)), response(text("Done."))])
+        self.assertFalse(res.fixed)
+        self.assertEqual(res.unresolved, ["test_calc.py::test_add"])
+
+    def test_a_run_tests_call_is_refused_anyway(self):
+        res = self.run_fix([response(tool("run_tests", {})), response(text("OK."))])
+        self.assertEqual(res.test_runs, 0)
+        result = self.client.requests[1]["messages"][2]["content"][0]
+        self.assertTrue(result["is_error"])
+
+    def test_only_the_closing_line_of_the_prompt_differs(self):
+        loop, once = agent.SYSTEM.splitlines(), agent.SYSTEM_NO_TESTS.splitlines()
+        self.assertEqual(len(loop), len(once))
+        self.assertEqual(sum(a != b for a, b in zip(loop, once)), 1)
+
+    def test_sonnet_5_5_is_priced_from_its_row_and_opts_into_fallback(self):
+        self.client = FakeClient([response(text("Nothing."), model="claude-sonnet-5-5", u=usage(inp=1_000, out=1_000))])
+        res = fix(self.repo, CMD, client=self.client, runner=calc_runner(), model="claude-sonnet-5-5")
+        first = self.client.requests[0]
+        self.assertEqual(first["model"], "claude-sonnet-5-5")
+        self.assertEqual(first["fallbacks"], "default")
+        self.assertEqual(first["thinking"]["type"], "adaptive")
+        self.assertEqual(llm.prices("claude-sonnet-5-5"), (2.00, 10.00, 2.50, 0.20))
+        self.assertAlmostEqual(res.cost, (1_000 * 2.00 + 1_000 * 10.00) / 1e6)
+
+    def test_the_default_is_unchanged(self):
+        self.client = FakeClient([response(text("Nothing."))])
+        fix(self.repo, CMD, client=self.client, runner=calc_runner())
+        first = self.client.requests[0]
+        self.assertIs(first["system"], agent.SYSTEM_BLOCKS)
+        self.assertIs(first["tools"], agent.TOOLS)
+        self.assertIn("8 test runs and 40 tool calls", first["messages"][0]["content"])
+
+
 class Unresolved(unittest.TestCase):
     def run_of(self, outcomes, exit_code=1):
         return TestRun(["pytest"], exit_code=exit_code, outcomes=outcomes)

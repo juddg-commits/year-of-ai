@@ -5,13 +5,19 @@
     .venv/bin/python eval.py verify                    # free: checks every case in the sandbox
     .venv/bin/python eval.py run --split dev           # PAID: prints the most it can spend, then stops
     .venv/bin/python eval.py run --split dev --yes     # ...and this spends it
+    .venv/bin/python eval.py run --split dev --no-test-loop --max-total 2.50 --yes   # the baseline without test runs
 
 A case is solved when the fix passes the agent's own final check (every visible test) AND the
 hidden tests, run on the broken repo with only the agent's changed files on top. Results go to
 runs/eval-<time>/: one trace (and patch) per case, and results.json, written after every case.
 
+--max-total is a ceiling for the whole run: a case isn't started if its own ceiling could take the
+run past it. The cases left out are listed as not run, never as failures.
+
 API failures that survive the SDK's retries are counted apart, never as the agent failing: the
-summary leaves them out of the rate and prints the command that reruns them."""
+summary leaves them out of the rate and prints the command that reruns them. One that no retry
+fixes (400, 401, 403, 404: an empty credit balance, a bad key) stops the run: every case after it
+would fail the same way."""
 
 import argparse
 import json
@@ -24,6 +30,8 @@ from collections import Counter
 from pathlib import Path
 
 from code_fixer import agent, cases, config, llm, machine, report, sandbox
+
+FATAL_STATUSES = {400, 401, 403, 404}   # the SDK doesn't retry these, and the next case won't fix them
 
 
 def fetch_sources(chosen: list) -> bool:
@@ -56,11 +64,12 @@ def cmd_verify(args) -> int:
 
 def run_case(c: cases.Case, args, out_dir: Path) -> dict:
     row = {"id": c.id, "split": c.split, "kind": c.kind, "category": c.category, "model": args.model,
-           "effort": args.effort, "solved": False, "api_failure": False}
+           "effort": args.effort, "test_loop": not args.no_test_loop, "solved": False, "api_failure": False}
     with tempfile.TemporaryDirectory(prefix="code-fixer-eval-") as tmp:
         repo = cases.materialize(c, Path(tmp) / c.source.split("@")[0])   # named after its project, no commit
         res = agent.fix(repo, c.command, limits=agent.Limits(max_usd=args.max_usd), model=args.model,
-                        effort=args.effort, log=lambda msg: print("   " + msg.strip()))
+                        effort=args.effort, log=lambda msg: print("   " + msg.strip()),
+                        test_loop=not args.no_test_loop)
     graded = cases.grade(c, res.changed) if res.changed else None
     hidden_failing = [t for t, o in graded.outcomes.items() if o in ("failed", "error") and c.is_hidden(t)] if graded else []
     res.trace["eval"] = {"case": cases.as_dict(c), "graded": graded.as_dict() if graded else None}
@@ -70,7 +79,7 @@ def run_case(c: cases.Case, args, out_dir: Path) -> dict:
         "visible_pass": res.fixed,
         "hidden_pass": graded.passed if graded else False,
         "hidden_failing": hidden_failing,
-        "api_failure": res.stop == "api_error",
+        "api_failure": res.stop == "api_error", "api_status": (res.trace.get("api_error") or {}).get("status"),
         "stop": res.stop, "error": res.error, "cost": round(res.cost, 4), "seconds": round(res.seconds, 1),
         "turns": res.turns, "tool_calls": res.tool_calls, "test_runs": res.test_runs,
         "refused_edits": len(res.trace.get("refused_edits", [])), "files_changed": sorted(res.changed),
@@ -79,7 +88,7 @@ def run_case(c: cases.Case, args, out_dir: Path) -> dict:
     return row
 
 
-def summarize(rows: list) -> dict:
+def summarize(rows: list, not_run: list | None = None) -> dict:
     graded = [r for r in rows if not r["api_failure"]]
     solved = [r for r in graded if r["solved"]]
     cost = sum(r.get("cost", 0) for r in rows)
@@ -91,6 +100,7 @@ def summarize(rows: list) -> dict:
         "cost_total": round(cost, 4), "cost_per_case": round(cost / len(rows), 4) if rows else None,
         "seconds_per_case": round(sum(r.get("seconds", 0) for r in rows) / len(rows), 1) if rows else None,
         "stops": dict(Counter(r.get("stop") for r in rows)),
+        "not_run": list(not_run or []),
     }
 
 
@@ -100,7 +110,13 @@ def cmd_run(args) -> int:
         print("No cases match.")
         return 1
     ceiling = len(chosen) * args.max_usd
-    print(f"{len(chosen)} case(s) on {args.model} (effort {args.effort}), at most ${args.max_usd:.2f} each: "
+    if args.max_total is not None:
+        if args.max_total < args.max_usd:
+            print(f"--max-total (${args.max_total:.2f}) is below one case's ceiling (${args.max_usd:.2f}): nothing could run.")
+            return 1
+        ceiling = min(ceiling, args.max_total)
+    print(f"{len(chosen)} case(s) on {args.model} (effort {args.effort}"
+          + ("" if not args.no_test_loop else ", no test loop") + f"), at most ${args.max_usd:.2f} each: "
           f"at most ${ceiling:.2f} in total.")
     if not args.yes:
         print("Nothing was run. Add --yes to spend it.")
@@ -122,8 +138,14 @@ def cmd_run(args) -> int:
     print()
     out_dir = config.RUNS_DIR / f"eval-{time.strftime('%Y%m%d-%H%M%S')}"
     out_dir.mkdir(parents=True)
-    rows = []
+    rows, not_run = [], []
     for i, c in enumerate(chosen, 1):
+        spent = sum(r.get("cost", args.max_usd) for r in rows)   # a crashed case's cost is unknown: count its ceiling
+        if args.max_total is not None and spent + args.max_usd > args.max_total:
+            not_run = [x.id for x in chosen[i - 1:]]
+            print(f"Stopped before {c.id}: ${spent:.2f} spent, and one more case could pass the "
+                  f"${args.max_total:.2f} ceiling. Not run: {', '.join(not_run)}")
+            break
         print(f"[{i}/{len(chosen)}] {c.id}")
         try:
             row = run_case(c, args, out_dir)
@@ -133,13 +155,20 @@ def cmd_run(args) -> int:
         print(f"   {'SOLVED' if row['solved'] else 'not solved'} · ${row.get('cost', 0):.3f} · "
               f"{row.get('seconds', 0):.0f}s · {row.get('stop')}" + (" · API failure, not graded" if row["api_failure"] else ""))
         (out_dir / "results.json").write_text(json.dumps({"args": vars(args), "summary": summarize(rows), "cases": rows}, indent=2))
-    s = summarize(rows)
+        if row["api_failure"] and row.get("api_status") in FATAL_STATUSES:
+            not_run = [x.id for x in chosen[i:]]
+            print(f"\nStopped: HTTP {row['api_status']} isn't retried and every case would hit it. {row.get('error', '')[:300]}")
+            break
+    s = summarize(rows, not_run)
+    (out_dir / "results.json").write_text(json.dumps({"args": vars(args), "summary": s, "cases": rows}, indent=2))
     print(f"\nSolved {s['solved']} of {s['graded']} graded case(s)" + (f" ({s['solved_rate']:.0%})" if s["graded"] else "")
           + f" · ${s['cost_total']:.2f} total, ${s['cost_per_case']:.3f} per case · {s['seconds_per_case']:.0f}s per case")
     if s["visible_only"]:
         print(f"Passed the visible tests but failed hidden ones: {', '.join(s['visible_only'])}")
     if s["api_failures"]:
         print(f"Not graded (API failures): rerun with --cases {','.join(s['api_failures'])}")
+    if s["not_run"]:
+        print(f"Not run (the run's ceiling): --cases {','.join(s['not_run'])}")
     print(f"Results: {out_dir / 'results.json'}")
     return 0
 
@@ -155,6 +184,9 @@ def main() -> int:
     run.add_argument("--model", default=config.MODEL)
     run.add_argument("--effort", default=config.EFFORT, choices=["low", "medium", "high", "xhigh", "max"])
     run.add_argument("--max-usd", type=float, default=config.MAX_USD, help="ceiling per case")
+    run.add_argument("--max-total", type=float, help="ceiling for the whole run")
+    run.add_argument("--no-test-loop", action="store_true",
+                     help="baseline: no run_tests tool, one patch checked once (what the test loop buys)")
     run.add_argument("--yes", action="store_true", help="actually run (it costs money)")
     run.add_argument("--ignore-power", action="store_true", help="run on battery or with the lid closed")
     args = p.parse_args()

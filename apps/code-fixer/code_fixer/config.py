@@ -35,11 +35,12 @@ PRICES = {
     "claude-opus-5-5": (4.00, 20.00, 5.00, 0.20),
     "claude-opus-5": (5.00, 25.00, 6.25, 0.50),
     "claude-opus-4-8": (5.00, 25.00, 6.25, 0.50),   # where a refused Opus request can fall back to
+    "claude-sonnet-5-5": (2.00, 10.00, 2.50, 0.20),
     "claude-sonnet-5": (2.00, 10.00, 2.50, 0.20),
 }
-# Opus requests opt into server-side refusal fallback (a rare classifier decline is re-run
+# Opus and Sonnet 5.5 requests opt into server-side refusal fallback (a rare classifier decline is re-run
 # on the model Anthropic recommends for it instead of ending the fix).
-FALLBACK_MODELS = {"claude-opus-5-5", "claude-opus-5"}
+FALLBACK_MODELS = {"claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5"}
 
 ROOT = Path(__file__).resolve().parent.parent
 RUNS_DIR = ROOT / "runs"
