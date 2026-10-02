@@ -13,6 +13,8 @@ MAX_TOOL_CALLS = 40
 MAX_TEST_RUNS = 8           # the model's runs; the final check is the checker's and doesn't count
 MAX_TURNS = 30
 MAX_SECONDS = 15 * 60
+API_RETRIES = 3             # the SDK retries 429s, 5xx, connection errors and timeouts with backoff
+MIN_CALL_TIMEOUT = 30       # seconds; each call's timeout is the time left, split across its attempts
 
 # What the model sees of long text
 READ_MAX_LINES = 400        # per read_file call

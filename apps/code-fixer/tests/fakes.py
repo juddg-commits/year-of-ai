@@ -88,6 +88,11 @@ class FakeMessages:
 class FakeClient:
     def __init__(self, script):
         self.beta = NS(messages=FakeMessages(script))
+        self.options = []     # the kwargs of every with_options call (one per model call)
+
+    def with_options(self, **kwargs):
+        self.options.append(kwargs)
+        return self
 
     @property
     def requests(self):

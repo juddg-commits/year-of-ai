@@ -24,7 +24,7 @@ def load_dotenv() -> None:
 def make_client():
     import anthropic   # imported here so the offline tests never need the SDK's network setup
     load_dotenv()
-    return anthropic.Anthropic(max_retries=3)   # the SDK retries 429s, 5xx and connection errors with backoff
+    return anthropic.Anthropic(max_retries=config.API_RETRIES)
 
 
 def prices(model: str) -> tuple:
@@ -103,10 +103,16 @@ def estimate_tokens(chars: int) -> int:
     return chars // 3 + 1   # code runs about 3-4 characters per token; err high
 
 
-def call(client, *, model: str, effort: str, system: list, tools: list, messages: list, max_tokens: int):
+def call(client, *, model: str, effort: str, system: list, tools: list, messages: list, max_tokens: int,
+         timeout: float | None = None):
     """One model turn, streamed (long thinking can't time out the HTTP request) and returned whole.
     An explicit cache breakpoint sits on the system prompt; top-level automatic caching moves a
-    second one along the growing conversation, so each turn re-reads the last from cache."""
+    second one along the growing conversation, so each turn re-reads the last from cache.
+
+    `timeout` bounds each attempt: on a stream it's how long the API may send nothing (it sends
+    pings while the model thinks, so only a stall trips it). A stalled call raises APITimeoutError."""
+    if timeout is not None:
+        client = client.with_options(timeout=timeout)
     kwargs = dict(model=model, max_tokens=max_tokens, system=system, tools=tools, messages=messages,
                   thinking={"type": "adaptive", "display": "summarized"},
                   output_config={"effort": effort}, cache_control={"type": "ephemeral"})

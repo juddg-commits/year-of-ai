@@ -238,10 +238,14 @@ def _loop(client, ledger: llm.Ledger, box: ToolBox, messages: list, model: str, 
             model, limits.max_usd - ledger.total(), cached, new, cache_hit))
         if max_tokens < config.MIN_TOKENS:
             return "budget", ""
+        # The time limit is checked between calls, so it has to bound each call too: one stalled
+        # stream once ran past 30 minutes through the SDK's retries. Split what's left across them.
+        left = limits.max_seconds - (time.monotonic() - started)
+        call_timeout = max(config.MIN_CALL_TIMEOUT, left / (config.API_RETRIES + 1))
         t0 = time.monotonic()
         try:
             response = llm.call(client, model=model, effort=effort, system=system, tools=tools,
-                                messages=messages, max_tokens=max_tokens)
+                                messages=messages, max_tokens=max_tokens, timeout=call_timeout)
         except Exception as e:   # after the SDK's own retries. Log what failed: a hidden error hides the bug
             status = getattr(e, "status_code", None)
             res.error = f"{type(e).__name__}" + (f" (HTTP {status})" if status else "") + f": {e}"

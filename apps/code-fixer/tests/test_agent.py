@@ -4,6 +4,7 @@ Run: .venv/bin/python -m unittest discover tests"""
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 from types import SimpleNamespace as NS
 
 from code_fixer import agent, config, llm, report
@@ -169,6 +170,33 @@ class Loop(unittest.TestCase):
         res = self.run_fix([], runner=broken)
         self.assertEqual(res.stop, "sandbox_error")
         self.assertEqual(res.error, "docker not found")
+
+    def test_each_call_is_bounded_by_the_time_left(self):
+        # 2026-10-02: the 15-minute limit was checked only between calls, and one stalled stream ran
+        # past 30 minutes through the SDK's retries. Each call now gets the time left over its attempts.
+        self.run_fix([response(text("Nothing."))], limits=Limits(max_seconds=900))
+        first = self.client.options[0]["timeout"]
+        self.assertLessEqual(first, 900 / (config.API_RETRIES + 1))
+        self.assertGreater(first, 900 / (config.API_RETRIES + 1) - 5)
+        self.run_fix([response(text("Nothing."))], limits=Limits(max_seconds=40))
+        self.assertEqual(self.client.options[0]["timeout"], config.MIN_CALL_TIMEOUT)
+
+    def test_the_call_timeout_shrinks_as_the_fix_runs(self):
+        clock = iter(range(0, 10_000, 30))   # every clock read is 30 s later
+        with mock.patch.object(agent.time, "monotonic", lambda: next(clock)):
+            self.run_fix([response(tool("read_file", {"path": "calc.py"})), response(text("Done."))],
+                         limits=Limits(max_seconds=900))
+        first, second = (o["timeout"] for o in self.client.options)
+        self.assertLess(second, first)
+
+    def test_a_stalled_call_ends_the_fix_as_an_api_error(self):
+        class APITimeoutError(Exception):   # shaped like the SDK's: no status code
+            pass
+        res = self.run_fix([response(tool("edit_file", EDIT)), APITimeoutError("Request timed out.")])
+        self.assertEqual(res.stop, "api_error")
+        self.assertIn("APITimeoutError: Request timed out.", res.error)
+        self.assertIsNone(res.trace["api_error"]["status"])
+        self.assertTrue(res.fixed)   # the edit before the stall still gets its final check
 
     def test_a_crash_in_the_loop_keeps_the_work_and_the_trace(self):
         res = self.run_fix([response(tool("edit_file", EDIT)), ValueError("boom")])
