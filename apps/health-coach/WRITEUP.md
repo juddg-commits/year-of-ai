@@ -4,7 +4,7 @@ This is project #1 of my Year of AI, where I'm spending a year building AI proje
 
 **What it is:** a personal trainer that remembers you between sessions and takes real actions. It logs workouts, meals and weigh-ins, saves if-then plans, and programs your week from the loads you actually logged. One Python engine file, a FastAPI server around it, and a phone-first web app as the face.
 
-I built it with Claude Code as my pair programmer.
+I built it with Claude Code as my pair programmer. It wrote most of the code. I picked what to build, tested it on my own questions, and decided which problems were worth fixing.
 
 ## How I tested it
 
