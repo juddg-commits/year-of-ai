@@ -9,8 +9,8 @@ One coach turn: send the conversation and the tools, run any tool the model asks
 Three guards around the loop. The last two were added after a run showed the failure:
 
 - **Roll back a failed turn.** A turn that errors halfway would leave a tool call without its result in the history, and every later request would be refused. The turn's messages are removed before the error is returned.
-- **Log the error and recover from a refused conversation.** Run 14 lost most of day 1: after one reply, every chat turn failed within a second until the session reset, while the weekly program call in between worked. The app swallowed the error, so the cause is unknown. Now every failed call writes its type, status and message to stderr and `data/usage.jsonl`. When the API refuses a turn with earlier messages in the session and nothing saved yet, the app saves the session to the log and retries once from a fresh start.
-- **Catch "Logged" with no tool call.** In run 13 the coach replied "Logged: 3 slices pepperoni + a Monster" and called nothing. When a sentence opens with "Logged" and no tool ran that turn, the loop sends one hidden check asking for the call. On the 297 turns of runs 1 to 13, that rule would have fired 3 times: the real miss, plus 2 recaps of data already saved ("Logged 3 days out of the last 7", "yesterday: logged the lift, marked it kept"), where the check tells it to save nothing.
+- **Log the error and recover from a refused conversation.** Run 14 lost most of day 1: after two replies, every chat turn failed within a second until the session reset, while the weekly program call in between worked. The app swallowed the error, so the cause is unknown. Now every failed call writes its type, status and message to stderr and `data/usage.jsonl`. When the API refuses a turn with earlier messages in the session and nothing saved yet, the app saves the session to the log and retries once from a fresh start.
+- **Catch "Logged" with no tool call.** In run 13 the coach replied "Logged: 3 slices pepperoni + a Monster" and called nothing. When a sentence opens with "Logged" and no tool ran that turn, the loop sends one hidden check asking for the call. On the 297 turns of runs 1 to 13, that rule would have fired 3 times: the real miss, plus 2 recaps of data already saved ("Logged 3 days out of the last 7", "yesterday: logged the lift, marked it kept"), where the check tells it to save nothing. Counting every reply that claimed a save with nothing saved, those 297 turns had 3: this one and two in run 5, which typed the tool marker instead (section 2). The rule doesn't catch that form; its fix is keeping tool calls out of the saved logs.
 
 ## 2. What the model sees
 
@@ -63,7 +63,7 @@ The rules have been wrong too. Checking every flag against a hand reading found 
 
 ## 5. Every run
 
-Scores use today's 13-check scorecard, so the rows compare like for like. Runs 4, 8, 9 and 11 scored 12/12 on the 12-check card of the time; the skipped-question check was added after run 11.
+Scores use today's 13-check scorecard, re-scored offline, so the rows compare like for like. The scorecards saved with older runs used earlier versions of the checks (runs 4, 8, 9 and 11 saved 7/10, 11/12, 11/12 and 11/12); the skipped-question check was added after run 11.
 
 | Run | User | Change before the run | Score | Cost | What it showed |
 |---|---|---|---|---|---|
@@ -73,7 +73,7 @@ Scores use today's 13-check scorecard, so the rows compare like for like. Runs 4
 | 4 | knee | notes section, intake nudge, injury rule | 12/13 | $1.43 | chased bodyweight |
 | 5 | knee | same code | 10/13 | $1.28 | typed "[log_workout] Logged…", saved nothing |
 | 6 | knee | tool markers out of saved logs | 11/13 | $1.48 | nagged about the knee |
-| 7 | knee | superseded, stopped early | | about $0.50 | |
+| 7 | knee | superseded, stopped early | | $0.28 | |
 | 8 | knee | final prompt | 12/13 | $1.43 | chased bodyweight |
 | 9 | knee | same code | 12/13 | $1.37 | chased bodyweight |
 | 10 | other | a different no-injury user, stopped on day 2 | | $0.49 | replaced by the control |
