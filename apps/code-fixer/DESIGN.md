@@ -52,7 +52,7 @@ repo + test command
 
 Same 19 dev cases, same $0.50 ceiling per case, one run each. Two counts per row:
 - **by the eval**: the visible tests and the hidden ones pass.
-- **by hand-check**: the same, plus the three real cases checked against upstream's fix on random inputs (the hand-check section below). A patch fails the hand-check if it raises an error or loses data where upstream's fix doesn't. Different but valid ID numbers don't count against it. Every row is held to this standard.
+- **by hand-check**: the same, plus the three real cases checked against upstream's fix on random inputs (the hand-check section below). A patch fails the hand-check if it raises an error or loses data where upstream's fix doesn't. Different but valid ID numbers don't count against it, and neither does a failed insert that names its own ID: under any valid numbering, the ID a caller asks for may already be taken. Only an insert that leaves the ID to tinydb has to succeed. Every row is held to this standard.
 
 | setup | by the eval | by hand-check | total | per case | time per case | run |
 |---|---|---|---|---|---|---|
@@ -132,9 +132,11 @@ Tests passing isn't the same as being the fix. For three real cases I rebuilt up
 |---|---|---|---|---|---|
 | networkx-8895 | 400 | 95 differ | 0 differ (4 runs) | 0 | Adds only the size check to `isomorphisms_iter`. Upstream moves the size **and** degree-sequence checks there from `is_isomorphic`. The degree check is a fast rejection, so answers are identical; speed wasn't measured. |
 | more-itertools-1285 | 400 | 256 differ | 0 differ (3 passing runs) | 0 | Keeps the `defaultdict` and registers a key with a bare `self._cache[value]`, the side-effect lookup the issue is about, used on purpose. Upstream replaces the `defaultdict` with a plain dict and `setdefault`, so no lookup can invent a key. Same behavior; upstream removes the trap, the patch works around it. |
-| tinydb-633 | 300 | 118 differ, 24 overwrites | 7-8 differ, 0 overwrites, 0 failed inserts (4 runs) | 112 differ, 0 overwrites, **10 failed inserts** | Fixes the overwrite but hands out different IDs in two edge cases: a batch that failed and wrote nothing still moves the counter (an empty table's next ID is 13, upstream's 1), and after an explicit ID is removed `insert_multiple` and `insert()` disagree (11 vs 2; upstream gives 2 for both, resetting the counter "same as insert()"). |
+| tinydb-633 | 300 | 118 differ, 24 overwrites | 7-8 differ, 0 overwrites, 0 failed plain inserts (4 runs) | 112 differ, 0 overwrites, **10 failed plain inserts** | Fixes the overwrite but hands out different IDs in two edge cases: a batch that failed and wrote nothing still moves the counter (an empty table's next ID is 13, upstream's 1), and after an explicit ID is removed `insert_multiple` and `insert()` disagree (11 vs 2; upstream gives 2 for both, resetting the counter "same as insert()"). |
 
 Opus patches: eval-20261001-163752, -165125, eval-20261002-124619 and -125922 (more-itertools: all but -124619, which missed it). Sonnet: eval-20261002-124640.
+
+A plain insert leaves the ID to tinydb. Inserts that name their own ID fail for every copy, upstream included, whenever the ID is taken. Each Opus tinydb patch has one of those that fails where upstream's succeeds and one the other way round, both from the different numbering above. By the hand-check standard (under "What each design choice bought"), neither counts.
 
 ## What didn't work
 
