@@ -100,7 +100,7 @@ Too many claims came back "partial" (56% on the tuned AI scribes run). The plan 
 
 The planned fix would have barely moved the number. The worker had read the whole page; only our excerpt was short. So stage 3 downloads the source page with a plain HTTP request (no tokens; 3.3 s and 0.6 s in the two saved runs that had it), finds the quote in it and completes the sentence (`quotes.py`).
 - **Matching on words, not characters.** The API's quote is markdown and the page isn't, so the quote's words must appear in order with anything non-word between them. The last word is skipped because it's often half a word ("documentatio").
-- **Real data found the edge cases the first tests missed:** Wikipedia quotes carry link targets and `[7]` markers, and the API sometimes glues two separate excerpts into one quote. Handling both raised recovery on one run from 61 to 73 of 81 cut-off quotes. What's left is mostly pages that can't be downloaded (403s, PDFs).
+- **Real data found the edge cases the first tests missed:** Wikipedia quotes carry link targets and `[7]` markers, and the API sometimes glues two separate excerpts into one quote. Handling both recovered more of the cut-off quotes (that session's counts were printed, not saved). What's left is mostly pages that can't be downloaded (403s, PDFs).
 - **Controlled replay** (`revalidate.py`): the same claims and validator prompt, API quotes vs recovered quotes, research not re-run. On the tuned AI scribes run, 2026-10-04 (`runs/revalidate-20261004-140048/`, $0.69):
 
 | 116 claims | supported | partial | unsupported |
