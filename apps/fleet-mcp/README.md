@@ -4,7 +4,7 @@ My agents are standalone apps, each with its own folder, dependencies, tests and
 
 | Tool | What it does | Cost |
 |---|---|---|
-| `research(question, sub_questions=4, searches=3)` | Runs the [research agent](../research-agent/): a brief where every sentence cites its source | ~$1.25 and 2-3 min (≈$0.35 at 2 × 1) |
+| `research(question, sub_questions=4, searches=3)` | Runs the [research agent](../research-agent/): a brief where every sentence cites its source | $1.25 and 2.5 min at 4 × 3 on the tuned run (runs/20260928-092603, before quote recovery); $0.37 and 7.5 min at 2 × 1 on the shipped code (runs/20260928-102158) |
 | `recent_research(limit=10)` | Lists past briefs and their files, so a caller can reuse one instead of paying again | free |
 | `fix_code(repo_path, test_command="python -m pytest -q", max_usd=0.50)` | Runs the [code fixer](../code-fixer/): a Python repo with failing tests in, a patch checked in a fresh sandbox out. It never edits the repo | ~$0.06 a fix on the dev eval; the server caps it at $0.50 |
 

@@ -26,7 +26,7 @@ from mcp.server.fastmcp.exceptions import ToolError
 APPS = Path(__file__).resolve().parent.parent
 RESEARCH = APPS / "research-agent"
 CODE_FIXER = APPS / "code-fixer"
-RUN_TIMEOUT = 15 * 60          # seconds; a normal research run takes 2-3 minutes
+RUN_TIMEOUT = 15 * 60          # seconds; the saved research runs took 1.2 to 7.5 minutes
 FIX_TIMEOUT = 20 * 60          # the fixer stops itself at 15 minutes, plus a sandbox run before and after
 MAX_FIX_USD = 0.50             # the code fixer's ceiling: a caller can ask for less, never more
 MAX_OUTPUT_CHARS = 40_000      # Claude Code caps a tool result at ~25k tokens; past this, read the file
@@ -96,8 +96,9 @@ async def research(question: str, ctx: Context, sub_questions: int = MAX_SUB_QUE
                    searches: int = MAX_SEARCHES) -> str:
     """Research a question on the web and return a brief in which every sentence cites its source.
 
-    Costs real money and time: about $1.25 and 2-3 minutes with the defaults (4 sub-questions,
-    3 searches each). sub_questions=2, searches=1 is about $0.35 and fine for narrow questions.
+    Costs real money and time: the tuned run cost $1.25 and took 2.5 minutes with the defaults
+    (4 sub-questions, 3 searches each; before quote recovery). On the shipped code, sub_questions=2,
+    searches=1 cost $0.37 and took 7.5 minutes, mostly waiting on web search; fine for narrow questions.
     Call recent_research first: an existing brief may already answer the question for free."""
     sub_questions = max(1, min(sub_questions, MAX_SUB_QUESTIONS))
     searches = max(1, min(searches, MAX_SEARCHES))
