@@ -27,6 +27,7 @@ The first full run cost $2.07. Ordering the prompt from the part that never chan
 ## What I learned
 
 - **The agent loop is small:** decide, call a tool, feed the result back, continue. Everything else is plumbing.
+- **Structured outputs make programming quality come from context** (real logged loads, week position), not cleverness.
 - **Give the model the data; don't make it remember or compute.** In the first simulated run, it called 8 days "three weeks." Every date it sees now carries its weekday and age, and trends are computed in code.
 - **XP that can only be earned from real log files is the honest version of gamification.** A tap can't mint it.
 - **Behavior science translates directly into product rules:** never miss twice, if-then plans, fresh starts.
