@@ -22,7 +22,7 @@ The first full run cost $2.07. Ordering the prompt from the part that never chan
 
 **It kept asking for a weigh-in.** With none on file, the coach asked for bodyweight in 4 to 5 replies per run. To the model, the empty section read like a blocker. Once that section said "nothing yet, and nothing waits on it," and a new rule told it to let skipped questions go, it asked zero times in the next four runs.
 
-**I blew my own ship window.** I kept building new versions and didn't commit any of them until the end. Lesson: commit on day one. "Done" is on GitHub, not on my laptop.
+**I blew my own ship window.** I kept building new versions and didn't commit any of them for about seven weeks. Lesson: commit on day one. "Done" is on GitHub, not on my laptop.
 
 ## What I learned
 
