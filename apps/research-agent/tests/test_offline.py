@@ -1,12 +1,20 @@
 """Offline tests: every deterministic step, no API calls, no cost.
 Run: .venv/bin/python -m unittest discover tests"""
 
+import json
+import os
+import shutil
+import sys
+import tempfile
 import unittest
+from pathlib import Path
 from types import SimpleNamespace as NS
+from unittest import mock
 
+import revalidate
 from research_agent import evidence as ev
 from research_agent import pages
-from research_agent.llm import Ledger
+from research_agent.llm import CallRecord, Ledger
 from research_agent.quotes import extend_quote
 from research_agent.researcher import extract
 from research_agent.synthesizer import Brief, Section, audit
@@ -222,6 +230,85 @@ class Cost(unittest.TestCase):
         rec = Ledger().record("research", NS(usage=usage, model="claude-sonnet-5"), 1.0)
         # $2 input + $1 output + $0.20 cache read + $0.03 searches
         self.assertAlmostEqual(rec.cost, 3.23, places=4)
+
+
+class Revalidate(unittest.TestCase):
+    """The paid replay, driven by a fake validator and fake page fetches: no API calls, no network."""
+
+    TRACE = {
+        "evidence": [
+            {"sub_question_id": "q1", "claim": "c1", "quote": "Scribes cut note time by 20% across...",
+             "url": "https://a.com/x", "title": "A", "id": "e1", "source_id": "s1", "verdict": "partial", "reason": "old"},
+            {"sub_question_id": "q1", "claim": "c2", "quote": "A complete quote that was not cut off.",
+             "url": "https://b.com/y", "title": "B", "id": "e2", "source_id": "s2", "verdict": "supported", "reason": "old"},
+        ],
+        "sources": {"s1": {"id": "s1", "url": "https://a.com/x", "title": "A", "domain": "a.com"},
+                    "s2": {"id": "s2", "url": "https://b.com/y", "title": "B", "domain": "b.com"}},
+        "calls": [{"stage": "validate", "cost": 0.10}],
+    }
+
+    def run_replay(self, *extra, cost=0.10, fail=False):
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp)
+        trace, out = tmp / "trace.json", tmp / "out"
+        trace.write_text(json.dumps(self.TRACE))
+        self.judged = 0
+
+        def fake_extend(items):
+            for e in items:
+                if e.quote.endswith("..."):
+                    e.api_quote, e.quote = e.quote, e.quote[:-3] + " six systems."
+            return pages.QuoteStats(truncated=1, extended=1, pages=1)
+
+        def fake_validate(ledger, evidence, sources):
+            self.judged += 1
+            ledger.calls.append(CallRecord("validate", "fake", 0, 0, 0, 0, 0, 0.0, cost))
+            if fail:
+                raise RuntimeError("API down")
+            for e in evidence:
+                e.verdict, e.reason = ("partial" if e.quote.endswith("...") else "supported"), "fake"
+            return []
+
+        argv = ["revalidate.py", str(trace), "--out", str(out), *extra]
+        with mock.patch.object(sys, "argv", argv), mock.patch.dict(os.environ, {"ANTHROPIC_API_KEY": "fake"}), \
+                mock.patch.object(revalidate.pages, "extend_quotes", fake_extend), \
+                mock.patch.object(revalidate.validator, "validate", fake_validate), mock.patch("builtins.print"):
+            code = revalidate.main()
+        saved = json.loads((out / "results.json").read_text()) if (out / "results.json").exists() else None
+        return code, saved, out
+
+    def test_both_arms_are_saved_with_every_items_verdicts(self):
+        code, saved, out = self.run_replay()
+        self.assertEqual(code, 0)
+        self.assertEqual(saved["arms"]["API quotes"]["counts"], {"supported": 1, "partial": 1, "unsupported": 0})
+        self.assertEqual(saved["arms"]["page quotes"]["counts"], {"supported": 2, "partial": 0, "unsupported": 0})
+        first = saved["items"][0]
+        self.assertEqual((first["api_verdict"], first["page_verdict"]), ("partial", "supported"))
+        self.assertTrue(first["page_quote"].endswith("six systems."))
+        self.assertAlmostEqual(saved["total_cost"], 0.20)
+        self.assertEqual(len(saved["calls"]), 2)
+        self.assertIn("page quotes", (out / "summary.txt").read_text())
+
+    def test_the_second_arm_is_skipped_when_it_would_pass_the_ceiling(self):
+        # estimate 0.10 x 2.5 = $0.25 fits under $0.60; then arm 1 costs $0.50, and ~$0.75 more wouldn't fit
+        code, saved, _ = self.run_replay("--max-total", "0.60", cost=0.50)
+        self.assertEqual(code, 1)
+        self.assertEqual(list(saved["arms"]), ["API quotes"])
+        self.assertIn("ceiling", saved["error"])
+        self.assertAlmostEqual(saved["total_cost"], 0.50)
+
+    def test_a_failed_call_still_saves_what_was_spent(self):
+        code, saved, _ = self.run_replay(fail=True)
+        self.assertEqual(code, 1)
+        self.assertEqual(saved["error"], "RuntimeError: API down")
+        self.assertEqual(len(saved["calls"]), 1)   # the call that was paid for is on the record
+
+    def test_an_estimate_over_the_ceiling_runs_nothing(self):
+        code, saved, out = self.run_replay("--max-total", "0.20")   # estimate $0.25
+        self.assertEqual(code, 1)
+        self.assertEqual(self.judged, 0)
+        self.assertIsNone(saved)
+        self.assertFalse(out.exists())
 
 
 if __name__ == "__main__":

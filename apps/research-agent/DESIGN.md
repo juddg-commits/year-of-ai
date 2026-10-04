@@ -1,6 +1,6 @@
 # Design notes: how the research agent works and why
 
-Written to be explained out loud. Every number here was measured on real runs (2026-09-28), not estimated.
+Written to be explained out loud. Every number here was measured, not estimated, and names the run behind it: the runs of 2026-09-28 (`runs/<time>-<question>.json`) and one validation replay on 2026-10-04 (`runs/revalidate-20261004-140048/`). Run folders stay on my machine. The AI scribes question was run twice: first (`runs/20260928-092235`) and tuned (`runs/20260928-092603`).
 
 ## The pipeline
 
@@ -40,7 +40,7 @@ question
 
 ### 2. Tool design
 - Workers use Claude's **server-side** web search: one API call runs search → read → answer on Anthropic's side. `max_uses` caps searches per worker, which is also the cost cap.
-- **Finding: the newest search tool drops citations.** `web_search_20260209` adds "dynamic filtering": the model searches from a code sandbox and reads filtered output. The answer came back with **0 citation objects** and took **150 s** per worker. The basic `web_search_20250305` returned **18 cited claims in 29 s** for the same sub-question at the same cost. For an agent built on provenance, I pinned the basic tool.
+- **Finding: the newest search tool drops citations.** `web_search_20260209` adds "dynamic filtering": the model searches from a code sandbox and reads filtered output. The answer came back with **0 citation objects** and took **150 s** per worker. The basic `web_search_20250305` returned **18 cited claims in 29 s** for the same sub-question at about the same cost. (Both from a debugging session whose output wasn't saved.) For an agent built on provenance, I pinned the basic tool.
 - Server-side tool loops can stop with `pause_turn`; the worker resumes by re-sending the conversation with the partial turn (capped at 3 resumes).
 - Each worker gets a **fresh context**: no shared history, so one sub-question's noise can't pollute another's.
 
@@ -62,10 +62,10 @@ The API attaches each citation to the exact quoted span, often a fragment ("incr
 1. **Cite or it doesn't count** (worker prompt + extraction code).
 2. **Validator: does THIS quote support THIS claim?** A separate model judges each claim against its quote. It's told *not* to use its own knowledge, because the check is support, not truth. It **fails closed**: an item the validator skipped counts as unsupported. It caught real misattributions, e.g. a Cleveland Clinic statistic whose citation pointed at a Mass General Brigham quote.
 3. **The writer only sees validated notes** and must cite `[S#]` on every factual sentence; "partial" notes must be hedged.
-4. **Programmatic audit**: code strips citations to sources that don't exist and counts uncited sentences. Latest run: **45/46 sentences cited, 0 invented sources.**
+4. **Programmatic audit**: code strips citations to sources that don't exist and counts uncited sentences. On the tuned AI scribes run: **45/46 sentences cited, 0 invented sources.** The later runs cited 28/28, 33/33 and 24/27.
 
 ### 6. Context window management
-- A single search pulls ~17-20k tokens of page content. One run read **~194k tokens** of search results.
+- A single search pulls 14-19k tokens of page content (the five saved runs). One run read **~194k tokens** of search results.
 - The orchestrator **never sees raw pages**, only compact notes (claim + one-sentence quote + source id): **~11.6k tokens** for the same run, a 94% reduction.
 - If notes exceed the budget (20k tokens), they're condensed **per sub-question** by the cheap model, and each condensed note must list which sources it came from. Code rejects any source id the condenser invents, so **citations survive compression**. That's the difference from blindly summarizing old context.
 
@@ -80,7 +80,7 @@ Same question, before and after tuning:
 | compress | $0.15, 87 s | skipped (fits budget) |
 | write (Opus) | $0.26 | $0.20 |
 
-What changed: validator effort `medium` → `low` (it's classification with a clear rubric; the cost was thinking tokens), validator batches in parallel, a realistic context budget. **Measure per stage first**; the first guess about where money goes is usually wrong.
+What changed: validator effort `medium` → `low` (it's classification with a clear rubric; the cost was thinking tokens), validator batches in parallel and a rewritten rubric, a realistic context budget (so compression stopped running), and a 600-900 word target for the brief. The validator was the biggest single saving, but less than half of the total: compression and the shorter brief make up most of the rest. **Measure per stage first**; the first guess about where money goes is usually wrong.
 - **Orchestrator-worker split:** Opus for the few judgment-heavy calls, Sonnet for the token-heavy research (~2.5x cheaper per token).
 - **Prompt caching isn't worth it here:** the shared prefix across workers is ~1k tokens, while the 194k tokens of search results are unique per worker. Caching pays when a big prefix repeats; that's not this workload.
 - Cheaper runs: `--searches 2` or `--sub-questions 3`.
@@ -91,30 +91,30 @@ What changed: validator effort `medium` → `low` (it's classification with a cl
 - Every run writes a JSON **trace** (plan, queries, every evidence item + verdict, calls, cost). Failed runs still save what they did and what they cost.
 
 ### 9. Measure before you build: the cut-off quote fix
-Too many claims came back "partial" (56%). The plan was to send the validator every quote for a claim at once. Before building that, I counted the causes across three runs:
+Too many claims came back "partial" (56% on the tuned AI scribes run). The plan was to send the validator every quote for a claim at once. Before building that, I counted the causes across three runs:
 
 | why a claim was "partial" | share of partials |
 |---|---|
 | its quote was **cut off**: the API caps quotes at ~150 chars and ends them with "..." | **76-88%** |
 | its claim had 2+ quotes judged separately (the planned fix) | 34-54%, mostly *also* cut off |
 
-The planned fix would have barely moved the number. The worker had read the whole page; only our excerpt was short. So stage 3 downloads the source page with a plain HTTP request (no tokens, 3-9 s per run), finds the quote in it and completes the sentence (`quotes.py`).
+The planned fix would have barely moved the number. The worker had read the whole page; only our excerpt was short. So stage 3 downloads the source page with a plain HTTP request (no tokens; 3.3 s and 0.6 s in the two saved runs that had it), finds the quote in it and completes the sentence (`quotes.py`).
 - **Matching on words, not characters.** The API's quote is markdown and the page isn't, so the quote's words must appear in order with anything non-word between them. The last word is skipped because it's often half a word ("documentatio").
 - **Real data found the edge cases the first tests missed:** Wikipedia quotes carry link targets and `[7]` markers, and the API sometimes glues two separate excerpts into one quote. Handling both raised recovery on one run from 61 to 73 of 81 cut-off quotes. What's left is mostly pages that can't be downloaded (403s, PDFs).
-- **Controlled replay** (`revalidate.py`): the same claims and validator prompt, API quotes vs recovered quotes, research not re-run.
+- **Controlled replay** (`revalidate.py`): the same claims and validator prompt, API quotes vs recovered quotes, research not re-run. On the tuned AI scribes run, 2026-10-04 (`runs/revalidate-20261004-140048/`, $0.69):
 
-| | supported | partial | unsupported |
+| 116 claims | supported | partial | unsupported |
 |---|---|---|---|
-| AI scribes, API quotes → recovered | 31% → **54%** | 64% → **41%** | 5% → 5% |
-| open weights, API quotes → recovered | 32% → **46%** | 60% → **50%** | 8% → **4%** |
+| API quotes → recovered | 29% → **41%** | 66% → **54%** | 5% → 5% |
 
-The second replay separates claims whose quote was recovered from the rest: recovered quotes improved 30 verdicts and worsened 1. That one bundles a second fact the full sentence doesn't contain, so "partial" is right: the validator got *more* accurate, not less. (The first replay, run before that split existed: 31 improved, 4 worse, at least one of them noise.)
-- **The judge isn't independent per item.** In the second replay, 10 of the 48 claims whose quote didn't change still changed verdict, all toward stricter. A cut-off quote looks weaker next to complete ones in the same batch. So one replay's small differences are noise, and an eval harness has to repeat runs (Exercise 3).
+That replay recovered 60 of the 99 cut-off quotes: 15 weren't found on their page, and 14 pages couldn't be read (9 blocked with a 403, 4 PDFs, 1 timeout). Of the 60 claims with a recovered quote, 18 went from partial to supported and none got worse.
+- **The judge isn't independent per item.** In the same replay, 5 of the 56 claims whose quote didn't change still changed verdict, all toward stricter (supported → partial). A cut-off quote looks weaker next to complete ones in the same batch. So one replay's small differences are noise, and an eval harness has to repeat runs (Exercise 3).
+- Two replays on 2026-09-28 printed bigger drops (AI scribes partial 64% → 41%, open weights 60% → 50%), but their output wasn't saved, so they can't be checked. The replay now saves every verdict to a run folder and stops at a dollar ceiling ($1.50 by default).
 
 ## Known issues (honest list)
-- **"Partial" is still 41-50%.** The main remaining cause: claims that bundle several facts from different sentences, each with its own quote. → Exercise 1. Pages that block downloads (403) or are PDFs keep their cut-off quote. → Exercise 4.
+- **"Partial" is still about half** (54% in the saved replay). The main remaining cause: claims that bundle several facts from different sentences, each with its own quote. → Exercise 1. Pages that block downloads (403) or are PDFs keep their cut-off quote. → Exercise 4.
 - **The validator's verdicts depend on the batch** (see §9): a claim's verdict can change when its neighbors change.
-- **The brief ignores its length target** (asked for 600-900 words, wrote ~2,000). Length in a prompt is a soft constraint. → Exercise 2.
+- **The brief can overshoot its length target.** Asked for 600-900 words across its sections, the tuned AI scribes run wrote 1,204; the other runs stayed inside it (691-870). Length in a prompt is a soft constraint. → Exercise 2.
 - `len(text) // 4` is a rough token estimate; fine for a budget decision, not for billing (billing uses the API's usage numbers).
 
 ## Exercises: build these yourself
@@ -125,9 +125,9 @@ The second replay separates claims whose quote was recovered from the rest: reco
 
 ## Likely interview questions
 - **Why not one agent with a search tool in a loop?** Predictability. Decomposition up front means parallel workers, a fixed cost ceiling (sub-questions × searches), and stages I can test and measure separately.
-- **How do you know it isn't hallucinating?** Four layers (above), plus numbers: 45/46 sentences cited, 6 misattributed claims caught and dropped, 0 invented citations, all in the trace.
+- **How do you know it isn't hallucinating?** Four layers (above), plus numbers from the tuned AI scribes run: 45/46 sentences cited, 6 unsupported claims caught and dropped, 0 invented citations, all in the trace.
 - **What was the hardest bug?** Zero evidence on the first run: the newest search tool routes results through a code sandbox and returns no citations. Found it by dumping raw response blocks for one worker.
-- **Tell me about measuring before building.** The plan to fix "partial" verdicts targeted multi-quote claims. Counting the causes first showed 76-88% came from the API's 150-char quote cap instead. Recovering the full sentence from the page, in plain code, cut "partial" from 64% to 41% on a controlled replay.
-- **How did you cut cost?** Per-stage ledger first. Validation was 32% of cost for a classification task: lower effort + parallel batches cut it 35% and 5x on latency.
+- **Tell me about measuring before building.** The plan to fix "partial" verdicts targeted multi-quote claims. Counting the causes first showed 76-88% came from the API's 150-char quote cap instead. Recovering the full sentence from the page, in plain code, cut "partial" from 66% to 54% on a controlled replay (`runs/revalidate-20261004-140048/`).
+- **How did you cut cost?** Per-stage ledger first. Validation was 32% of the first run's cost for a classification task. Lower effort and parallel batches took it from $0.54 and 152 s to $0.35 and 31 s, partly because the tuned run had fewer items to check (116 vs 155).
 - **How do you manage context?** Workers are isolated; the orchestrator only sees compact evidence (~94% smaller than raw results); compression keeps provenance.
 - **What would you do next?** An eval harness (exercise 3) before any more prompt tuning: without it, every change is a vibe check.

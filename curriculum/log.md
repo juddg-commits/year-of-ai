@@ -23,8 +23,8 @@ Format:
 
 ## 2026-09-28 — Research agent: question in, cited brief out (Phase 1, ship #2)
 - Repo: https://github.com/juddg-commits/year-of-ai (`apps/research-agent/`)
-- What it does: splits a question into sub-questions, researches them in parallel with web search, recovers each cut-off quote from its source page, checks every claim against its quote, and writes a brief where every sentence cites a source (~$1.25, ~2.5 min per question).
-- What broke / what I learned: the newest search tool returned zero citations, so I pinned the older one (found by dumping raw responses). A per-stage cost ledger showed validation, a simple grading job, eating a third of the cost and most of the time ($1.68 → $1.25 after lowering its effort and parallelizing). Measuring before building: "partial" verdicts came from the API's 150-char quote cap, not multi-quote claims (recovering the sentence: 64% → 41% partial). An LLM judge isn't independent per item: verdicts shift with batch context.
+- What it does: splits a question into sub-questions, researches them in parallel with web search, recovers each cut-off quote from its source page, checks every claim against its quote, and writes a brief where every sentence cites a source ($1.25 and 2.5 min on the tuned run, runs/20260928-092603).
+- What broke / what I learned: the newest search tool returned no citations, so I pinned the older one (found by dumping raw responses). A per-stage cost ledger showed validation, a simple grading job, was a third of the cost and the slowest stage; lower validator effort, parallel batches, a realistic context budget and a brief-length target took a question from $1.68 to $1.25. Measuring before building: 76-88% of "partial" verdicts came from the API's 150-char quote cap, not multi-quote claims (recovering the sentence: 66% → 54% partial on a saved replay, runs/revalidate-20261004-140048). An LLM judge isn't independent per item: verdicts shift with batch context.
 - Post: _pending: edit WRITEUP.md and post it, then paste the link here_
 
 ## 2026-09-28 — Coach: AI personal trainer (Phase 1, ship #1)

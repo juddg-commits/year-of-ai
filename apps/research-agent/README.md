@@ -27,12 +27,12 @@ A full-size brief (4 sub-questions × 3 searches, $1.25): [examples/ai-scribes.m
 
 1. **Plan**: break the question into independent sub-questions (structured output).
 2. **Research**: one worker per sub-question, in parallel, using Claude's server-side web search. Code turns every citation into an evidence record: claim, quote, URL.
-3. **Recover quotes**: the API cuts quotes off at ~150 characters, often right before the number a claim depends on. Code downloads the source page, finds the quote, and completes its sentence. Plain HTTP, no tokens.
+3. **Recover quotes**: the API caps quotes at ~150 characters, so a claim can be judged against half a sentence. Code downloads the source page, finds the quote, and completes its sentence. Plain HTTP, no tokens.
 4. **Validate**: a separate model checks each claim against its quote; unsupported claims are dropped.
 5. **Fit context**: the writer sees compact evidence notes, never raw pages (~94% smaller); notes are condensed if they outgrow the budget, keeping their sources.
 6. **Write + audit**: a structured brief with `[S#]` citations; code removes citations to unknown sources and counts uncited sentences.
 
-Step 3 cut "partial" verdicts from 64% to 41% on the same evidence (a controlled replay with `revalidate.py`).
+Step 3 cut "partial" verdicts from 66% to 54% on the same 116 claims (a controlled replay with `revalidate.py`: `runs/revalidate-20261004-140048/`, kept on my machine).
 
 Why each piece is built this way, with measurements: **[DESIGN.md](DESIGN.md)**.
 
@@ -47,12 +47,12 @@ cp .env.example .env                      # paste your ANTHROPIC_API_KEY
 .venv/bin/python research.py "your question"
 .venv/bin/python research.py --searches 2 --sub-questions 3 "your question"   # cheaper
 .venv/bin/python -m unittest discover tests                                   # offline tests, free
-.venv/bin/python revalidate.py runs/<run>.json     # replay validation: API quotes vs recovered quotes (~$0.70)
+.venv/bin/python revalidate.py runs/<run>.json     # replay validation: API quotes vs recovered quotes (~$0.70, stops at $1.50)
 ```
 
 Each run saves the brief (`runs/*.md`) and a full JSON trace (`runs/*.json`): plan, search queries, every evidence item with its verdict, every API call and its cost.
 
-**Cost:** about $1.25 and 2-3 minutes per question with the defaults (4 sub-questions × 3 searches). Research is about half the cost, because each search reads ~17-20k tokens of pages.
+**Cost:** $1.25 and 2.5 minutes for the tuned AI scribes run with the defaults (4 sub-questions × 3 searches; `runs/20260928-092603`, before quote recovery was added, which uses no tokens). Time depends mostly on web search: the smaller run above took 7.5 minutes, 6 of them waiting on search. Research was about half the cost (53%), because each search reads 14-19k tokens of pages.
 
 ## Layout
 
