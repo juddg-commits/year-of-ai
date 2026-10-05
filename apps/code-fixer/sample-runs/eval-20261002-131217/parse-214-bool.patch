@@ -1,0 +1,11 @@
+--- a/parse/__init__.py
++++ b/parse/__init__.py
+@@ -211,7 +211,7 @@
+         time_only = True
+ 
+     H = M = S = u = 0
+-    if hms is not None or groups[hms]:
++    if hms is not None and groups[hms]:
+         t = groups[hms].split(":")
+         if len(t) == 2:
+             H, M = t

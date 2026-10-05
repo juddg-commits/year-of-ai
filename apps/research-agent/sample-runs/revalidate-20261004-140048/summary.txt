@@ -1,0 +1,11 @@
+116 evidence items · 99 cut-off quotes · 60 extended from 57 pages · not found on page: 15 · not fetched: {'http 403': 9, 'pdf': 4, 'ReadTimeout': 1}
+
+Validating both arms (estimate $0.88, ceiling $1.50)…
+API quotes      supported  34 (29%)   partial  76 (66%)   unsupported   6 (5%)   $0.359
+page quotes     supported  47 (41%)   partial  63 (54%)   unsupported   6 (5%)   $0.330
+
+Changed verdicts (API → page). Items that kept their quote (56) only change by run-to-run noise:
+      partial → supported   quote recovered:  18   quote unchanged (noise):  0
+    supported → partial     quote recovered:   0   quote unchanged (noise):  5
+
+Total $0.689 · saved to ~/year-of-ai/apps/research-agent/runs/revalidate-20261004-140048

@@ -4,6 +4,8 @@ A phone-first web app where you talk to a coach in plain English and it **takes 
 
 Project #1 of my Year of AI. Built with the Claude API, FastAPI and one HTML file.
 
+**I test it with a simulator that plays one scripted user for ten days, and the coach passed all 13 checks in 3 of its last 5 runs.** The other two scored 12 and 9. Those runs cost $1.23 to $1.35 each, except run 14 at $0.81, which lost most of day 1. The first version scored 7 of 13 for $2.07 (runs/sim-20260928-155554, and runs 12 to 16: runs/sim-20260928-190640 to -193316; the folders aren't in the repo). One scripted user only goes so far, because a simulator only tests what it types: a bug in reading real logs passed every simulated run. The checks also only catch failures an earlier run showed. Two of the guards have only run in offline tests, and I haven't evaluated real use yet.
+
 ![The Coach, Workout and Journey tabs (demo data)](docs/screenshots.png)
 
 ## What it does

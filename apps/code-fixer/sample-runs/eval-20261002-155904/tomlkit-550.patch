@@ -1,0 +1,33 @@
+--- a/tomlkit/container.py
++++ b/tomlkit/container.py
+@@ -160,6 +160,10 @@
+                 continue
+ 
+             if isinstance(v, (Table, AoT)) and k is not None and not k.is_dotted():
++                break
++            if isinstance(v, Table) and _renders_table_header(v):
++                # A dotted-key table that contains a `[table]` child opens
++                # a table scope when rendered.
+                 break
+             last_index = i
+         return last_index + 1
+@@ -1233,6 +1237,19 @@
+         return self[key]
+ 
+ 
++def _renders_table_header(table: Table) -> bool:
++    """Returns ``True`` if rendering ``table`` emits a nested ``[table]``
++    or ``[[aot]]`` header."""
++    return any(
++        isinstance(v, AoT)
++        or (
++            isinstance(v, Table)
++            and (not v.is_super_table() or _renders_table_header(v))
++        )
++        for _, v in table.value.body
++    )
++
++
+ def ends_with_whitespace(it: Any) -> bool:
+     """Returns ``True`` if the given item ``it`` is a ``Table`` or ``AoT`` object
+     ending with a ``Whitespace``.

@@ -1,6 +1,6 @@
 # Design notes: how the research agent works and why
 
-Written to be explained out loud. Every number here was measured, not estimated, and names the run behind it: the runs of 2026-09-28 (`runs/<time>-<question>.json`) and one validation replay on 2026-10-04 (`runs/revalidate-20261004-140048/`). Run folders stay on my machine. The AI scribes question was run twice: first (`runs/20260928-092235`) and tuned (`runs/20260928-092603`).
+Written to be explained out loud. Every number here was measured, not estimated, and names the run behind it: the runs of 2026-09-28 (`runs/<time>-<question>.json`) and one validation replay on 2026-10-04 (`runs/revalidate-20261004-140048/`, also in [sample-runs/](sample-runs/)). The other run folders stay on my machine. The AI scribes question was run twice: first (`runs/20260928-092235`) and tuned (`runs/20260928-092603`).
 
 ## The pipeline
 
@@ -40,7 +40,7 @@ question
 
 ### 2. Tool design
 - Workers use Claude's **server-side** web search: one API call runs search → read → answer on Anthropic's side. `max_uses` caps searches per worker, which is also the cost cap.
-- **Finding: the newest search tool drops citations.** `web_search_20260209` adds "dynamic filtering": the model searches from a code sandbox and reads filtered output. The answer came back with **0 citation objects** and took **150 s** per worker. The basic `web_search_20250305` returned **18 cited claims in 29 s** for the same sub-question at about the same cost. (Both from a debugging session whose output wasn't saved.) For an agent built on provenance, I pinned the basic tool.
+- **Finding: the newest search tool drops citations.** `web_search_20260209` adds "dynamic filtering": the model searches from a code sandbox and reads filtered output. The answer came back with **no citation objects at all**, while the basic `web_search_20250305` returned cited claims for the same sub-question. (I didn't save that debugging session's output, so I've left its timings and counts out.) For an agent built on provenance, I pinned the basic tool.
 - Server-side tool loops can stop with `pause_turn`; the worker resumes by re-sending the conversation with the partial turn (capped at 3 resumes).
 - Each worker gets a **fresh context**: no shared history, so one sub-question's noise can't pollute another's.
 
@@ -123,7 +123,7 @@ That replay recovered 60 of the 99 cut-off quotes: 15 weren't found on their pag
 3. **Eval harness (Phase 2, project 6).** Pick 10 questions, save their traces, and score them: citation precision (sample claims, check the source), coverage, cost, latency. Re-run after every change, and run validation 3 times per trace so you know how big a change has to be before it's more than noise.
 4. **Recover quotes from PDFs.** arXiv and journal PDFs keep their cut-off quotes today. Extract the text (e.g. `pypdf`) in `pages.fetch_page` and reuse `extend_quote`.
 
-## Likely interview questions
+## Questions this design should answer
 - **Why not one agent with a search tool in a loop?** Predictability. Decomposition up front means parallel workers, a fixed cost ceiling (sub-questions × searches), and stages I can test and measure separately.
 - **How do you know it isn't hallucinating?** Four layers (above), plus numbers from the tuned AI scribes run: 45/46 sentences cited, 6 unsupported claims caught and dropped, 0 invented citations, all in the trace.
 - **What was the hardest bug?** Zero evidence on the first run: the newest search tool routes results through a code sandbox and returns no citations. Found it by dumping raw response blocks for one worker.

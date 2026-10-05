@@ -4,6 +4,8 @@ Ask a hard question. The agent splits it into sub-questions, researches them in 
 
 Project #2 of my Year of AI. Python, Claude API (Opus 5 orchestrates, Sonnet 5 researches).
 
+**Recovering the quotes the API cuts off took "partial" verdicts from 66% to 54% of the same 116 claims** (runs/revalidate-20261004-140048), and a full brief costs about $1.25 (runs/20260928-092603). Keep in mind that a model hands out those verdicts, and I haven't checked them against human labels yet. So treat the percentages as the validator's judgment until I've measured its accuracy. They also move with whatever else is in the batch: in that replay, 5 of the 56 claims whose quote didn't change got a different verdict anyway. About half the claims are still "partial", too. The brief keeps them, and it has to hedge them. The replay is in [sample-runs/](sample-runs/) if you want to check it, and the brief's run stays on my machine.
+
 ```
 $ python research.py --sub-questions 2 --searches 1 "What does the evidence say about whether four-day work weeks maintain productivity?"
 [1/6] Planning…              2 sub-questions
@@ -32,7 +34,7 @@ A full-size brief (4 sub-questions × 3 searches, $1.25): [examples/ai-scribes.m
 5. **Fit context**: the writer sees compact evidence notes, never raw pages (~94% smaller); notes are condensed if they outgrow the budget, keeping their sources.
 6. **Write + audit**: a structured brief with `[S#]` citations; code removes citations to unknown sources and counts uncited sentences.
 
-Step 3 cut "partial" verdicts from 66% to 54% on the same 116 claims (a controlled replay with `revalidate.py`: `runs/revalidate-20261004-140048/`, kept on my machine).
+Step 3 cut "partial" verdicts from 66% to 54% on the same 116 claims (a controlled replay with `revalidate.py`: `runs/revalidate-20261004-140048/`, copied into [sample-runs/](sample-runs/revalidate-20261004-140048/)).
 
 Why each piece is built this way, with measurements: **[DESIGN.md](DESIGN.md)**.
 

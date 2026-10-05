@@ -1,0 +1,3 @@
+# Sample runs
+
+These are the runs behind the code fixer's held-out score, copied from my local `runs/` folder so you can check it yourself. `eval-20261002-131217` has 9 of the 10 held-out cases. `eval-20261002-155904` has the tenth, tomlkit-550, which I reran on its own after a stalled API call cut the first run short, and the first folder keeps the logs from that stall. Each has a `results.json` plus a trace and a patch for every case. The re-grade against the hidden tests is `regrade-20261005-104714/results.json`, and that's where lark-1641 fails. I only changed local paths: my home folder shows as `~` and the temp folder as `$TMPDIR`. Paths inside the files still say `runs/`, because that's where they were written.

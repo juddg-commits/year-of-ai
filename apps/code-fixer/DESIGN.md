@@ -1,6 +1,6 @@
 # Design notes: how the code fixer works and why
 
-Written to be explained out loud. Every number here was measured, and each one names the eval run that produced it (`runs/eval-<date>-<time>/`, kept on my machine: traces and patches aren't committed). Unless a row says otherwise: Claude Opus 5.5, effort `medium`, a $0.50 ceiling per fix, measured 2026-09-30 to 2026-10-02, and every saved patch re-graded on 2026-10-05 once every real case had hidden tests (runs/regrade-20261005-104714).
+Written to be explained out loud. Every number here was measured, and each one names the eval run that produced it (`runs/eval-<date>-<time>/`, kept on my machine, though the held-out runs and the re-grade are also in [sample-runs/](sample-runs/)). Unless a row says otherwise: Claude Opus 5.5, effort `medium`, a $0.50 ceiling per fix, measured 2026-09-30 to 2026-10-02, and every saved patch re-graded on 2026-10-05 once every real case had hidden tests (runs/regrade-20261005-104714).
 
 ## The pipeline
 
@@ -172,7 +172,7 @@ The model did look ("I looked for the same mistake elsewhere and found none"), b
 2. Hand-check the other real cases the same way, the held-out ones first.
 3. Harder cases: fixes across files, bigger repos, bugs with two sites. The dev set can't tell the setups apart, so more prompt tuning on it would be guessing.
 
-## Likely interview questions
+## Questions this design should answer
 
 - **How do you know it works?** 9 of 10 on a held-out set I ran once, at the end, after all tuning. It was 10 of 10 by the tests the cases had then. When I wrote hidden tests for the real bugs that had none and re-graded the saved patches for free, one held-out fix turned out to fix the caller, not the cause. Each case is verified before it counts, every case is graded by tests the agent never saw, and "fixed" is decided by a fresh sandbox run, not the model. On the dev set, passing patches for three real bugs were also compared with upstream's fix on random inputs.
 - **What did the test loop buy?** One case of 19, at no measurable extra cost ($1.03 against $1.05). The first fix there broke a different test in 3 of 4 attempts, and only a test run shows that. On the other 18, one test run confirmed a fix that was already right.

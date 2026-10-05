@@ -26,4 +26,4 @@ This agent was the first member of a small team. Mother, the agent that runs my 
 
 Code: https://github.com/juddg-commits/year-of-ai/tree/main/apps/research-agent
 
-Every number here comes from a saved run (kept on my machine): the first run `runs/20260928-092235`, the tuned run `runs/20260928-092603`, a third question with the same settings `runs/20260928-093154`, and the replay `runs/revalidate-20261004-140048/` ($0.69). [DESIGN.md](DESIGN.md) has the details.
+Every number here comes from a saved run: the first run `runs/20260928-092235`, the tuned run `runs/20260928-092603`, a third question with the same settings `runs/20260928-093154`, and the replay `runs/revalidate-20261004-140048/` ($0.69). The replay is in [sample-runs/](sample-runs/), and the rest stay on my machine. [DESIGN.md](DESIGN.md) has the details.

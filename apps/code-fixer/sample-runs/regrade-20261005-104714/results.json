@@ -1,0 +1,578 @@
+{
+  "cases": [
+    "boltons-424",
+    "boltons-445",
+    "lark-1641",
+    "more-itertools-1248",
+    "more-itertools-1261",
+    "more-itertools-1285",
+    "networkx-8734",
+    "tinydb-633",
+    "tomlkit-550",
+    "xmltodict-421"
+  ],
+  "hidden": {
+    "boltons-424": [
+      "tests/test_ours_iset_indexing.py"
+    ],
+    "boltons-445": [
+      "tests/test_ours_wraps_kwonly.py"
+    ],
+    "lark-1641": [
+      "tests/test_ours_interactive_copy.py"
+    ],
+    "more-itertools-1248": [
+      "tests/test_ours_numeric_range_floats.py"
+    ],
+    "more-itertools-1261": [
+      "tests/test_ours_cwr_index_pools.py"
+    ],
+    "more-itertools-1285": [
+      "tests/test_ours_bucket_lookups.py"
+    ],
+    "networkx-8734": [
+      "networkx/algorithms/connectivity/tests/test_ours_kcomponents_brute_force.py"
+    ],
+    "tinydb-633": [
+      "tests/test_ours_insert_multiple_mixed.py"
+    ],
+    "tomlkit-550": [
+      "tests/test_ours_dotted_table_round_trip.py"
+    ],
+    "xmltodict-421": [
+      "tests/test_ours_streaming_depths_and_options.py"
+    ]
+  },
+  "runs": [
+    {
+      "run": "eval-20260930-181610",
+      "split": null,
+      "model": "claude-opus-5-5",
+      "test_loop": true,
+      "graded": 0,
+      "solved_before": 0,
+      "solved_now": 0,
+      "now_failing": [],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261001-131121",
+      "split": null,
+      "model": "claude-opus-5-5",
+      "test_loop": true,
+      "graded": 0,
+      "solved_before": 0,
+      "solved_now": 0,
+      "now_failing": [],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261001-163752",
+      "split": null,
+      "model": "claude-opus-5-5",
+      "test_loop": true,
+      "graded": 4,
+      "solved_before": 4,
+      "solved_now": 4,
+      "now_failing": [],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261001-164745",
+      "split": null,
+      "model": "claude-opus-5-5",
+      "test_loop": true,
+      "graded": 0,
+      "solved_before": 0,
+      "solved_now": 0,
+      "now_failing": [],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261001-164812",
+      "split": null,
+      "model": "claude-opus-5-5",
+      "test_loop": true,
+      "graded": 0,
+      "solved_before": 0,
+      "solved_now": 0,
+      "now_failing": [],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261001-164837",
+      "split": null,
+      "model": "claude-opus-5-5",
+      "test_loop": true,
+      "graded": 0,
+      "solved_before": 0,
+      "solved_now": 0,
+      "now_failing": [],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261001-165125",
+      "split": "dev",
+      "model": "claude-opus-5-5",
+      "test_loop": true,
+      "graded": 4,
+      "solved_before": 4,
+      "solved_now": 4,
+      "now_failing": [],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261001-170123",
+      "split": null,
+      "model": "claude-opus-5-5",
+      "test_loop": true,
+      "graded": 0,
+      "solved_before": 0,
+      "solved_now": 0,
+      "now_failing": [],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261001-170207",
+      "split": null,
+      "model": "claude-opus-5-5",
+      "test_loop": true,
+      "graded": 0,
+      "solved_before": 0,
+      "solved_now": 0,
+      "now_failing": [],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261002-123656",
+      "split": "dev",
+      "model": "claude-opus-5-5",
+      "test_loop": false,
+      "graded": 0,
+      "solved_before": 0,
+      "solved_now": 0,
+      "now_failing": [],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261002-123732",
+      "split": "dev",
+      "model": "claude-sonnet-5-5",
+      "test_loop": true,
+      "graded": 0,
+      "solved_before": 0,
+      "solved_now": 0,
+      "now_failing": [],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261002-124619",
+      "split": "dev",
+      "model": "claude-opus-5-5",
+      "test_loop": false,
+      "graded": 4,
+      "solved_before": 3,
+      "solved_now": 3,
+      "now_failing": [],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261002-124640",
+      "split": "dev",
+      "model": "claude-sonnet-5-5",
+      "test_loop": true,
+      "graded": 4,
+      "solved_before": 4,
+      "solved_now": 3,
+      "now_failing": [
+        "tinydb-633"
+      ],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261002-125922",
+      "split": "dev",
+      "model": "claude-opus-5-5",
+      "test_loop": true,
+      "graded": 4,
+      "solved_before": 4,
+      "solved_now": 4,
+      "now_failing": [],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261002-131217",
+      "split": "test",
+      "model": "claude-opus-5-5",
+      "test_loop": true,
+      "graded": 5,
+      "solved_before": 5,
+      "solved_now": 4,
+      "now_failing": [
+        "lark-1641"
+      ],
+      "now_passing": [],
+      "errors": []
+    },
+    {
+      "run": "eval-20261002-155904",
+      "split": null,
+      "model": "claude-opus-5-5",
+      "test_loop": true,
+      "graded": 1,
+      "solved_before": 1,
+      "solved_now": 1,
+      "now_failing": [],
+      "now_passing": [],
+      "errors": []
+    }
+  ],
+  "rows": [
+    {
+      "run": "eval-20261001-163752",
+      "id": "boltons-445",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "529 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261001-163752",
+      "id": "more-itertools-1285",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "880 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261001-163752",
+      "id": "tinydb-633",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "345 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261001-163752",
+      "id": "xmltodict-421",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "199 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261001-165125",
+      "id": "boltons-445",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "529 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261001-165125",
+      "id": "more-itertools-1285",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "880 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261001-165125",
+      "id": "tinydb-633",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "345 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261001-165125",
+      "id": "xmltodict-421",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "199 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-124619",
+      "id": "boltons-445",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "529 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-124619",
+      "id": "more-itertools-1285",
+      "solved_before": false,
+      "solved_now": false,
+      "visible_pass": false,
+      "hidden_failing": [
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[False-6]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[False-12]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[False-15]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[False-17]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[False-20]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[False-27]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[False-38]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[False-40]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[False-44]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[False-58]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[True-6]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[True-12]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[True-15]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[True-17]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[True-20]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[True-27]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[True-40]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[True-44]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[True-45]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[True-56]",
+        "tests/test_ours_bucket_lookups.py::test_lookups_never_invent_keys[True-58]",
+        "tests/test_ours_bucket_lookups.py::test_a_key_read_to_the_end_is_still_a_key"
+      ],
+      "error": null,
+      "graded": "23 failed, 857 passed (exit 1)"
+    },
+    {
+      "run": "eval-20261002-124619",
+      "id": "tinydb-633",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "345 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-124619",
+      "id": "xmltodict-421",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "199 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-124640",
+      "id": "boltons-445",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "529 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-124640",
+      "id": "more-itertools-1285",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "880 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-124640",
+      "id": "tinydb-633",
+      "solved_before": true,
+      "solved_now": false,
+      "visible_pass": true,
+      "hidden_failing": [
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[0-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[1-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[4-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[6-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[6-json]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[8-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[10-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[11-json]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[13-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[14-json]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[15-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[16-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[16-json]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[18-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[18-json]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[20-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[25-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[25-json]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[26-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[27-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[28-json]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[29-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[32-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[32-json]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[33-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[34-json]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[35-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[36-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[39-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[41-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[46-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[46-json]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[48-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[51-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[52-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[53-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[54-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[55-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[55-json]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[56-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[58-memory]",
+        "tests/test_ours_insert_multiple_mixed.py::test_mixed_batches_overwrite_nothing[58-json]",
+        "tests/test_ours_insert_multiple_mixed.py::test_explicit_id_first_then_plain_inserts"
+      ],
+      "error": null,
+      "graded": "43 failed, 302 passed (exit 1)"
+    },
+    {
+      "run": "eval-20261002-124640",
+      "id": "xmltodict-421",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "199 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-125922",
+      "id": "boltons-445",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "529 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-125922",
+      "id": "more-itertools-1285",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "880 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-125922",
+      "id": "tinydb-633",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "345 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-125922",
+      "id": "xmltodict-421",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "199 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-131217",
+      "id": "boltons-424",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "483 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-131217",
+      "id": "lark-1641",
+      "solved_before": true,
+      "solved_now": false,
+      "visible_pass": true,
+      "hidden_failing": [
+        "tests/test_ours_interactive_copy.py::test_copied_parser_state_is_independent[basic-0]",
+        "tests/test_ours_interactive_copy.py::test_copied_parser_state_is_independent[basic-4]",
+        "tests/test_ours_interactive_copy.py::test_copied_parser_state_is_independent[contextual-0]",
+        "tests/test_ours_interactive_copy.py::test_copied_parser_state_is_independent[contextual-4]"
+      ],
+      "error": null,
+      "graded": "4 failed, 1210 passed (exit 1)"
+    },
+    {
+      "run": "eval-20261002-131217",
+      "id": "more-itertools-1248",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "761 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-131217",
+      "id": "more-itertools-1261",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "787 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-131217",
+      "id": "networkx-8734",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "370 passed (exit 0)"
+    },
+    {
+      "run": "eval-20261002-155904",
+      "id": "tomlkit-550",
+      "solved_before": true,
+      "solved_now": true,
+      "visible_pass": true,
+      "hidden_failing": [],
+      "error": null,
+      "graded": "420 passed (exit 0)"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+--- a/more_itertools/more.py
++++ b/more_itertools/more.py
+@@ -2334,14 +2334,11 @@
+             return self._start > self._stop
+ 
+     def __contains__(self, elem):
+-        if self._growing:
+-            if self._start <= elem < self._stop:
+-                return (elem - self._start) % self._step == self._zero
+-        else:
+-            if self._start >= elem > self._stop:
+-                return (self._start - elem) % (-self._step) == self._zero
+-
+-        return False
++        try:
++            self.index(elem)
++        except ValueError:
++            return False
++        return True
+ 
+     def __eq__(self, other):
+         # numeric_range object equality is intended to mirror the built-in range
+@@ -2420,7 +2417,22 @@
+             return 0
+         else:  # distance > 0 and step > 0: regular euclidean division
+             q, r = divmod(distance, step)
+-            return int(q) + int(r != self._zero)
++            n = int(q) + int(r != self._zero)
++            # The items are computed as start + i * step, which may not agree
++            # exactly with the division above; adjust to match iteration.
++            while n > 0 and not self._in_bounds(self._start_plus(n - 1)):
++                n -= 1
++            while self._in_bounds(self._start_plus(n)):
++                n += 1
++            return n
++
++    def _start_plus(self, i):
++        return self._start + i * self._step
++
++    def _in_bounds(self, value):
++        if self._growing:
++            return self._start <= value < self._stop
++        return self._start >= value > self._stop
+ 
+     def __reduce__(self):
+         return numeric_range, (self._start, self._stop, self._step)
+@@ -2450,13 +2462,20 @@
+         if self._growing:
+             if self._start <= value < self._stop:
+                 q, r = divmod(value - self._start, self._step)
+-                if r == self._zero:
+-                    return int(q)
++            else:
++                q = None
+         else:
+             if self._start >= value > self._stop:
+                 q, r = divmod(self._start - value, -self._step)
+-                if r == self._zero:
+-                    return int(q)
++            else:
++                q = None
++
++        if q is not None:
++            # Floating point division may land just below the true index.
++            q = int(q)
++            for i in (q, q + 1):
++                if 0 <= i < self._len and self._start_plus(i) == value:
++                    return i
+ 
+         raise ValueError(f"{value} is not in numeric range")
+ 

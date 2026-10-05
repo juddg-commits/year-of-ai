@@ -2,6 +2,8 @@
 
 My agents are standalone apps, each with its own folder, dependencies, tests and ship. This small [MCP](https://modelcontextprotocol.io) server exposes all of them as tools, so an orchestrator (my Mother agent in Claude Code, or any MCP client) can call them.
 
+**There's no result for the server itself yet.** Its offline tests use fake agents, and the costs below come from the agents' own saved runs. It runs locally over stdio for one user. The only thing that calls it so far is my own orchestrator (a Claude Code subagent whose definition isn't in this repo), and I haven't published it to the MCP registry.
+
 | Tool | What it does | Cost |
 |---|---|---|
 | `research(question, sub_questions=4, searches=3)` | Runs the [research agent](../research-agent/): a brief where every sentence cites its source | $1.25 and 2.5 min at 4 × 3 on the tuned run (runs/20260928-092603, before quote recovery); $0.37 and 7.5 min at 2 × 1 on the shipped code (runs/20260928-102158) |
@@ -18,7 +20,7 @@ Every agent follows one **result contract**: run its CLI with `--json`, and it p
 ```
 
 The server runs that CLI in the agent's own venv and relays the result. So:
-- **Agents never share dependencies.** A new agent is one more tool function here, nothing else changes.
+- **Agents never share dependencies.** A new agent is one more tool function here, plus its name in the orchestrator's tool list, because Claude Code won't take a wildcard there. None of the other agents change.
 - **Progress streams to the client.** The agent's `[3/6]` stage lines become MCP progress notifications.
 - **Money is guarded.** The server caps the settings a caller can ask for (4 sub-questions × 3 searches; $0.50 a fix). A cancelled or stuck call kills the agent process, so it stops spending. Every failure comes back as a tool error that says what was spent.
 - **Big results don't overflow the caller.** Claude Code caps a tool result at ~25k tokens, so long output is cut and points to the saved file.

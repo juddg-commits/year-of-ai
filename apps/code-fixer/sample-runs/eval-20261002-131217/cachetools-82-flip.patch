@@ -1,0 +1,11 @@
+--- a/src/cachetools/__init__.py
++++ b/src/cachetools/__init__.py
+@@ -79,7 +79,7 @@
+         size = self.getsizeof(value)
+         if size < 0:
+             raise ValueError("value size must be non-negative")
+-        if size < maxsize:
++        if size > maxsize:
+             raise ValueError("value too large")
+         if key not in self.__data:
+             diffsize = size

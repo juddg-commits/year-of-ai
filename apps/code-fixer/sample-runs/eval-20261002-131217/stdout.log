@@ -1,0 +1,126 @@
+10 case(s) on claude-opus-5-5 (effort medium), at most $0.50 each: at most $2.00 in total.
+
+[1/10] boltons-424
+   [1/3] Running the tests in the sandbox…
+   2 failed, 439 passed (exit 1)
+   [2/3] Fixing with claude-opus-5-5 (effort medium, up to $0.50)…
+   1. search 'def _get_real_index|def __getitem__|def pop|real_index'
+   1. read_file tests/test_setutils.py
+   2. read_file boltons/setutils.py
+   2. read_file boltons/setutils.py
+   3. edit_file boltons/setutils.py  ✗
+   3. edit_file boltons/setutils.py
+   4. edit_file boltons/setutils.py
+   4. run_tests
+   [3/3] Checking the result in a fresh sandbox…
+   441 passed (exit 0)
+   SOLVED · $0.104 · 28s · done
+[2/10] cachetools-306-delete
+   [1/3] Running the tests in the sandbox…
+   1 failed, 311 passed (exit 1)
+   [2/3] Fixing with claude-opus-5-5 (effort medium, up to $0.50)…
+   1. read_file src/cachetools/__init__.py
+   1. read_file src/cachetools/keys.py
+   2. edit_file src/cachetools/__init__.py
+   2. run_tests
+   [3/3] Checking the result in a fresh sandbox…
+   312 passed (exit 0)
+   SOLVED · $0.037 · 32s · done
+[3/10] cachetools-483-boundary
+   [1/3] Running the tests in the sandbox…
+   1 failed, 307 passed (exit 1)
+   [2/3] Fixing with claude-opus-5-5 (effort medium, up to $0.50)…
+   1. search 'def __contains__|expires|< self.timer|<= self.timer|time\\(\\) [<>]'
+   2. edit_file src/cachetools/__init__.py
+   2. run_tests
+   [3/3] Checking the result in a fresh sandbox…
+   308 passed (exit 0)
+   SOLVED · $0.021 · 28s · done
+[4/10] cachetools-82-flip
+   [1/3] Running the tests in the sandbox…
+   2 failed, 10 passed (exit 1)
+   [2/3] Fixing with claude-opus-5-5 (effort medium, up to $0.50)…
+   1. read_file src/cachetools/__init__.py
+   1. read_file tests/test_ttl_boundary.py
+   2. edit_file src/cachetools/__init__.py
+   2. run_tests
+   [3/3] Checking the result in a fresh sandbox…
+   12 passed (exit 0)
+   SOLVED · $0.026 · 26s · done
+[5/10] lark-1641
+   [1/3] Running the tests in the sandbox…
+   3 failed, 1145 passed (exit 1)
+   [2/3] Fixing with claude-opus-5-5 (effort medium, up to $0.50)…
+   1. read_file lark/parsers/lalr_interactive_parser.py
+   2. search 'class LexerThread|class LexerState|__copy__|def copy|lexer_state|def parse_from_state'
+   3. read_file lark/lexer.py
+   3. read_file lark/parsers/lalr_parser_state.py
+   4. read_file lark/parsers/lalr_parser.py
+   5. edit_file lark/parsers/lalr_interactive_parser.py
+   5. run_tests
+   [3/3] Checking the result in a fresh sandbox…
+   1148 passed (exit 0)
+   SOLVED · $0.126 · 41s · done
+[6/10] more-itertools-1248
+   [1/3] Running the tests in the sandbox…
+   2 failed, 738 passed (exit 1)
+   [2/3] Fixing with claude-opus-5-5 (effort medium, up to $0.50)…
+   1. search 'class numeric_range'
+   2. read_file more_itertools/more.py
+   3. read_file tests/test_more.py
+   4. edit_file more_itertools/more.py
+   4. edit_file more_itertools/more.py
+   4. edit_file more_itertools/more.py
+   5. run_tests
+   [3/3] Checking the result in a fresh sandbox…
+   740 passed (exit 0)
+   SOLVED · $0.106 · 79s · done
+[7/10] more-itertools-1261
+   [1/3] Running the tests in the sandbox…
+   2 failed, 745 passed (exit 1)
+   [2/3] Fixing with claude-opus-5-5 (effort medium, up to $0.50)…
+   1. search 'def combination_with_replacement_index'
+   2. read_file more_itertools/more.py
+   3. search '^_marker|def combination_index'
+   4. read_file more_itertools/more.py
+   5. edit_file more_itertools/more.py
+   5. run_tests
+   [3/3] Checking the result in a fresh sandbox…
+   747 passed (exit 0)
+   SOLVED · $0.044 · 64s · done
+[8/10] networkx-8734
+   [1/3] Running the tests in the sandbox…
+   1 failed, 318 passed (exit 1)
+   [2/3] Fixing with claude-opus-5-5 (effort medium, up to $0.50)…
+   1. search 'def _generate_partition'
+   2. read_file networkx/algorithms/connectivity/kcomponents.py
+   3. search '_generate_partition|cuts ='
+   4. edit_file networkx/algorithms/connectivity/kcomponents.py
+   4. run_tests
+   5. read_file networkx/algorithms/connectivity/kcomponents.py
+   6. edit_file networkx/algorithms/connectivity/kcomponents.py
+   6. run_tests
+   [3/3] Checking the result in a fresh sandbox…
+   319 passed (exit 0)
+   SOLVED · $0.177 · 91s · done
+[9/10] parse-214-bool
+   [1/3] Running the tests in the sandbox…
+   1 failed, 48 passed (exit 1)
+   [2/3] Fixing with claude-opus-5-5 (effort medium, up to $0.50)…
+   1. read_file parse/__init__.py
+   2. edit_file parse/__init__.py
+   2. run_tests
+   [3/3] Checking the result in a fresh sandbox…
+   49 passed (exit 0)
+   SOLVED · $0.023 · 9s · done
+[10/10] tomlkit-550
+   [1/3] Running the tests in the sandbox…
+   1 failed, 369 passed (exit 1)
+   [2/3] Fixing with claude-opus-5-5 (effort medium, up to $0.50)…
+   1. search 'def append|def _insert_after|_find_insert|is_super_table|def _previous_item'
+   2. read_file tomlkit/container.py
+   3. search 'def _get_last_index_before_table'
+   4. read_file tomlkit/container.py
+   5. search 'is_dotted\\(\\)'
+   6. read_file tomlkit/container.py
+   6. read_file tomlkit/container.py

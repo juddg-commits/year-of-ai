@@ -1,0 +1,32 @@
+--- a/networkx/algorithms/connectivity/kcomponents.py
++++ b/networkx/algorithms/connectivity/kcomponents.py
+@@ -182,14 +182,22 @@
+     def has_nbrs_in_partition(G, node, partition):
+         return any(n in partition for n in G[node])
+ 
+-    components = []
+     n_in_cuts = {n for cut in cuts for n in cut}
+-    nodes = {n for n, d in G.degree() if d > k} - n_in_cuts
+-    H = G.subgraph(nodes)
+-    for cc in map(set, nx.connected_components(H)):
+-        component = cc | {n for n in n_in_cuts if has_nbrs_in_partition(G, n, cc)}
+-        if len(component) < G.order():
+-            components.append(component)
++    nodes = {n for n, d in G.degree() if d > k} | n_in_cuts
++    # Remove the cutsets one at a time, so that nodes of a cutset whose
++    # neighbors all lie in other cutsets are not dropped.
++    partition = list(map(set, nx.connected_components(G.subgraph(nodes))))
++    for cut in cuts:
++        cut = set(cut)
++        new_partition = []
++        for part in partition:
++            H = G.subgraph(part - cut)
++            for cc in map(set, nx.connected_components(H)):
++                new_partition.append(
++                    cc | {n for n in cut if has_nbrs_in_partition(G, n, cc)}
++                )
++        partition = new_partition
++    components = [c for c in partition if len(c) < G.order()]
+     yield from _consolidate(components, k + 1)
+ 
+ 

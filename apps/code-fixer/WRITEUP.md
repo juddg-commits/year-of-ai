@@ -34,4 +34,4 @@ The whole build cost $6.24 in recorded API calls, plus at most 50 cents lost wit
 
 Code: https://github.com/juddg-commits/year-of-ai/tree/main/apps/code-fixer
 
-Every number here comes from a saved run (kept on my machine), and [DESIGN.md](DESIGN.md) names the run behind each one.
+Every number here comes from a saved run, and [DESIGN.md](DESIGN.md) names the run behind each one. Most stay on my machine, but the held-out runs and the re-grade are in [sample-runs/](sample-runs/).

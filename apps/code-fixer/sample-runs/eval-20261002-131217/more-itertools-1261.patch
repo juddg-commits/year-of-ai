@@ -1,0 +1,21 @@
+--- a/more_itertools/more.py
++++ b/more_itertools/more.py
+@@ -4525,15 +4525,17 @@
+ 
+     indexes = []
+     pool = tuple(iterable)
++    done = False
+     for n, x in enumerate(pool):
+         while x == y:
+             indexes.append(n)
+             tmp, y = next(element, (None, None))
+             if tmp is None:
++                done = True
+                 break
+             else:
+                 k = tmp
+-        if y is None:
++        if done:
+             break
+     else:
+         raise ValueError(

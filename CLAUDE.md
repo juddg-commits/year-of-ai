@@ -10,6 +10,7 @@ The Year of AI: one repo, one shipped project at a time (`curriculum/README.md`,
 - **Offline tests for every deterministic step**, with fakes instead of API calls, so they're free: `.venv/bin/python -m unittest discover tests` in each app.
 - **Every run leaves a trace**: what it did, what each API call cost, and why it stopped. Failed runs too.
 - **A DESIGN.md explains the why, with measured numbers.** Known issues are listed honestly.
+- **Anything public written in Judd's name (READMEs, DESIGN.md, WRITEUP.md, the shipping log, posts, the site) goes through a voice pass against brain/voice.md before it's committed or published.** The pass changes words, never facts or numbers. Judd sees the before and after for anything longer than a paragraph.
 
 ## Rules learned the hard way
 - **Measure before building.** Count the causes before choosing a fix. The research agent's planned fix for "partial" verdicts targeted the wrong cause (76-88% were cut-off quotes).
@@ -39,14 +40,14 @@ The Year of AI: one repo, one shipped project at a time (`curriculum/README.md`,
 - **Run the paid path against a fake client before the first real call.** A scripted-model test found the code fixer's cost ledger reading `.type` off the API's top-level usage object, which has none: the first paid call would have crashed the run after spending.
 - **Verify an eval case before it counts.** The code fixer runs each case without the bug (every test must pass) and with it (a visible test must fail) before using it. That first check caught two broken tests in the hand-written cases.
 - **Read what the model was shown, even when it succeeds.** The code fixer solved all 5 dev cases while up to 95% of the test output it read was pytest's PASSED lines, which pushed failure tracebacks out of the trimmed tail (30,122 characters cut from a 26-failure run). It now reads a count instead; grading still parses the full output.
-- **A hidden test checks the project's standard, not upstream's choices.** The code fixer's first tinydb hidden test demanded upstream's exact IDs, though DESIGN.md had already ruled any valid numbering correct: it would have failed patches the hand-check passed. Three other first drafts failed on upstream itself (a quirk outside the fix, a separate tomlkit bug, my own generator). Run every new test against upstream's fix and against the bug before it grades anything.
+- **A hidden test checks the project's standard, not upstream's choices.** The code fixer's first tinydb hidden test demanded upstream's exact IDs, though DESIGN.md had already ruled any valid numbering correct: it would have failed patches the hand-check passed. Three other first drafts failed on upstream itself (a quirk outside the fix, a separate tomlkit bug, the mutant generator). Run every new test against upstream's fix and against the bug before it grades anything.
 - **Check what a commit leaves out, not just what it adds.** An unanchored `sandbox/` in the root .gitignore, meant for one local folder, silently dropped the code fixer's Dockerfile; `git add -n` showed it missing.
 - **Commit on day one.** Ship #1 sat uncommitted for weeks.
 - **One chat per working tree.** A second chat opened while the first was still building: the handoff was hours stale, and a test failed on the other chat's container. Before editing, check `git status` and for another running session.
 - **A handoff is a state file, not a log.** Rewrite `brain/state.md` at the end of each session and move what's history to `brain/history/`. Appended to session after session, one handoff reached 85 KB with five "START HERE" sections, and the older ones contradicted the newer ones.
 
 ## Public repo: keep private things out
-This repo is public on GitHub. Never commit `.env`, `runs/`, data folders, or anything about Judd's jobs, internships, school work or personal life. Local-only folders (`brain/`, `outreach/`, `content/`, `.claude/`…) are gitignored for that reason. Before a push, check the diff for secrets and personal details. Test files are public too: an eval's never-say terms spell out what they protect, so they live in a git-ignored list.
+This repo is public on GitHub. Never commit `.env`, `runs/`, data folders, or anything about Judd's jobs, internships, school work or personal life. A run goes public only as a copy in its app's `sample-runs/`, scanned for keys and private details first, with local paths replaced. Local-only folders (`brain/`, `outreach/`, `content/`, `.claude/`…) are gitignored for that reason. Before a push, check the diff for secrets and personal details. Test files are public too: an eval's never-say terms spell out what they protect, so they live in a git-ignored list.
 
 ## Review loop
 After each build: run the tests, review the diff for real bugs (not style), fold any lesson into this file, and let Judd explain the build back in his own words. At the end of every session, rewrite `brain/state.md`; a new session starts there.

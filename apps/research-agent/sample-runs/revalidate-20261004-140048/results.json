@@ -1,0 +1,1267 @@
+{
+ "trace": "runs/20260928-092603-how-are-us-hospitals-using-ai-medical-scribes-and-.json",
+ "max_total": 1.5,
+ "estimate": 0.8789625,
+ "quote_stats": {
+  "truncated": 99,
+  "extended": 60,
+  "pages": 57,
+  "page_failures": {
+   "http 403": 9,
+   "pdf": 4,
+   "ReadTimeout": 1
+  },
+  "not_found": 15,
+  "errors": []
+ },
+ "arms": {
+  "API quotes": {
+   "counts": {
+    "supported": 34,
+    "partial": 76,
+    "unsupported": 6
+   },
+   "cost": 0.35924
+  },
+  "page quotes": {
+   "counts": {
+    "supported": 47,
+    "partial": 63,
+    "unsupported": 6
+   },
+   "cost": 0.3296199999999999
+  }
+ },
+ "error": "",
+ "total_cost": 0.6888599999999999,
+ "calls": [
+  {
+   "stage": "validate",
+   "model": "claude-opus-5",
+   "input_tokens": 9603,
+   "output_tokens": 2602,
+   "cache_read": 0,
+   "cache_write": 0,
+   "searches": 0,
+   "seconds": 29.46,
+   "cost": 0.113065
+  },
+  {
+   "stage": "validate",
+   "model": "claude-opus-5",
+   "input_tokens": 10108,
+   "output_tokens": 2918,
+   "cache_read": 0,
+   "cache_write": 0,
+   "searches": 0,
+   "seconds": 31.16,
+   "cost": 0.12349
+  },
+  {
+   "stage": "validate",
+   "model": "claude-opus-5",
+   "input_tokens": 9837,
+   "output_tokens": 2940,
+   "cache_read": 0,
+   "cache_write": 0,
+   "searches": 0,
+   "seconds": 33.86,
+   "cost": 0.122685
+  },
+  {
+   "stage": "validate",
+   "model": "claude-opus-5",
+   "input_tokens": 10104,
+   "output_tokens": 1684,
+   "cache_read": 0,
+   "cache_write": 0,
+   "searches": 0,
+   "seconds": 16.93,
+   "cost": 0.09262
+  },
+  {
+   "stage": "validate",
+   "model": "claude-opus-5",
+   "input_tokens": 10297,
+   "output_tokens": 2490,
+   "cache_read": 0,
+   "cache_write": 0,
+   "searches": 0,
+   "seconds": 25.68,
+   "cost": 0.113735
+  },
+  {
+   "stage": "validate",
+   "model": "claude-opus-5",
+   "input_tokens": 10438,
+   "output_tokens": 2843,
+   "cache_read": 0,
+   "cache_write": 0,
+   "searches": 0,
+   "seconds": 29.59,
+   "cost": 0.123265
+  }
+ ],
+ "items": [
+  {
+   "id": "E1",
+   "claim": "**Vendor landscape:** The dominant vendors deployed in US health systems are Microsoft's Nuance Dragon Ambient eXperience (DAX) Copilot (rebranded Dragon Copilot), Abridge, and Ambience Healthcare, typically integrated with the Epic EHR. Sites studied by AHA utilized Ambience, Nuance DAX Copilot (predecessor to Microsoft Dragon Copilot), and/or Abridge along with Epic as their EHR system.",
+   "api_quote": "The sites included in the study utilized Ambience, Nuance Dragon Ambient eXperience (DAX) Copilot (the predecessor to Microsoft Dragon Copilot) and/or...",
+   "page_quote": "The sites included in the study utilized Ambience, Nuance Dragon Ambient eXperience (DAX) Copilot (the predecessor to Microsoft Dragon Copilot) and/or Abridge along with Epic as their EHR system.",
+   "api_verdict": "partial",
+   "api_reason": "Quote cut before Abridge/Epic; vendor-dominance claim unsupported",
+   "page_verdict": "partial",
+   "page_reason": "Quote supports sites studied; 'dominant vendors' nationally not supported"
+  },
+  {
+   "id": "E2",
+   "claim": "**Microsoft DAX Copilot scale:** Microsoft chair and CEO Satya Nadella stated in an October 18 annual letter that \"more than 400 healthcare organizations are increasing physician productivity and reducing burnout\" with DAX Copilot, with clinicians saving \"more than five minutes per patient encounter,\" and 77% saying it improves documentation quality.",
+   "api_quote": "\u201cWith DAX Copilot, more than 400 healthcare organizations are increasing physician productivity and reducing burnout,\u201d Microsoft chair and CEO Satya N...",
+   "page_quote": "\u201cWith DAX Copilot, more than 400 healthcare organizations are increasing physician productivity and reducing burnout,\u201d Microsoft chair and CEO Satya N...",
+   "api_verdict": "partial",
+   "api_reason": "400 orgs quote present; five minutes and 77% absent",
+   "page_verdict": "partial",
+   "page_reason": "Quote cut before five-minute and 77% figures"
+  },
+  {
+   "id": "E3",
+   "claim": "By 2026, one industry source reported Microsoft reporting 600+ healthcare organizations having deployed DAX Copilot, with the deployment base concentrated in large health systems.",
+   "api_quote": "Microsoft reports 600+ healthcare organizations have deployed DAX Copilot.\u00b9 The deployment base is concentrated in large health systems.",
+   "page_quote": "Microsoft reports 600+ healthcare organizations have deployed DAX Copilot.\u00b9 The deployment base is concentrated in large health systems.",
+   "api_verdict": "supported",
+   "api_reason": "Quote states 600+ orgs and large-system concentration",
+   "page_verdict": "supported",
+   "page_reason": "Quote states 600+ organizations and large-system concentration"
+  },
+  {
+   "id": "E4",
+   "claim": "Another 2026 source claims DAX Copilot crossed 200,000 clinician users in 2026 across US health systems, though this figure comes from a lower-authority industry blog and should be treated with caution.",
+   "api_quote": "DAX Copilot crossed 200,000 clinician users in 2026 across US health systems.",
+   "page_quote": "DAX Copilot crossed 200,000 clinician users in 2026 across US health systems.",
+   "api_verdict": "supported",
+   "api_reason": "Quote states 200,000 clinician users in 2026",
+   "page_verdict": "supported",
+   "page_reason": "Quote states 200,000 clinician users in 2026"
+  },
+  {
+   "id": "E5",
+   "claim": "Another 2026 source claims DAX Copilot crossed 200,000 clinician users in 2026 across US health systems, though this figure comes from a lower-authority industry blog and should be treated with caution. Named health system customers include Stanford Health Care, Atrium Health, and Northwestern Medicine.",
+   "api_quote": "Health system customers include Palo Alto, Calif.-based Stanford Health Care, Charlotte, N.C.-based Atrium Health, Chicago-based Northwestern Medicine...",
+   "page_quote": "Health system customers include Palo Alto, Calif.-based Stanford Health Care, Charlotte, N.C.-based Atrium Health, Chicago-based Northwestern Medicine...",
+   "api_verdict": "partial",
+   "api_reason": "Names supported; 200,000 figure absent from quote",
+   "page_verdict": "partial",
+   "page_reason": "Quote names customers but not the 200,000 figure"
+  },
+  {
+   "id": "E6",
+   "claim": "Earlier pilot data: a pilot with 30 Overlake clinicians saw a significant reduction in time spent on notes outside scheduled hours, with 81% reporting reduced cognitive burden and 77% reporting other benefits.",
+   "api_quote": "A pilot with 30 Overlake clinicians saw a significant reduction in time spent on notes outside of scheduled hours. Users also reported other important...",
+   "page_quote": "A pilot with 30 Overlake clinicians saw a significant reduction in time spent on notes outside of scheduled hours. Users also reported other important benefits: 81% said DAX Copilot had reduced their cognitive burden and 77% said the solution had improved the quality of their documentation.",
+   "api_verdict": "partial",
+   "api_reason": "30 clinicians and reduction supported; 81%/77% missing",
+   "page_verdict": "supported",
+   "page_reason": "Pilot size, 81% and 77% figures all present"
+  },
+  {
+   "id": "E7",
+   "claim": "- Abridge finalized an agreement with Johns Hopkins Medicine to implement its ambient AI platform across 6,700 clinicians, six hospitals and 40 patient-care centers.",
+   "api_quote": "In early December, Abridge finalized the agreement with Johns Hopkins Medicine to implement the ambient AI platform across its 6,700 clinicians, six h...",
+   "page_quote": "In early December, Abridge finalized the agreement with Johns Hopkins Medicine to implement the ambient AI platform across its 6,700 clinicians, six h...",
+   "api_verdict": "partial",
+   "api_reason": "6,700 clinicians, six hospitals shown; 40 centers cut off",
+   "page_verdict": "partial",
+   "page_reason": "Quote truncated; 40 patient-care centers not shown"
+  },
+  {
+   "id": "E8",
+   "claim": "- Kaiser Permanente contracted with Abridge to make AI clinical documentation available to its 40 hospitals and over 600 medical offices \u2014 making the app available to more than 24,000 doctors across the system, at 40 hospitals and more than 600 medical offices in eight states and Washington, D.C.; the health system's clinical staff includes 24,600 physicians and 73,600 nurses.",
+   "api_quote": "In August, Kaiser Permanente contracted with Abridge to make AI clinical documentation available to its 40 hospitals and over 600 medical offices.",
+   "page_quote": "In August, Kaiser Permanente contracted with Abridge to make AI clinical documentation available to its 40 hospitals and over 600 medical offices.",
+   "api_verdict": "partial",
+   "api_reason": "Hospital/office counts supported; 24,000 doctors, states, staff absent",
+   "page_verdict": "partial",
+   "page_reason": "24,000 doctors, states, staff counts absent from quote"
+  },
+  {
+   "id": "E9",
+   "claim": "- Kaiser Permanente contracted with Abridge to make AI clinical documentation available to its 40 hospitals and over 600 medical offices \u2014 making the app available to more than 24,000 doctors across the system, at 40 hospitals and more than 600 medical offices in eight states and Washington, D.C.; the health system's clinical staff includes 24,600 physicians and 73,600 nurses.",
+   "api_quote": "Its generative-AI-powered platform ... a collaboration with Mayo Clinic and health IT giant Epic to develop a generative AI ambient documentation work...",
+   "page_quote": "Its generative-AI-powered platform ... a collaboration with Mayo Clinic and health IT giant Epic to develop a generative AI ambient documentation work...",
+   "api_verdict": "unsupported",
+   "api_reason": "Quote about Mayo/Epic collaboration, not Kaiser numbers",
+   "page_verdict": "unsupported",
+   "page_reason": "Quote about Mayo/Epic collaboration, not Kaiser deployment figures"
+  },
+  {
+   "id": "E10",
+   "claim": "- Abridge finalized an enterprise-wide agreement with Mayo Clinic, starting with approximately 2,000 clinicians who serve over 1 million patients annually across a wide range of specialties and care settings.",
+   "api_quote": "SAN FRANCISCO, CA, and ROCHESTER, MN\u2014January 14, 2025\u2014Abridge has finalized an enterprise-wide agreement with Mayo Clinic to implement the AI-powered ...",
+   "page_quote": "SAN FRANCISCO, CA, and ROCHESTER, MN\u2014January 14, 2025\u2014Abridge has finalized an enterprise-wide agreement with Mayo Clinic to implement the AI-powered clinical documentation platform, starting with approximately 2,000 clinicians who serve over 1 million patients annually across a wide range of specialties and care settings.",
+   "api_verdict": "partial",
+   "api_reason": "Agreement supported; 2,000 clinicians and 1 million patients cut",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches enterprise agreement and 2,000 clinicians"
+  },
+  {
+   "id": "E11",
+   "claim": "- Abridge's platform has also been deployed at the University of Vermont Health System, Christus Health, UChicago Medicine, Sutter Health, Yale New Haven Health System, UCI Health, Emory Healthcare, The University of Kansas Health System, UPMC and dozens of other health systems.",
+   "api_quote": "Its generative-AI-powered platform has been deployed at the University of Vermont Health System, Christus Health, UChicago Medicine, Sutter Health, Ya...",
+   "page_quote": "Its generative-AI-powered platform has been deployed at the University of Vermont Health System, Christus Health, UChicago Medicine, Sutter Health, Ya...",
+   "api_verdict": "partial",
+   "api_reason": "Quote truncated mid-list; later named systems unsupported",
+   "page_verdict": "partial",
+   "page_reason": "Quote truncated before most named systems"
+  },
+  {
+   "id": "E12",
+   "claim": "- Corewell Health (Michigan) is also an Abridge customer, described by CEO Shiv Rao as \"one of Abridge's larger health system partnerships.\"",
+   "api_quote": "Last month, the company said it would deploy the product at Michigan-based Corewell Health in one of Abridge\u2019s larger health system partnerships, acco...",
+   "page_quote": "Last month, the company said it would deploy the product at Michigan-based Corewell Health in one of Abridge\u2019s larger health system partnerships, according to CEO Shiv Rao.",
+   "api_verdict": "supported",
+   "api_reason": "Quote confirms Corewell deployment as larger partnership",
+   "page_verdict": "supported",
+   "page_reason": "Quote confirms Corewell deployment and Rao characterization"
+  },
+  {
+   "id": "E13",
+   "claim": "- Overall, by early 2025: Abridge had signed partnerships with dozens of hospital systems representing tens of thousands of clinicians, including Kaiser Permanente, Duke Health, Johns Hopkins Medicine, UChicago Medicine, Reid Health, CHRISTUS Health, and many more.",
+   "api_quote": "In the past year, Abridge alone has signed partnerships with dozens of hospital systems that represent tens of thousands of clinicians, including Kais...",
+   "page_quote": "In the past year, Abridge alone has signed partnerships with dozens of hospital systems that represent tens of thousands of clinicians, including Kaiser Permanente, Duke Health, Johns Hopkins Medicine, UChicago Medicine, Reid Health, CHRISTUS Health, and many more.",
+   "api_verdict": "partial",
+   "api_reason": "Dozens/tens of thousands supported; most named systems cut off",
+   "page_verdict": "supported",
+   "page_reason": "Quote lists same partners and scale"
+  },
+  {
+   "id": "E14",
+   "claim": "- Nursing expansion in 2026: Abridge made its nursing documentation product generally available across more than 250 health system partners in early May 2026, following development involving Epic and nurses at Mayo Clinic; systems named in coverage included Corewell Health, Johns Hopkins Medicine, Emory Healthcare, Bon Secours Mercy Health and Reid Health.",
+   "api_quote": "Abridge made its nursing documentation product generally available across more than 250 health system partners in early May 2026, following a developm...",
+   "page_quote": "Abridge made its nursing documentation product generally available across more than 250 health system partners in early May 2026, following a developm...",
+   "api_verdict": "partial",
+   "api_reason": "250+ partners, May 2026 supported; named systems cut",
+   "page_verdict": "partial",
+   "page_reason": "Quote truncated; Epic, Mayo, named systems missing"
+  },
+  {
+   "id": "E15",
+   "claim": "**Ambience Healthcare scale:** Ardent Health signed on as an enterprise customer, aiming to have the tech deployed with its medical groups by the end of Q1 the following year, with long-term plans to expand across the Ardent network including nurses and emergency departments.",
+   "api_quote": "The health system aims to have the tech deployed with its medical groups by the end of the first quarter next year. The long-term plan is to expand Am...",
+   "page_quote": "The health system aims to have the tech deployed with its medical groups by the end of the first quarter next year. The long-term plan is to expand Am...",
+   "api_verdict": "supported",
+   "api_reason": "Quote matches Q1 deployment and expansion plans",
+   "page_verdict": "partial",
+   "page_reason": "Long-term nurse/ED expansion cut off in quote"
+  },
+  {
+   "id": "E16",
+   "claim": "**Ambience Healthcare scale:** Ardent Health signed on as an enterprise customer, aiming to have the tech deployed with its medical groups by the end of Q1 the following year, with long-term plans to expand across the Ardent network including nurses and emergency departments. Ardent's pilot showed 70% of pilot clinicians reporting reduced cognitive load and 100% stating Ambience improved their job satisfaction.",
+   "api_quote": "| Ardent Health saw strong results from that pilot program\u201470% of Ardent\u2019s pilot clinicians reported reduced cognitive load, improving focus on patien...",
+   "page_quote": "| Ardent Health saw strong results from that pilot program\u201470% of Ardent\u2019s pilot clinicians reported reduced cognitive load, improving focus on patien...",
+   "api_verdict": "partial",
+   "api_reason": "70% supported; 100% job satisfaction figure cut off",
+   "page_verdict": "partial",
+   "page_reason": "100% job satisfaction figure cut from quote"
+  },
+  {
+   "id": "E17",
+   "claim": "Cleveland Clinic is also an Ambience customer: Cleveland Clinic found that AI Scribe from Ambience decreased the average time clinicians spent writing and reviewing notes in the EHR system by 14 minutes per day.",
+   "api_quote": "Mass General Brigham in Boston observed a 21.2% reduction in burnout prevalence after 84 days of ambient documentation technology utilization, accordi...",
+   "page_quote": "Mass General Brigham in Boston observed a 21.2% reduction in burnout prevalence after 84 days of ambient documentation technology utilization, according to the 2025 JAMA",
+   "api_verdict": "unsupported",
+   "api_reason": "Quote concerns Mass General Brigham, not Cleveland Clinic",
+   "page_verdict": "unsupported",
+   "page_reason": "Quote concerns Mass General Brigham burnout, not Cleveland Clinic"
+  },
+  {
+   "id": "E18",
+   "claim": "Cleveland Clinic is also an Ambience customer: Cleveland Clinic found that AI Scribe from Ambience decreased the average time clinicians spent writing and reviewing notes in the EHR system by 14 minutes per day. Ambience is backed by approximately $370 million in total funding, including a $243 million Series C in July 2025 led by Andreessen Horowitz and Oak HC/FT, at a post-money valuation reported between $1 billion and $1.25 billion.",
+   "api_quote": "Founded in San Francisco and backed by approximately $370 million in total funding \u2014 including a $243 million Series C in July 2025 led by Andreessen ...",
+   "page_quote": "Founded in San Francisco and backed by approximately $370 million in total funding \u2014 including a $243 million Series C in July 2025 led by Andreessen Horowitz (a16z) and Oak HC/FT \u2014 Ambience builds AI tools designed for large health systems, not individual clinicians.",
+   "api_verdict": "partial",
+   "api_reason": "Funding supported; valuation range cut off",
+   "page_verdict": "partial",
+   "page_reason": "Valuation range absent from quote"
+  },
+  {
+   "id": "E19",
+   "claim": "**System-wide outcome data (AHA report, 2026):** AI scribe usage was associated with 0.49 more visits per week for clinicians included in the study.",
+   "api_quote": "Additionally, AI scribe usage was associated with 0.49 more visits per week for the clinicians included in the study.",
+   "page_quote": "Additionally, AI scribe usage was associated with 0.49 more visits per week for the clinicians included in the study.",
+   "api_verdict": "supported",
+   "api_reason": "Quote states 0.49 more visits per week",
+   "page_verdict": "supported",
+   "page_reason": "Quote states 0.49 more visits per week"
+  },
+  {
+   "id": "E20",
+   "claim": "**System-wide outcome data (AHA report, 2026):** AI scribe usage was associated with 0.49 more visits per week for clinicians included in the study. Emory Healthcare saw a 30.7% increase in documentation-related well-being prevalence associated with ambient documentation technology use, per a JAMA study published in 2025.",
+   "api_quote": "Atlanta-based Emory Healthcare saw a 30.7% increase in documentation-related well-being prevalence associated with ambient documentation technology us...",
+   "page_quote": "Atlanta-based Emory Healthcare saw a 30.7% increase in documentation-related well-being prevalence associated with ambient documentation technology use, according to a study published in JAMA in 2025.",
+   "api_verdict": "supported",
+   "api_reason": "Quote gives Emory 30.7% well-being increase",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches Emory 30.7% and JAMA 2025"
+  },
+  {
+   "id": "E21",
+   "claim": "Emory Healthcare saw a 30.7% increase in documentation-related well-being prevalence associated with ambient documentation technology use, per a JAMA study published in 2025. Mass General Brigham observed a 21.2% reduction in burnout prevalence after 84 days of ambient documentation technology utilization, per the 2025 JAMA study.",
+   "api_quote": "Mass General Brigham in Boston observed a 21.2% reduction in burnout prevalence after 84 days of ambient documentation technology utilization, accordi...",
+   "page_quote": "Mass General Brigham in Boston observed a 21.2% reduction in burnout prevalence after 84 days of ambient documentation technology utilization, according to the 2025 JAMA",
+   "api_verdict": "supported",
+   "api_reason": "Quote states 21.2% burnout reduction after 84 days",
+   "page_verdict": "supported",
+   "page_reason": "Quote gives 21.2%, 84 days, 2025 JAMA"
+  },
+  {
+   "id": "E22",
+   "claim": "**Scale of encounters processed:** In one large integrated practice group, more than 2.5 million patient-encounter notes were generated within a year following deployment.",
+   "api_quote": "In one large integrated practice group more than 2.5 million patient\u2010encounter notes were generated within a year following deployment [4].",
+   "page_quote": "In one large integrated practice group more than 2.5 million patient\u2010encounter notes were generated within a year following deployment [4].",
+   "api_verdict": "supported",
+   "api_reason": "Quote matches 2.5 million notes within a year",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches 2.5 million notes within a year"
+  },
+  {
+   "id": "E23",
+   "claim": "**UCLA RCT (Lukac et al., NEJM AI, 2025; medRxiv preprint 2025.07.10.25331333).** This is described as Despite swift and widespread adoption of AI scribes, their impacts have not been examined in randomized-clinical trials prior to this study.",
+   "api_quote": "Despite swift and widespread adoption of AI scribes, their impacts have not been examined in randomized-clinical trials.",
+   "page_quote": "Despite swift and widespread adoption of AI scribes, their impacts have not been examined in randomized-clinical trials.",
+   "api_verdict": "supported",
+   "api_reason": "Quote matches claimed statement about lacking RCTs",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches lack of prior randomized trials"
+  },
+  {
+   "id": "E24",
+   "claim": "The trial design: 238 outpatient physicians, representing 14 specialties, were assigned 1:1:1 via covariate-constrained randomization to either Microsoft DAX Copilot or Nabla, or a usual-care control group from November 4, 2024, to January 3, 2025, with secondary end points measured by the Mini-Z 2.0, physician task load (PTL), and Professional Fulfillment Index \u2014 Work Exhaustion (PFI-WE) scores; DAX was used in 33.5% of 24,696 visits and Nabla in 29.5% of 23,653 visits.",
+   "api_quote": "In this parallel three-group pragmatic randomized clinical trial, 238 outpatient physicians, representing 14 specialties, were assigned 1:1:1 via cova...",
+   "page_quote": "In this parallel three-group pragmatic randomized clinical trial, 238 outpatient physicians, representing 14 specialties, were assigned 1:1:1 via cova...",
+   "api_verdict": "partial",
+   "api_reason": "238 physicians, 14 specialties supported; dates and percentages cut",
+   "page_verdict": "partial",
+   "page_reason": "Quote truncated; dates, visit percentages missing"
+  },
+  {
+   "id": "E25",
+   "claim": "The trial design: 238 outpatient physicians, representing 14 specialties, were assigned 1:1:1 via covariate-constrained randomization to either Microsoft DAX Copilot or Nabla, or a usual-care control group from November 4, 2024, to January 3, 2025, with secondary end points measured by the Mini-Z 2.0, physician task load (PTL), and Professional Fulfillment Index \u2014 Work Exhaustion (PFI-WE) scores; DAX was used in 33.5% of 24,696 visits and Nabla in 29.5% of 23,653 visits.",
+   "api_quote": "Secondary end points measured by surveys included the Mini-Z 2.0, a four-item physician task load (PTL), and Professional Fulfillment Index \u2014 Work Exh...",
+   "page_quote": "Secondary end points measured by surveys included the Mini-Z 2.0, a four-item physician task load (PTL), and Professional Fulfillment Index \u2014 Work Exh...",
+   "api_verdict": "partial",
+   "api_reason": "Secondary endpoints supported; design and visit figures absent",
+   "page_verdict": "partial",
+   "page_reason": "Supports endpoints only; randomization, dates, percentages absent"
+  },
+  {
+   "id": "E26",
+   "claim": "**Effect sizes:** A randomised controlled trial at UCLA across 238 physicians in 14 specialties compared two commercial ambient scribe tools (DAX and Nabla) against usual care, with approximately 24,000 encounters per arm. Nabla reduced time-in-note by 9.5% relative to control (95% CI \u201317.2 to \u20131.8; P=0.02), while DAX showed no statistically significant effect (\u20131.7%, 95% CI \u20139.4 to +5.9; P=0.66).",
+   "api_quote": "A randomised controlled trial at UCLA across 238 physicians in 14 specialties compared two commercial ambient scribe tools (DAX and Nabla) against usu...",
+   "page_quote": "A randomised controlled trial at UCLA across 238 physicians in 14 specialties compared two commercial ambient scribe tools (DAX and Nabla) against usu...",
+   "api_verdict": "partial",
+   "api_reason": "Design supported; effect sizes and CIs cut off",
+   "page_verdict": "partial",
+   "page_reason": "Quote cut before effect sizes and confidence intervals"
+  },
+  {
+   "id": "E27",
+   "claim": "Overall, the researchers observed a modest reduction in time spent on documentation amongst Nabla users, and improvements in burnout, work exhaustion, and task load with use of any scribe, relative to control.",
+   "api_quote": "In this first randomized-controlled trial of LLM-powered ambient AI scribes, we observed a modest reduction in time spent on documentation amongst Nab...",
+   "page_quote": "In this first randomized-controlled trial of LLM-powered ambient AI scribes, we observed a modest reduction in time spent on documentation amongst Nab...",
+   "api_verdict": "partial",
+   "api_reason": "Nabla documentation reduction supported; burnout findings cut off",
+   "page_verdict": "partial",
+   "page_reason": "Quote truncated before burnout/exhaustion improvements"
+  },
+  {
+   "id": "E28",
+   "claim": "Notably, exploratory analyses revealed a dose-response effect, wherein physicians who used an AI scribe at a higher percentage of encounters experienced greater benefit, and most physicians did not report inaccuracy and bias, found the AI scribes easy to learn and use, and felt the technology allowed them to better engage with their patients\u2014results which may reflect additional mechanisms for reduced burnout aside from documentation time savings.",
+   "api_quote": "Exploratory analyses revealed a dose-response effect, wherein physicians who used an AI scribe at a higher percentage of encounters experienced greate...",
+   "page_quote": "Exploratory analyses revealed a dose-response effect, wherein physicians who used an AI scribe at a higher percentage of encounters experienced greate...",
+   "api_verdict": "partial",
+   "api_reason": "Dose-response supported; accuracy and engagement findings cut",
+   "page_verdict": "partial",
+   "page_reason": "Quote truncated; accuracy and engagement findings missing"
+  },
+  {
+   "id": "E29",
+   "claim": "**Limitations:** The researchers note that their findings may not apply broadly to all practice settings, as the study was conducted at a single academic medical center during a relatively short time period.",
+   "api_quote": "The researchers note that their findings may not apply broadly to all practice settings, as the study was conducted at a single academic medical cente...",
+   "page_quote": "The researchers note that their findings may not apply broadly to all practice settings, as the study was conducted at a single academic medical center during a relatively short time period.",
+   "api_verdict": "supported",
+   "api_reason": "Quote matches single-center, short-period limitation",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches limitation statement verbatim"
+  },
+  {
+   "id": "E30",
+   "claim": "**Nuance DAX step-wedge RCT (ScienceDirect).** This was a randomised, control study with a step-wedge design, where providers were randomly assigned to use ACI early or late in the study; medical records metadata captured time spent on documentation, and measures of burden and burnout were collected monthly.",
+   "api_quote": "This was a randomised, control study with a step-wedge design. Providers were randomly assigned to use ACI early or late in the study. Medical records...",
+   "page_quote": "This was a randomised, control study with a step-wedge design. Providers were randomly assigned to use ACI early or late in the study. Medical records...",
+   "api_verdict": "supported",
+   "api_reason": "Quote matches step-wedge randomization design description",
+   "page_verdict": "supported",
+   "page_reason": "Design details match quote"
+  },
+  {
+   "id": "E31",
+   "claim": "Findings: Ambient clinical intelligence (ACI) significantly reduced provider documentation burden, frustration and burnout, reducing daily documentation time and 2.5 hours per week of \"Pajama Time\" or off-hours documentation.",
+   "api_quote": "Ambient clinical intelligence (ACI) significantly reduced provider documentation burden, frustration and burnout. ACI use reduced daily documentation ...",
+   "page_quote": "Ambient clinical intelligence (ACI) significantly reduced provider documentation burden, frustration and burnout. ACI use reduced daily documentation ...",
+   "api_verdict": "partial",
+   "api_reason": "Burden/burnout reduction supported; 2.5 hours Pajama Time cut",
+   "page_verdict": "partial",
+   "page_reason": "2.5 hours Pajama Time figure cut off"
+  },
+  {
+   "id": "E32",
+   "claim": "Post-hoc regression found ACI software was significantly and negatively predictive of burnout (OR=0.96; 95% CI=0.94\u20130.98, p=0.0003), whereas Pajama Time was significantly and positively associated with burnout (OR=1.01; 95% CI=1.00\u20131.03, p=0.036).",
+   "api_quote": "Post-hoc regression analyses, which ... 95% CI=0.94\u20130.98, p=0.0003), whereas Pajama Time was significantly and positively associated with burnout (OR=...",
+   "page_quote": "Post-hoc regression analyses, which ... 95% CI=0.94\u20130.98, p=0.0003), whereas Pajama Time was significantly and positively associated with burnout (OR=...",
+   "api_verdict": "partial",
+   "api_reason": "OR values partly cut; Pajama Time OR missing",
+   "page_verdict": "partial",
+   "page_reason": "OR values 0.96 and 1.01 missing from quote"
+  },
+  {
+   "id": "E33",
+   "claim": "**JAMA Network Open (Olson et al., 2025) \u2014 Abridge, 6 health systems.** Design: This quality improvement study was conducted between February 1 and October 31, 2024, in 6 health systems across the US that deployed the Abridge ambient AI scribe intervention; the Yale University Institutional Review Board determined the study to not be human participant research because it was a secondary analysis of deidentified aggregated survey data originally collected for quality improvement.",
+   "api_quote": "This quality improvement study was conducted between February 1 and October 31, 2024, in 6 health systems across the US that deployed the Abridge ambi...",
+   "page_quote": "This quality improvement study was conducted between February 1 and October 31, 2024, in 6 health systems across the US that deployed the Abridge ambi...",
+   "api_verdict": "partial",
+   "api_reason": "Dates and 6 systems supported; IRB statement cut off",
+   "page_verdict": "partial",
+   "page_reason": "IRB determination cut off from quote"
+  },
+  {
+   "id": "E34",
+   "claim": "Sample: 263 clinicians were included (mean [SD] years in practice, 15.1 [9.3]; 53.6% female), including 131 primary care professionals, 46 adult specialists, 14 in neurology/psychiatry, and 72 in surgical specialties; the sample included predominantly attending physicians (88.2%) and academic faculty (63.9%).",
+   "api_quote": "emergency medicine participants without specialized ambulatory clinics or direct patient care, 263 \u00b7 clinicians were included in the study (mean [SD] ...",
+   "page_quote": "emergency medicine participants without specialized ambulatory clinics or direct patient care, 263 \u00b7 clinicians were included in the study (mean [SD] ...",
+   "api_verdict": "partial",
+   "api_reason": "263 clinicians supported; demographics and specialty counts cut",
+   "page_verdict": "partial",
+   "page_reason": "Quote truncated before demographic and specialty numbers"
+  },
+  {
+   "id": "E35",
+   "claim": "Sample: 263 clinicians were included (mean [SD] years in practice, 15.1 [9.3]; 53.6% female), including 131 primary care professionals, 46 adult specialists, 14 in neurology/psychiatry, and 72 in surgical specialties; the sample included predominantly attending physicians (88.2%) and academic faculty (63.9%).",
+   "api_quote": "These individuals included 131 primary \u00b7 care professionals representing general internal medicine, family practice, internal medicine/ pediatrics, an...",
+   "page_quote": "These individuals included 131 primary \u00b7 care professionals representing general internal medicine, family practice, internal medicine/ pediatrics, an...",
+   "api_verdict": "partial",
+   "api_reason": "131 primary care supported; other specialty counts cut",
+   "page_verdict": "partial",
+   "page_reason": "Quote truncated; other specialty counts and percentages missing"
+  },
+  {
+   "id": "E36",
+   "claim": "**Effect sizes:** After 30 days with an ambient AI scribe, burnout among those working in ambulatory clinics decreased significantly from 51.9% to 38.8%; there were also significant improvements in cognitive task load, time spent documenting after hours, focused attention on patients, and urgent access to care.",
+   "api_quote": "study of 263 physicians and advance \u00b7 practice practitioners across 6 health \u00b7 care systems found that after 30 days \u00b7 with an ambient AI scribe, burn...",
+   "page_quote": "study of 263 physicians and advance \u00b7 practice practitioners across 6 health \u00b7 care systems found that after 30 days \u00b7 with an ambient AI scribe, burn...",
+   "api_verdict": "partial",
+   "api_reason": "Quote truncated before burnout percentages and secondary improvements",
+   "page_verdict": "partial",
+   "page_reason": "Quote cut before burnout percentages and secondary improvements"
+  },
+  {
+   "id": "E37",
+   "claim": "An invited commentary characterized this as \"a net reduction of 13.9 percentage points in burnout and a reduction of 6.2 percentage points in severe burnout across 186 clinicians... These results were robust when controlling for demographic and site characteristics.\"",
+   "api_quote": "This study \u201cvalidates and extends the work of early adopters, observing a net reduction of 13.9 percentage points in burnout and a reduction of 6.2 pe...",
+   "page_quote": "This study \u201cvalidates and extends the work of early adopters, observing a net reduction of 13.9 percentage points in burnout and a reduction of 6.2 percentage points in severe burnout across 186 clinicians.",
+   "api_verdict": "partial",
+   "api_reason": "13.9 points supported; 6.2 points and 186 clinicians cut",
+   "page_verdict": "supported",
+   "page_reason": "Quote contains 13.9 and 6.2 point reductions, 186 clinicians"
+  },
+  {
+   "id": "E38",
+   "claim": "**Limitations:** As a quality improvement initiative, the evaluation was not structured for research purposes, and the study could not adjust for temporal trends as a control group was lacking.",
+   "api_quote": "As a quality improvement initiative, the evaluation was not structured for research purposes. The study could not adjust for temporal trends as a cont...",
+   "page_quote": "As a quality improvement initiative, the evaluation was not structured for research purposes. The study could not adjust for temporal trends as a control group was lacking.",
+   "api_verdict": "supported",
+   "api_reason": "Quote matches both stated limitations",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches limitations statement"
+  },
+  {
+   "id": "E39",
+   "claim": "Recruitment was non-random: participants agreed to complete an evaluation before and after the 30 days of ambient AI scribe use, recruited by health systems' digital health leaders on a voluntary basis \u2014 introducing likely volunteer/selection bias.",
+   "api_quote": "Health systems\u2019 digital health leaders recruited ambulatory care medical doctors and advanc",
+   "page_quote": "Health systems\u2019 digital health leaders recruited ambulatory care medical doctors and advanc",
+   "api_verdict": "partial",
+   "api_reason": "Recruitment by leaders shown; voluntary pre/post evaluation detail missing",
+   "page_verdict": "partial",
+   "page_reason": "Quote truncated; voluntary consent detail not shown"
+  },
+  {
+   "id": "E40",
+   "claim": "**JAMA multi-site, multi-vendor study (2026) \u2014 5 academic health systems.** This first major multi-site, multi-vendor study analyzed data from 8,581 ambulatory clinicians (including 1,809 AI scribe adopters) across five major academic health systems\u2014Mass General Brigham, Emory Healthcare, UCSF, Yale New Haven Health, and UC Davis\u2014using tools from Ambience, Nuance DAX Copilot, and Abridge.",
+   "api_quote": "The Scale of the Study: In the first major multi-site, multi-vendor study of its kind published in JAMA, researchers analyzed data from 8,581 ambulato...",
+   "page_quote": "The Scale of the Study: In the first major multi-site, multi-vendor study of its kind published in JAMA, researchers analyzed data from 8,581 ambulatory clinicians (including 1,809 AI scribe adopters) across five major academic health systems: Mass General Brigham, Emory Healthcare, UCSF, Yale New Haven Health, and UC Davis.",
+   "api_verdict": "partial",
+   "api_reason": "Quote truncated before clinician counts, sites, vendors",
+   "page_verdict": "partial",
+   "page_reason": "Vendor tools list not in quote; rest supported"
+  },
+  {
+   "id": "E41",
+   "claim": "**Effect sizes:** AI scribe adoption was associated with 13.4 fewer minutes of total EHR time and 16.0 fewer minutes of documentation time per 8 scheduled patient hours, and yielded a modest productivity bump of 0.49 additional weekly visits.",
+   "api_quote": "The Baseline ROI: Across the board, AI scribe adoption was associated with 13.4 fewer minutes of total EHR time and 16.0 fewer minutes of documentatio...",
+   "page_quote": "The Baseline ROI: Across the board, AI scribe adoption was associated with 13.4 fewer minutes of total EHR time and 16.0 fewer minutes of documentation time per 8 scheduled patient hours.",
+   "api_verdict": "partial",
+   "api_reason": "Quote cut before documentation figure completes; 0.49 productivity claim absent",
+   "page_verdict": "partial",
+   "page_reason": "Quote supports time figures but not the 0.49 visits claim"
+  },
+  {
+   "id": "E42",
+   "claim": "**Effect sizes:** AI scribe adoption was associated with 13.4 fewer minutes of total EHR time and 16.0 fewer minutes of documentation time per 8 scheduled patient hours, and yielded a modest productivity bump of 0.49 additional weekly visits.",
+   "api_quote": "It also yielded a modest productivity bump of 0.49 additional weekly visits.",
+   "page_quote": "It also yielded a modest productivity bump of 0.49 additional weekly visits.",
+   "api_verdict": "partial",
+   "api_reason": "Only supports 0.49 visits; EHR time figures absent",
+   "page_verdict": "partial",
+   "page_reason": "Quote supports only productivity figure, not time savings numbers"
+  },
+  {
+   "id": "E43",
+   "claim": "Notably, on after-hours work: the study found that time spent on the EHR outside of scheduled working hours (often referred to as \"pajama time\") did not change significantly with the adoption of AI scribes.",
+   "api_quote": "No Change in \u201cPajama Time\u201d: Interestingly, the study found that time spent on the EHR outside of scheduled working hours (often referred to as \u201cpajama...",
+   "page_quote": "No Change in \u201cPajama Time\u201d: Interestingly, the study found that time spent on the EHR outside of scheduled working hours (often referred to as \u201cpajama time\u201d) did not change significantly with the adoption of AI scribes.",
+   "api_verdict": "supported",
+   "api_reason": "Heading and text confirm no pajama-time change",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches claim directly"
+  },
+  {
+   "id": "E44",
+   "claim": "**Northwestern Medicine (Microsoft blog).** DAX Copilot users at Northwestern Medicine reported spending an average of 24% less time on notes and a 17% decrease in \"pajama time.\" This is a vendor-published figure, not from a peer-reviewed study, and lacks a comparison group or methodological detail.",
+   "api_quote": "DAX Copilot users at Northwestern Medicine also report spending an average of 24% less time on notes and a 17% decrease in \u201cpajama time,\u201d working on a...",
+   "page_quote": "DAX Copilot users at Northwestern Medicine also report spending an average of 24% less time on notes and a 17% decrease in \u201cpajama time,\u201d working on administrative tasks late into the night.",
+   "api_verdict": "supported",
+   "api_reason": "24% less note time and 17% pajama decrease stated",
+   "page_verdict": "supported",
+   "page_reason": "24% and 17% figures match; vendor framing is context"
+  },
+  {
+   "id": "E45",
+   "claim": "**Vanderbilt University Medical Center pilot.** During the pilot period, the top-utilizing clinicians across multiple specialties saw decreased pajama and overall documentation time, and these same clinicians also saw an increase in appointments closed the same day.",
+   "api_quote": "During the pilot period, the top-utilizing clinicians across multiple specialties saw decreased pajama and overall documentation time. These same clin...",
+   "page_quote": "During the pilot period, the top-utilizing clinicians across multiple specialties saw decreased pajama and overall documentation time. These same clinicians also saw an increase in appointments closed the same day.",
+   "api_verdict": "partial",
+   "api_reason": "Same-day appointment closure increase cut off",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches both pilot findings"
+  },
+  {
+   "id": "E46",
+   "claim": "**Providence Health pilot.** This was a small, non-randomized cohort: Providence selected the 24 physicians in 2022 and 2023 based on the amount of time they spent documenting after clinic hours, as well as overall time spent in each patient EHR chart \u2014 a design that pre-selects high-burden clinicians, limiting generalizability and introducing regression-to-the-mean risk.",
+   "api_quote": "\u00b7 Providence selected the 24 physicians in 2022 and 2023 based on the amount of time they spent documenting after clinic hours, as well as overall tim...",
+   "page_quote": "Providence selected the 24 physicians in 2022 and 2023 based on the amount of time they spent documenting after clinic hours, as well as overall time spent in each patient EHR chart.",
+   "api_verdict": "supported",
+   "api_reason": "24 physicians, 2022-2023, selection criteria match",
+   "page_verdict": "supported",
+   "page_reason": "Selection criteria and 24 physicians supported; critique is interpretation"
+  },
+  {
+   "id": "E47",
+   "claim": "\"Two small, nonrandomized pilot studies of DAX reported decreases in documentation time, EHR time, task load (TL), and aspects of burnout. However a larger, nonrandomized study using DAX showed no significant changes in financial and EHR use metrics, while discordantly, survey respondents in the intervention group subjectively reported decreased EHR time. Separately, in a large Nabla pilot, researchers reported small reductions in note time and favorable physician reception.\"",
+   "api_quote": "To address this problem, human scribes, both in person and virtual, have been deployed with some success, though these options present challenges arou...",
+   "page_quote": "To address this problem, human scribes, both in person and virtual, have been deployed with some success, though these options present challenges arou...",
+   "api_verdict": "unsupported",
+   "api_reason": "Quote about human scribes, unrelated to claimed pilot findings",
+   "page_verdict": "unsupported",
+   "page_reason": "Quote about human scribes, unrelated to claimed study findings"
+  },
+  {
+   "id": "E48",
+   "claim": "A pediatric hematology-oncology evaluation of DAX similarly found inconsistency: early evaluations demonstrate potential reductions in documentation burden, improvements in usability, and variable effects on clinician experience, but large-scale analyses show mixed effects \u2014 one study observed no overall reduction in documentation time, while another found increased engagement.",
+   "api_quote": "1 2 Early evaluations demonstrate potential reductions in documentation burden, improvements in usability, and variable effects on clinician experienc...",
+   "page_quote": "1 2 Early evaluations demonstrate potential reductions in documentation burden, improvements in usability, and variable effects on clinician experienc...",
+   "api_verdict": "partial",
+   "api_reason": "Mixed large-scale findings and specific studies cut off",
+   "page_verdict": "partial",
+   "page_reason": "Truncated; mixed large-scale findings not in quote"
+  },
+  {
+   "id": "E49",
+   "claim": "In that pediatric subspecialty setting itself, while some repeat users experienced meaningful reductions in active documentation time during shorter encounters, efficiency gains were inconsistent, and overall adoption remained low.",
+   "api_quote": "While some repeat users experienced meaningful reductions in active documentation time during shorter encounters, efficiency gains were inconsistent, ...",
+   "page_quote": "While some repeat users experienced meaningful reductions in active documentation time during shorter encounters, efficiency gains were inconsistent, ...",
+   "api_verdict": "partial",
+   "api_reason": "Low adoption claim cut off from quote",
+   "page_verdict": "partial",
+   "page_reason": "Truncated before low adoption statement"
+  },
+  {
+   "id": "E50",
+   "claim": "Reported error rates vary widely by study and vendor. Reported hallucination rates for large language model scribes are roughly 1\u20133%, versus 7\u201311% error rates for older dictation software, but independent testing found error rates ranging from about 12% to 25% across four ambient scribe platforms.",
+   "api_quote": "Reported hallucination rates for large language model scribes are roughly 1\u20133%, versus 7\u201311% error rates for older dictation software. Independent tes...",
+   "page_quote": "Reported hallucination rates for large language model scribes are roughly 1\u20133%, versus 7\u201311% error rates for older dictation software. Independent testing found error rates ranging from about 12% to 25% across four ambient scribe platforms \u2014 vendor choice matters.",
+   "api_verdict": "partial",
+   "api_reason": "12\u201325% independent testing figures cut off",
+   "page_verdict": "supported",
+   "page_reason": "All rates present in quote"
+  },
+  {
+   "id": "E51",
+   "claim": "A peer-reviewed instrument validation study found that 70% of the 44 draft notes from simulated encounters contained at least one error, and 44% of the 191 hallucinating sentences were classified as \"major,\" meaning errors that could impact diagnosis or management.",
+   "api_quote": "70% of the 44 draft notes from simulated encounters contained at least one error (31 notes; Biro et al., JMIR 2025) 44% of the 191 hallucinating sente...",
+   "page_quote": "70% of the 44 draft notes from simulated encounters contained at least one error (31 notes; Biro et al., JMIR 2025) 44% of the 191 hallucinating sentences were classified as \u201cmajor,\u201d meaning errors that could impact diagnosis or management (84 sentences; Asgari et al., npj Digital Medicine 2025)",
+   "api_verdict": "partial",
+   "api_reason": "Major-error classification detail truncated",
+   "page_verdict": "supported",
+   "page_reason": "Both figures appear verbatim"
+  },
+  {
+   "id": "E52",
+   "claim": "A separate, more rigorous evaluation using clinician-annotated sentences found lower rates: researchers analyzed 12,999 clinician-annotated sentences across 450 clinical notes and found hallucinations in 191 sentences, an overall rate of 1.47%, and of those, 84 (44%) were classified as major, meaning errors that could impact patient diagnosis or management if uncorrected.",
+   "api_quote": "Their team analyzed 12,999 clinician-annotated sentences across 450 clinical notes and found hallucinations in 191 sentences, an overall rate of 1.47%...",
+   "page_quote": "Their team analyzed 12,999 clinician-annotated sentences across 450 clinical notes and found hallucinations in 191 sentences, an overall rate of 1.47%.",
+   "api_verdict": "partial",
+   "api_reason": "84 (44%) major errors clause cut off",
+   "page_verdict": "partial",
+   "page_reason": "Quote lacks the 84 (44%) major-error detail"
+  },
+  {
+   "id": "E53",
+   "claim": "A companion analysis of the same dataset reported a 1.47% hallucination rate (fabricated content) and a 3.45% omission rate (missing critical information) across the 12,999 sentences, noting that even low rates mean errors in thousands of notes at health-system scale.",
+   "api_quote": "... A validated evaluation of an ambient AI scribe across 12,999 clinician-annotated sentences found a 1.47% hallucination rate (fabricated content) a...",
+   "page_quote": "A validated evaluation of an ambient AI scribe across 12,999 clinician-annotated sentences found a 1.47% hallucination rate (fabricated content) and a 3.45% omission rate (missing critical information).",
+   "api_verdict": "partial",
+   "api_reason": "3.45% omission rate truncated from quote",
+   "page_verdict": "supported",
+   "page_reason": "Both rates and sample size match"
+  },
+  {
+   "id": "E54",
+   "claim": "A companion analysis of the same dataset reported a 1.47% hallucination rate (fabricated content) and a 3.45% omission rate (missing critical information) across the 12,999 sentences, noting that even low rates mean errors in thousands of notes at health-system scale.",
+   "api_quote": "Even low rates mean errors in thousands of notes at health-system scale.",
+   "page_quote": "Even low rates mean errors in thousands of notes at health-system scale.",
+   "api_verdict": "partial",
+   "api_reason": "Only scale caveat; rates absent",
+   "page_verdict": "partial",
+   "page_reason": "Quote supports only scale remark, not the rates"
+  },
+  {
+   "id": "E55",
+   "claim": "A direct comparison study found AI-generated notes performed worse than clinician-written ones on hallucination frequency: 31% of AI notes contained hallucinations versus 20% in physician notes (p=0.01).",
+   "api_quote": "The result: 31% of AI notes contained hallucinations versus 20% in physician notes (p=0.01) (Palm et al., Front Artif Intell 2025).",
+   "page_quote": "The result: 31% of AI notes contained hallucinations versus 20% in physician notes (p=0.01) (Palm et al., Front Artif Intell 2025).",
+   "api_verdict": "supported",
+   "api_reason": "Numbers and p-value match exactly",
+   "page_verdict": "supported",
+   "page_reason": "Percentages and p-value match"
+  },
+  {
+   "id": "E56",
+   "claim": "Another simulation-based comparison of five ambient-scribe platforms found a mean error rate of 26.3% in clinical notes (95% CI: 17.0\u201331.0%).",
+   "api_quote": "One simulation comparing 5 ambient-digital-scribe platforms found a mean error rate of 26.3% in clinical notes (95% CI: 17.0\u201331.0%), while separate pe...",
+   "page_quote": "One simulation comparing 5 ambient-digital-scribe platforms found a mean error rate of 26.3% in clinical notes (95% CI: 17.0\u201331.0%), while separate pe...",
+   "api_verdict": "supported",
+   "api_reason": "Five platforms, 26.3%, CI all present",
+   "page_verdict": "supported",
+   "page_reason": "Mean error rate and CI present"
+  },
+  {
+   "id": "E57",
+   "claim": "A study using simulated clinical encounters found that AI scribes can compound interpreter errors during non-English-language visits: AI scribes may propagate interpreter errors in clinical documentation, and larger studies using more diverse scenarios, language pairs, vendors, and real-world interpreter-mediated encounters are needed to better characterize these risks and guide safe deployment.",
+   "api_quote": "Our study suggests that AI scribes may propagate interpreter errors in clinical documentation. Larger studies using more diverse scenarios, language p...",
+   "page_quote": "Our study suggests that AI scribes may propagate interpreter errors in clinical documentation. Larger studies using more diverse scenarios, language p...",
+   "api_verdict": "supported",
+   "api_reason": "Propagation and need for larger studies both stated",
+   "page_verdict": "supported",
+   "page_reason": "Quote conveys propagation finding and need for larger studies"
+  },
+  {
+   "id": "E58",
+   "claim": "Underlying speech-recognition models have also shown racial bias in transcription: one analysis found a widely used transcription engine correctly transcribed a speaker's reference to \"two other girls and one lady\" but added \"which were Black,\" despite no such racial context in the original conversation, and 38% of the tool's hallucinations could have harmful con[sequences].",
+   "api_quote": "In Ontario, AI note-taking tools intended for use by doctors provided incorrect and incomplete information or demonstrated hallucinations, and governm...",
+   "page_quote": "In Ontario, AI note-taking tools intended for use by doctors provided incorrect and incomplete information or demonstrated hallucinations, and governm...",
+   "api_verdict": "unsupported",
+   "api_reason": "Quote concerns Ontario tools, not racial transcription bias or 38%",
+   "page_verdict": "unsupported",
+   "page_reason": "Quote about Ontario; no racial bias or 38% figure"
+  },
+  {
+   "id": "E59",
+   "claim": "Regulatory testing in Ontario, Canada found similarly serious problems: AI note-taking tools intended for use by doctors provided incorrect and incomplete information or demonstrated hallucinations, and government evaluators found serious errors in transcripts generated by 20 programs.",
+   "api_quote": "In Ontario, AI note-taking tools intended for use by doctors provided incorrect and incomplete information or demonstrated hallucinations, and governm...",
+   "page_quote": "In Ontario, AI note-taking tools intended for use by doctors provided incorrect and incomplete information or demonstrated hallucinations, and governm...",
+   "api_verdict": "partial",
+   "api_reason": "20 programs figure truncated",
+   "page_verdict": "partial",
+   "page_reason": "Truncated before the 20 programs detail"
+  },
+  {
+   "id": "E60",
+   "claim": "A vendor selection guide notes that difficult use cases break tools down: behavioral health, procedural specialties, and visits with non-English-speaking patients or multiple family members in the room are where tools break down; if a vendor's tool performs well under those conditions, it will perform everywhere, but piloting in a controlled primary care setting first gives false confidence.",
+   "api_quote": "Behavioral health, procedural specialties, and visits with non-English-speaking patients or multiple family members in the room are where tools break ...",
+   "page_quote": "Behavioral health, procedural specialties, and visits with non-English-speaking patients or multiple family members in the room are where tools break down.",
+   "api_verdict": "partial",
+   "api_reason": "Pilot false-confidence claim cut off",
+   "page_verdict": "partial",
+   "page_reason": "Quote omits claims about vendor performance and pilot false confidence"
+  },
+  {
+   "id": "E61",
+   "claim": "Reviews of the evidence base emphasize that benefits are counterbalanced by quality concerns: benefits are counterbalanced by persisting concerns regarding the accuracy, consistency, language use, and style of AI-generated notes, and studies noting errors, omissions, or hallucinations caution that diligent clinician oversight is necessary.",
+   "api_quote": "However, these benefits are counterbalanced by persisting concerns regarding the accuracy, consistency, language use, and style of AI-generated notes....",
+   "page_quote": "However, these benefits are counterbalanced by persisting concerns regarding the accuracy, consistency, language use, and style of AI-generated notes....",
+   "api_verdict": "partial",
+   "api_reason": "Clinician oversight caution missing from quote",
+   "page_verdict": "partial",
+   "page_reason": "Truncated; oversight/errors clause not shown"
+  },
+  {
+   "id": "E62",
+   "claim": "Liability remains squarely with clinicians rather than vendors: the clinician who signs the note carries responsibility for its content, and no published framework shifts liability to the scribe vendor.",
+   "api_quote": "Who is liable for AI scribe errors? The clinician who signs the note carries responsibility for its content. No published framework shifts liability t...",
+   "page_quote": "Who is liable for AI scribe errors? The clinician who signs the note carries responsibility for its content. No published framework shifts liability to the scribe vendor.",
+   "api_verdict": "supported",
+   "api_reason": "Both liability statements present",
+   "page_verdict": "supported",
+   "page_reason": "Quote states both liability points"
+  },
+  {
+   "id": "E63",
+   "claim": "A randomized trial across 238 outpatient physicians using two commercial platforms (DAX and Nabla) found that clinically significant inaccuracies were noted \"occasionally\" on five-point Likert questions (DAX 2.7 [95% CI, 2.4 to 3.0]; Nabla 2.8 [95% CI, 2.6 to 3.0]), and one grade 1 (mild) adverse event was reported.",
+   "api_quote": "One grade 1 (mild) adverse event was reported, while clinically significant inaccuracies were noted \u201coccasionally\u201d on five-point Likert questions (DAX...",
+   "page_quote": "One grade 1 (mild) adverse event was reported, while clinically significant inaccuracies were noted \u201coccasionally\u201d on five-point Likert questions (DAX...",
+   "api_verdict": "partial",
+   "api_reason": "Likert values and 238 physicians not in quote",
+   "page_verdict": "partial",
+   "page_reason": "Truncated; 238 physicians and CI values absent"
+  },
+  {
+   "id": "E64",
+   "claim": "Across five academic medical centers and 1,800 clinicians, those using the technology saved 16 minutes of documentation time and spent 13 fewer minutes in the medical record for every eight hours of patient care; the study did not find significant impacts on time spent in the electronic health record outside of working hours, and primary care and female clinicians benefitted more than others.",
+   "api_quote": "The large new study of AI scribe use by 1,800 clinicians across five academic medical centers from 2023 to 2025 found those using the technology saved...",
+   "page_quote": "The large new study of AI scribe use by 1,800 clinicians across five academic medical centers from 2023 to 2025 found those using the technology saved 16 minutes of documentation time and spent 13 fewer minutes in the medical record for every eight hours of patient care.",
+   "api_verdict": "partial",
+   "api_reason": "Quote truncated before time savings and subgroup findings",
+   "page_verdict": "partial",
+   "page_reason": "After-hours and subgroup findings missing from quote"
+  },
+  {
+   "id": "E65",
+   "claim": "there was a 7% decrease in note writing time at day zero, increasing to 16% decrease by day 150; there was no change in pajama time, time outside scheduled hours (TOSH), or work RVU at day zero, though these improved by day 150 (19% decrease in pajama time, 13% decrease in TOSH, 2% increase in wRVU); note closure improved briefly at day zero but returned to pre-period levels by day 150; and there were no changes in note length at day zero or day 150.",
+   "api_quote": "Compared to the pre-period, there was 7% decrease in note writing time at day zero (Incidence Rate Ratio (IRR) 0.93,95% Credible Interval (CI) [0.89,0...",
+   "page_quote": "Compared to the pre-period, there was 7% decrease in note writing time at day zero (Incidence Rate Ratio (IRR) 0.93,95% Credible Interval (CI) [0.89,0...",
+   "api_verdict": "partial",
+   "api_reason": "Only day-zero note time present; later figures truncated",
+   "page_verdict": "partial",
+   "page_reason": "Truncated; most day-150 numbers absent"
+  },
+  {
+   "id": "E66",
+   "claim": "Utilization drop-off and silent abandonment are documented risks: active lawsuits over patient consent, a 1 to 3% AI error rate that includes clinically plausible hallucinations, and silent physician abandonment are all documented risks from skipping the basics during rollout, and if utilization is dropping after the initial spike, that is a change management problem, not a technology problem \u2014 silent abandonment is much harder to reverse once it becomes a habit.",
+   "api_quote": "Active lawsuits over patient consent, a 1 to 3% AI error rate that includes clinically plausible hallucinations, and silent physician abandonment are ...",
+   "page_quote": "Active lawsuits over patient consent, a 1 to 3% AI error rate that includes clinically plausible hallucinations, and silent physician abandonment are all documented risks from skipping the basics.",
+   "api_verdict": "partial",
+   "api_reason": "Utilization/change-management portion cut off",
+   "page_verdict": "partial",
+   "page_reason": "Quote lacks utilization drop-off/change management portion"
+  },
+  {
+   "id": "E67",
+   "claim": "Utilization drop-off and silent abandonment are documented risks: active lawsuits over patient consent, a 1 to 3% AI error rate that includes clinically plausible hallucinations, and silent physician abandonment are all documented risks from skipping the basics during rollout, and if utilization is dropping after the initial spike, that is a change management problem, not a technology problem \u2014 silent abandonment is much harder to reverse once it becomes a habit.",
+   "api_quote": "If utilization is dropping after the initial spike, that is a change management problem, not a technology problem. Address it early because silent aba...",
+   "page_quote": "If utilization is dropping after the initial spike, that is a change management problem, not a technology problem. Address it early because silent abandonment is much harder to reverse once it becomes a habit.",
+   "api_verdict": "partial",
+   "api_reason": "Lawsuits and 1\u20133% error rate absent from quote",
+   "page_verdict": "partial",
+   "page_reason": "Quote lacks lawsuits and error-rate portion"
+  },
+  {
+   "id": "E68",
+   "claim": "A quality improvement study of 263 clinicians across 6 health systems found that after 30 days with an ambient AI scribe, burnout among those working in ambulatory clinics decreased significantly from 51.9% to 38.8%, with significant improvements in cognitive task load, time spent documenting after hours, focused attention on patients, and urgent access to care.",
+   "api_quote": "**Findings:**\n\nThis quality improvement study of 263 physicians and advance practice practitioners across 6 health care systems found that after 30 da...",
+   "page_quote": "**Findings:**\n\nThis quality improvement study of 263 physicians and advance practice practitioners across 6 health care systems found that after 30 da...",
+   "api_verdict": "partial",
+   "api_reason": "Burnout percentages 51.9%\u219238.8% truncated",
+   "page_verdict": "partial",
+   "page_reason": "Truncated before burnout percentages and outcomes"
+  },
+  {
+   "id": "E69",
+   "claim": "A JAMA study across five academic medical centers found AI-powered ambient scribes modestly decreased total electronic health record (EHR) time by 13.4 minutes and documentation time by 16.0 minutes, and usage was associated with 0.49 more visits per week for the clinicians included in the study.",
+   "api_quote": "A recent study published in JAMA found that AI-powered ambient scribes modestly decreased total electronic health record (EHR) time by 13.4 minutes an...",
+   "page_quote": "A recent study published in JAMA found that AI-powered ambient scribes modestly decreased total electronic health record (EHR) time by 13.4 minutes and documentation time by 16.0 minutes across five academic medical centers.",
+   "api_verdict": "partial",
+   "api_reason": "Documentation 16.0 minutes and 0.49 visits cut off",
+   "page_verdict": "partial",
+   "page_reason": "Quote omits the 0.49 visits finding"
+  },
+  {
+   "id": "E70",
+   "claim": "A JAMA study across five academic medical centers found AI-powered ambient scribes modestly decreased total electronic health record (EHR) time by 13.4 minutes and documentation time by 16.0 minutes, and usage was associated with 0.49 more visits per week for the clinicians included in the study.",
+   "api_quote": "Additionally, AI scribe usage was associated with 0.49 more visits per week for the clinicians included in the study.",
+   "page_quote": "Additionally, AI scribe usage was associated with 0.49 more visits per week for the clinicians included in the study.",
+   "api_verdict": "partial",
+   "api_reason": "Only 0.49 visits supported; time savings absent",
+   "page_verdict": "partial",
+   "page_reason": "Quote covers only visits figure, not time savings"
+  },
+  {
+   "id": "E71",
+   "claim": "In April 2026, three California patients filed a proposed class action lawsuit against Sutter Health, Memorial Health Services, and MemorialCare Medical Foundation, alleging that an ambient AI documentation tool captured patient-clinician conversations, transmitted the audio to external systems for processing, and generated draft clinical notes, all without meaningful, informed consent.",
+   "api_quote": "In April 2026, three California patients filed a proposed class action lawsuit against Sutter Health, Memorial Health Services, and MemorialCare Medic...",
+   "page_quote": "In April 2026, three California patients filed a proposed class action lawsuit against Sutter Health, Memorial Health Services, and MemorialCare Medical Foundation.",
+   "api_verdict": "partial",
+   "api_reason": "Consent allegation details truncated",
+   "page_verdict": "partial",
+   "page_reason": "Quote lacks consent allegations and tool description"
+  },
+  {
+   "id": "E72",
+   "claim": "The complaint alleges violations of multiple statutes: the lawsuit alleges that their use of the tool violates the California Invasion of Privacy Act (CIPA), California Confidentiality of Medical Information Act (CMIA), California Unfair Competition Law, Federal Wiretap Act, and constitutes invasion of privacy \u2013 intrusion upon seclusion.",
+   "api_quote": "The lawsuit names the California nonprofit public benefit corporations Sutter Health and Memorial Healthcare Services as defendants, and alleges that ...",
+   "page_quote": "The lawsuit names the California nonprofit public benefit corporations Sutter Health and Memorial Healthcare Services as defendants, and alleges that their use of the tool violates the California Invasion of Privacy Act (CIPA), California Confidentiality of Medical Information Act (CMIA), California Unfair Competition Law, Federal Wiretap Act, and constitutes invasion of privacy \u2013 intrusion upon seclusion.",
+   "api_verdict": "partial",
+   "api_reason": "Statute list cut off from quote",
+   "page_verdict": "supported",
+   "page_reason": "All named statutes appear in quote"
+  },
+  {
+   "id": "E73",
+   "claim": "An earlier, related case was filed against another California system: a California patient sued Sharp HealthCare in January 2026 alleging his appointment was recorded by Abridge AI without consent, in violation of California privacy laws, and the suit seeks class-action status for all affected California patients.",
+   "api_quote": "... A: A California patient sued Sharp HealthCare in January 2026 alleging his appointment was recorded by Abridge AI without consent, in violation of...",
+   "page_quote": "A: A California patient sued Sharp HealthCare in January 2026 alleging his appointment was recorded by Abridge AI without consent, in violation of California privacy laws.",
+   "api_verdict": "partial",
+   "api_reason": "Class-action status sought not in truncated quote",
+   "page_verdict": "partial",
+   "page_reason": "Class-action status sought not in quote"
+  },
+  {
+   "id": "E74",
+   "claim": "Legal analysis notes the novel theory being pursued: plaintiffs contend that the legal violation occurs \"at the moment of interception,\" when live communications are happening and recorded, not only later when data is stored, used, or disclosed.",
+   "api_quote": "The Plaintiffs contend that the legal violation occurs \u201cat the moment of interception\u201d, when live communications are happening and recorded, not only ...",
+   "page_quote": "The Plaintiffs contend that the legal violation occurs \u201cat the moment of interception\u201d, when live communications are happening and recorded, not only later when data is stored, used, or disclosed.",
+   "api_verdict": "supported",
+   "api_reason": "Interception-moment theory stated verbatim",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches interception theory verbatim"
+  },
+  {
+   "id": "E75",
+   "claim": "since the information collected, transmitted, and processed by the platform at the direction of its clients is related to healthcare operations, patient consent is not required by HIPAA, provided the healthcare organization has a HIPAA-compliant business associate agreement with Abridge AI",
+   "api_quote": "Since the information collected, transmitted, and processed by the platform at the direction of its clients is related to healthcare operations, patie...",
+   "page_quote": "Since the information collected, transmitted, and processed by the platform at the direction of its clients is related to healthcare operations, patient consent is not required by HIPAA, provided the healthcare organization has a HIPAA-compliant business associate agreement with Abridge AI.",
+   "api_verdict": "partial",
+   "api_reason": "BAA condition truncated",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches claim verbatim"
+  },
+  {
+   "id": "E76",
+   "claim": "the lawsuit does not allege that HIPAA has been violated but does assert that the interception, recording, and transmission of sensitive communications and health information without patients' express consent violates the federal Wiretap Act and state consumer privacy laws.",
+   "api_quote": "The lawsuit does not allege that HIPAA has been violated but does assert that the interception, recording, and transmission of sensitive communication...",
+   "page_quote": "The lawsuit does not allege that HIPAA has been violated but does assert that the interception, recording, and transmission of sensitive communications and health information without patients\u2019 express consent violates the federal Wiretap Act and state consumer privacy laws.",
+   "api_verdict": "partial",
+   "api_reason": "Wiretap Act and state law violations cut off",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches claim verbatim"
+  },
+  {
+   "id": "E77",
+   "claim": "State-level regulatory responses are emerging in reaction to these gaps: as of mid-2026, Rhode Island became the fourth state to require providers to disclose AI scribe use and give every patient the right to opt out, after Illinois, Maine, and Colorado already did the same.",
+   "api_quote": "This week, Rhode Island became the fourth state to require providers to disclose AI scribe use and give every patient the right to opt out.",
+   "page_quote": "This week, Rhode Island became the fourth state to require providers to disclose AI scribe use and give every patient the right to opt out.",
+   "api_verdict": "partial",
+   "api_reason": "Mid-2026 date and prior states not in quote",
+   "page_verdict": "partial",
+   "page_reason": "Quote says 'this week'; mid-2026 date unsupported"
+  },
+  {
+   "id": "E78",
+   "claim": "State-level regulatory responses are emerging in reaction to these gaps: as of mid-2026, Rhode Island became the fourth state to require providers to disclose AI scribe use and give every patient the right to opt out, after Illinois, Maine, and Colorado already did the same.",
+   "api_quote": "Illinois, Maine, and Colorado already did the same.",
+   "page_quote": "Illinois, Maine, and Colorado already did the same.",
+   "api_verdict": "partial",
+   "api_reason": "Only prior three states; Rhode Island and date absent",
+   "page_verdict": "partial",
+   "page_reason": "Quote names three states only, not Rhode Island claim"
+  },
+  {
+   "id": "E79",
+   "claim": "Legal commentary notes that the audio recordings central to both lawsuits might raise specific concerns because they collect patients' biometric data \u2014 \"a full audio recording is very different from a physician's notes,\" and \"some patients may want to turn it off, and they should have the ability to say no.\"",
+   "api_quote": "She noted that the audio recordings central to both lawsuits might raise specific concerns because they collect patients\u2019 biometric data. \u201cA full audi...",
+   "page_quote": "She noted that the audio recordings central to both lawsuits might raise specific concerns because they collect patients\u2019 biometric data. \u201cA full audio recording is very different from a physician\u2019s notes,\u201d she said.",
+   "api_verdict": "partial",
+   "api_reason": "Quoted statements about recordings truncated",
+   "page_verdict": "partial",
+   "page_reason": "Second quoted statement about opting out not included"
+  },
+  {
+   "id": "E80",
+   "claim": "The FDA regulates software that diagnoses, treats, or drives clinical decisions as Software as a Medical Device (SaMD), but the FDA regulates software that diagnoses, treats, or drives clinical decisions \u2014 a category called Software as a Medical Device, or SaMD \u2014 and does not regulate software that merely records and organizes information, so a pure ambient scribe sits comfortably on the safe side of that line.",
+   "api_quote": "The US Food and Drug Administration (FDA) regulates software that diagnoses, treats, or drives clinical decisions \u2014 a category called Software as a Me...",
+   "page_quote": "The US Food and Drug Administration (FDA) regulates software that diagnoses, treats, or drives clinical decisions \u2014 a category called Software as a Medical Device, or SaMD.",
+   "api_verdict": "partial",
+   "api_reason": "Non-regulation of recording software and scribe conclusion truncated",
+   "page_verdict": "partial",
+   "page_reason": "Quote omits non-regulation of recording software point"
+  },
+  {
+   "id": "E81",
+   "claim": "On January 6, 2026 (reissued January 29, 2026), the FDA issued a revised Clinical Decision Support Software guidance; this guidance draws the boundary so documentation assistance falls outside CDS regulation, and the January 2026 update generally loosened the agency's posture toward lower-risk software while keeping hard cases hard.",
+   "api_quote": "The FDA's Clinical Decision Support Software guidance, updated to a new final version in January 2026 (docket FDA-2017-D-6569), draws the boundary, an...",
+   "page_quote": "The FDA's Clinical Decision Support Software guidance, updated to a new final version in January 2026 (docket FDA-2017-D-6569), draws the boundary, and documentation assistance falls outside it.",
+   "api_verdict": "partial",
+   "api_reason": "Quote lacks Jan 6/Jan 29 dates, loosening, documentation exclusion; cut off",
+   "page_verdict": "partial",
+   "page_reason": "Quote lacks Jan 6/Jan 29 dates and 'loosened posture' characterization"
+  },
+  {
+   "id": "E82",
+   "claim": "Separately, on January 6, 2026, the FDA announced revised guidance that loosens oversight for certain AI-enabled digital health products, most notably CDS software, aiming to cut unnecessary regulation and promote innovation and accelerate time-to-market for tools positioned as clinical assistants rather than autonomous decision-makers.",
+   "api_quote": "On January 6, 2026, the FDA announced revised guidance that loosens oversight for certain AI-enabled digital health products, most notably clinical de...",
+   "page_quote": "On January 6, 2026, the FDA announced revised guidance that loosens oversight for certain AI-enabled digital health products, most notably clinical decision support (CDS) software.",
+   "api_verdict": "supported",
+   "api_reason": "Quote states date and loosened oversight for CDS software",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches date and loosening of CDS oversight"
+  },
+  {
+   "id": "E83",
+   "claim": "Separately, on January 6, 2026, the FDA announced revised guidance that loosens oversight for certain AI-enabled digital health products, most notably CDS software, aiming to cut unnecessary regulation and promote innovation and accelerate time-to-market for tools positioned as clinical assistants rather than autonomous decision-makers.",
+   "api_quote": "The goal was to cut unnecessary regulation and promote innovation, accelerating time-to-market for tools positioned as clinical assistants rather than...",
+   "page_quote": "The goal was to cut unnecessary regulation and promote innovation, accelerating time-to-market for tools positioned as clinical assistants rather than autonomous decision-makers.",
+   "api_verdict": "supported",
+   "api_reason": "Quote matches stated goals of regulation cut and innovation",
+   "page_verdict": "supported",
+   "page_reason": "Quote backs goal of cutting regulation, accelerating time-to-market"
+  },
+  {
+   "id": "E84",
+   "claim": "However, the boundary is unsettled for more advanced tools: as of August 2026, the FDA's regulatory approach to generative AI in medical devices is a discussion paper open for public comment, while the Government Accountability Office finds few independent studies evaluating the accuracy of AI note-taking tools and reports that policymakers need more information about their performance to set the appropriate level of oversight.",
+   "api_quote": "In the United States, the FDA's regulatory approach to generative AI in medical devices is, as of August 2026, a discussion paper open for public comm...",
+   "page_quote": "In the United States, the FDA's regulatory approach to generative AI in medical devices is, as of August 2026, a discussion paper open for public comm...",
+   "api_verdict": "partial",
+   "api_reason": "FDA discussion paper supported; GAO findings cut off",
+   "page_verdict": "partial",
+   "page_reason": "Supports FDA discussion paper; GAO findings cut off"
+  },
+  {
+   "id": "E85",
+   "claim": "Industry commentary notes the emerging risk that scribes are evolving into agentic tools that cross into CDS territory: vendors are building autonomous clinical agents that do not just document the visit but act on it \u2014 identifying care gaps, pre-populating orders, and drafting prior authorization requests \u2014 which is a different kind of product where documentation is clerical work but clinical decision support is medicine, changing liability exposure and regulatory requirements.",
+   "api_quote": "But vendors are building towards something more ambitious: autonomous clinical agents that do not just document the visit but act on it. The next gene...",
+   "page_quote": "But vendors are building towards something more ambitious: autonomous clinical agents that do not just document the visit but act on it. The next generation can listen to an encounter, identify a care gap, such as a diabetic patient not on station, pre-populate orders for physicians to sign and draft a prior authorization request.",
+   "api_verdict": "partial",
+   "api_reason": "Autonomous agents supported; care gaps, orders, prior auth cut",
+   "page_verdict": "supported",
+   "page_reason": "Quote backs agentic agents, care gaps, orders, prior auth"
+  },
+  {
+   "id": "E86",
+   "claim": "Industry commentary notes the emerging risk that scribes are evolving into agentic tools that cross into CDS territory: vendors are building autonomous clinical agents that do not just document the visit but act on it \u2014 identifying care gaps, pre-populating orders, and drafting prior authorization requests \u2014 which is a different kind of product where documentation is clerical work but clinical decision support is medicine, changing liability exposure and regulatory requirements.",
+   "api_quote": "That is a different kind of product. Documentation is clerical work. Clinical decision support is medicine. The liability exposure changes, the regula...",
+   "page_quote": "That is a different kind of product. Documentation is clerical work. Clinical decision support is medicine. The liability exposure changes, the regulatory requirements change and the procurement conversion should change too.",
+   "api_verdict": "supported",
+   "api_reason": "Quote backs clerical vs medicine and liability/regulatory change",
+   "page_verdict": "supported",
+   "page_reason": "Quote backs clerical vs medicine, liability and regulatory change"
+  },
+  {
+   "id": "E87",
+   "claim": "CMS updated its signature-authentication guidance in July 2025 to explicitly address AI scribes for the first time: CMS updated its signature requirements guidance in July 2025 (MLN905364) to explicitly address AI scribes and artificial intelligence technology in clinical documentation for the first time, stating \"If you use a scribe, including artificial intelligence technology, sign the entry to authenticate the documents and the care you provided or ordered\".",
+   "api_quote": "The key CMS language states: \"If you use a scribe, including artificial intelligence technology, sign the entry to authenticate the documents and...",
+   "page_quote": "The key CMS language states: \"If you use a scribe, including artificial intelligence technology, sign the entry to authenticate the documents and the care you provided or ordered.",
+   "api_verdict": "partial",
+   "api_reason": "Quoted CMS language truncated; July 2025 MLN number absent",
+   "page_verdict": "supported",
+   "page_reason": "Quote contains the cited CMS language verbatim"
+  },
+  {
+   "id": "E88",
+   "claim": "CMS updated its signature-authentication guidance in July 2025 to explicitly address AI scribes for the first time: CMS updated its signature requirements guidance in July 2025 (MLN905364) to explicitly address AI scribes and artificial intelligence technology in clinical documentation for the first time, stating \"If you use a scribe, including artificial intelligence technology, sign the entry to authenticate the documents and the care you provided or ordered\".",
+   "api_quote": "TL;DR: CMS updated its signature requirements guidance in July 2025 (MLN905364) to explicitly address AI scribes and artificial intelligence technolog...",
+   "page_quote": "TL;DR: CMS updated its signature requirements guidance in July 2025 (MLN905364) to explicitly address AI scribes and artificial intelligence technology in clinical documentation for the first time.",
+   "api_verdict": "supported",
+   "api_reason": "Quote gives July 2025 MLN905364 addressing AI scribes",
+   "page_verdict": "supported",
+   "page_reason": "Quote states July 2025 MLN905364 update addressing AI scribes first time"
+  },
+  {
+   "id": "E89",
+   "claim": "Critically, the signing clinician must authenticate all AI-generated entries \u2014 CMS does not require the AI scribe itself to sign or date documentation, and this contradicts some state medical board rules, since the federal CMS position (MLN905364, July 2025) states physicians do not need to document \"who or what transcribed the entry\".",
+   "api_quote": "The signing clinician must authenticate all AI-generated entries\u2014CMS does not require the AI scribe itself to sign or date documentation.",
+   "page_quote": "The signing clinician must authenticate all AI-generated entries\u2014CMS does not require the AI scribe itself to sign or date documentation.",
+   "api_verdict": "partial",
+   "api_reason": "Authentication supported; state-board contradiction not in quote",
+   "page_verdict": "partial",
+   "page_reason": "Supports authentication point; contradiction and 'who or what' clause absent"
+  },
+  {
+   "id": "E90",
+   "claim": "Critically, the signing clinician must authenticate all AI-generated entries \u2014 CMS does not require the AI scribe itself to sign or date documentation, and this contradicts some state medical board rules, since the federal CMS position (MLN905364, July 2025) states physicians do not need to document \"who or what transcribed the entry\".",
+   "api_quote": "This directly contradicts the federal CMS position (MLN905364, July 2025), which states physicians do not need to document \"who or what transcribed th...",
+   "page_quote": "This directly contradicts the federal CMS position (MLN905364, July 2025), which states physicians do not need to document \"who or what transcribed th...",
+   "api_verdict": "supported",
+   "api_reason": "Quote confirms contradiction and CMS position citation",
+   "page_verdict": "supported",
+   "page_reason": "Quote backs contradiction with federal CMS position and citation"
+  },
+  {
+   "id": "E91",
+   "claim": "Corrections to signed AI notes must follow standard amendment procedures: when a clinician needs to correct an AI-generated note after signing, the correction must follow proper amendment or addendum procedures, and the original AI-generated content should never be deleted \u2014 it must remain visible in the record with the correction appended and signed separately.",
+   "api_quote": "When a clinician needs to correct an AI-generated note after signing, the correction must follow proper amendment or addendum procedures. The original...",
+   "page_quote": "When a clinician needs to correct an AI-generated note after signing, the correction must follow proper amendment or addendum procedures. The original AI-generated content should never be deleted\u2014it must remain visible in the record with the correction appended and signed separately.",
+   "api_verdict": "partial",
+   "api_reason": "Amendment procedure supported; deletion/appending detail cut off",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches amendment/addendum and retention requirements"
+  },
+  {
+   "id": "E92",
+   "claim": "This MLN update is sub-regulatory: the MLN905364 update is guidance, not regulation, though CMS has signaled through the CY 2025 and CY 2026 Medicare Physician Fee Schedule proposed rules that more formal rulemaking on AI in clinical documentation is under consideration.",
+   "api_quote": "The MLN905364 update is guidance, not regulation. CMS has signaled through multiple channels\u2014including the CY 2025 and CY 2026 Medicare Physician Fee ...",
+   "page_quote": "The MLN905364 update is guidance, not regulation. CMS has signaled through multiple channels\u2014including the CY 2025 and CY 2026 Medicare Physician Fee Schedule proposed rules\u2014that more formal rulemaking on AI in clinical documentation is under consideration.",
+   "api_verdict": "supported",
+   "api_reason": "Quote states guidance not regulation and CY2025/2026 PFS signaling",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches guidance-not-regulation and CY2025/2026 rulemaking signal"
+  },
+  {
+   "id": "E93",
+   "claim": "Enforcement stance is strict on accountability: a CMS-related AI Playbook (v4, 2026) reportedly states \"The AI did it\" is not a valid defense in documentation audits, and providers remain fully responsible for note accuracy, with an auditable-lineage expectation that any AI used in documentation or billing workflows must maintain auditable records of what the AI generated versus what the clinician added, and vendors must provide a signed BAA since this is legally required when processing PHI.",
+   "api_quote": "CMS stance: CMS AI Playbook v4 (2026) explicitly states \"The AI did it\" is not a valid defense in documentation audits. Providers remain fully respons...",
+   "page_quote": "CMS stance: CMS AI Playbook v4 (2026) explicitly states \"The AI did it\" is not a valid defense in documentation audits. Providers remain fully responsible for note accuracy.",
+   "api_verdict": "partial",
+   "api_reason": "Playbook defense claim supported; lineage and BAA cut off",
+   "page_verdict": "supported",
+   "page_reason": "Quote backs Playbook v4 2026 defense and provider responsibility"
+  },
+  {
+   "id": "E94",
+   "claim": "Enforcement stance is strict on accountability: a CMS-related AI Playbook (v4, 2026) reportedly states \"The AI did it\" is not a valid defense in documentation audits, and providers remain fully responsible for note accuracy, with an auditable-lineage expectation that any AI used in documentation or billing workflows must maintain auditable records of what the AI generated versus what the clinician added, and vendors must provide a signed BAA since this is legally required when processing PHI.",
+   "api_quote": "... CMS AI Playbook v4, released in 2026, provides governance guidance for AI use in Medicare-funded workflows. Key provisions: Auditable data lineage...",
+   "page_quote": "CMS AI Playbook v4, released in 2026, provides governance guidance for AI use in Medicare-funded workflows. Key provisions: Auditable data lineage: Any AI used in documentation or billing workflows must maintain auditable records of what the AI generated vs.",
+   "api_verdict": "partial",
+   "api_reason": "Lineage mentioned; BAA requirement not in quote",
+   "page_verdict": "partial",
+   "page_reason": "Auditable lineage supported; BAA requirement not in quote"
+  },
+  {
+   "id": "E95",
+   "claim": "Separately on payer/prior-authorization AI, CMS has launched pilot programs applying AI in prior authorization decisions for traditional Medicare, and HHS has indicated commitment to being \"all in\" for AI across federal health programs.",
+   "api_quote": "The Centers for Medicare & Medicaid Services has launched pilot programs applying AI in prior authorization decisions for traditional Medicare, and HH...",
+   "page_quote": "The Centers for Medicare & Medicaid Services has launched pilot programs applying AI in prior authorization decisions for traditional Medicare, and HHS has indicated commitment to being \u201call in\u201d for AI across federal health programs.",
+   "api_verdict": "partial",
+   "api_reason": "Pilot programs supported; HHS 'all in' statement truncated",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches claim verbatim"
+  },
+  {
+   "id": "E96",
+   "claim": "As of 2026, the states generally treated as all-party consent are California, Connecticut, Delaware, Florida, Illinois, Maryland, Massachusetts, Michigan, Montana, Nevada, New Hampshire, Oregon, Pennsylvania, Vermont, and Washington, and several other states have introduced all-party bills recently, so the practical takeaway is to ask every patient for consent regardless of state, since even in one-party states documenting consent builds trust and is the best protection if a patient objects.",
+   "api_quote": "As of 2026, the states generally treated as all-party consent are: California, Connecticut, Delaware, Florida, Illinois, Maryland, Massachusetts, Mich...",
+   "page_quote": "As of 2026, the states generally treated as all-party consent are: California, Connecticut, Delaware, Florida, Illinois, Maryland, Massachusetts, Mich...",
+   "api_verdict": "partial",
+   "api_reason": "State list truncated mid-enumeration; later states unsupported",
+   "page_verdict": "partial",
+   "page_reason": "State list truncated mid-way; later states unverified"
+  },
+  {
+   "id": "E97",
+   "claim": "As of 2026, the states generally treated as all-party consent are California, Connecticut, Delaware, Florida, Illinois, Maryland, Massachusetts, Michigan, Montana, Nevada, New Hampshire, Oregon, Pennsylvania, Vermont, and Washington, and several other states have introduced all-party bills recently, so the practical takeaway is to ask every patient for consent regardless of state, since even in one-party states documenting consent builds trust and is the best protection if a patient objects.",
+   "api_quote": "Several other states have introduced all-party bills recently, so this list should be verified against current law for your state. The practical takea...",
+   "page_quote": "Several other states have introduced all-party bills recently, so this list should be verified against current law for your state. The practical takea...",
+   "api_verdict": "supported",
+   "api_reason": "Quote backs other states' bills and verification takeaway",
+   "page_verdict": "partial",
+   "page_reason": "Supports bills point; practical takeaway truncated"
+  },
+  {
+   "id": "E98",
+   "claim": "This is not theoretical: recent lawsuits in California and Illinois allege that health systems used ambient scribing without obtaining informed consent from patients, potentially violating state wiretapping statutes and confidentiality protections when audio is transmitted to third-party vendors for processing, including a class action lawsuit against Sutter Health and MemorialCare over AI scribe use, published April 2026, citing the California Invasion of Privacy Act (CIPA), Cal.",
+   "api_quote": "Recent lawsuits in California and Illinois allege that health systems used ambient scribing without obtaining informed consent from patients, potentia...",
+   "page_quote": "Recent lawsuits in California and Illinois allege that health systems used ambient scribing without obtaining informed consent from patients, potentially violating state wiretapping statutes and confidentiality protections when audio is transmitted to third-party vendors for processing.",
+   "api_verdict": "partial",
+   "api_reason": "Lawsuits supported; Sutter/MemorialCare and CIPA details cut off",
+   "page_verdict": "partial",
+   "page_reason": "Lawsuits supported; Sutter/MemorialCare CIPA details absent"
+  },
+  {
+   "id": "E99",
+   "claim": "a class action lawsuit against Sutter Health and MemorialCare over AI scribe use, published April 2026, citing the California Invasion of Privacy Act (CIPA), Cal. Penal Code \u00a7 632",
+   "api_quote": "Sutter Health, MemorialCare face class action lawsuit over AI scribe use. Published April 2026. https://www.techtarget.com/healthtechsecurity/news/366...",
+   "page_quote": "Sutter Health, MemorialCare face class action lawsuit over AI scribe use. Published April 2026. https://www.techtarget.com/healthtechsecurity/news/366...",
+   "api_verdict": "supported",
+   "api_reason": "Quote names defendants and April 2026 publication",
+   "page_verdict": "partial",
+   "page_reason": "Supports suit and April 2026; CIPA/\u00a7632 citation not shown"
+  },
+  {
+   "id": "E100",
+   "claim": "Texas, through its Responsible Artificial Intelligence Governance Act and a companion health law, both effective in January 2026, now requires providers to tell patients when AI has a hand in their care, though it says little about what that disclosure should contain",
+   "api_quote": "Texas, through its Responsible Artificial Intelligence Governance Act and a companion health law, both effective in January 2026, now requires provide...",
+   "page_quote": "Texas, through its Responsible Artificial Intelligence Governance Act and a companion health law, both effective in January 2026, now requires providers to tell patients when AI has a hand in their care, though it says little about what that disclosure should contain.",
+   "api_verdict": "partial",
+   "api_reason": "Law names and date present; disclosure requirement truncated",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches claim verbatim"
+  },
+  {
+   "id": "E101",
+   "claim": "the Future of Privacy Forum counted dozens of chatbot bills across more than thirty states early in 2026, on top of the hundreds of health-AI measures introduced the year before",
+   "api_quote": "The broader wave is bipartisan and large: the Future of Privacy Forum counted dozens of chatbot bills across more than thirty states early in 2026, on...",
+   "page_quote": "The broader wave is bipartisan and large: the Future of Privacy Forum counted dozens of chatbot bills across more than thirty states early in 2026, on top of the hundreds of health-AI measures introduced the year before.",
+   "api_verdict": "partial",
+   "api_reason": "Chatbot bill count supported; prior-year hundreds cut off",
+   "page_verdict": "supported",
+   "page_reason": "Quote matches claim verbatim"
+  },
+  {
+   "id": "E102",
+   "claim": "Best-practice consent guidance recommends providers may obtain patient consent either verbally or in writing, though verbal consent should be documented using a standard script, and consent should satisfy any state law audio recording requirements as well.",
+   "api_quote": "When explaining the AI scribe tool to patients, consider addressing the following: How the tool assists with documentation, and that the licensed prov...",
+   "page_quote": "When explaining the AI scribe tool to patients, consider addressing the following: How the tool assists with documentation, and that the licensed provider reviews, revises, and confirms the final record for accuracy;",
+   "api_verdict": "unsupported",
+   "api_reason": "Quote discusses explanation content, not verbal/written consent documentation",
+   "page_verdict": "unsupported",
+   "page_reason": "Quote about explaining tool, not verbal/written consent documentation"
+  },
+  {
+   "id": "E103",
+   "claim": "At least one state board has issued specific documentation-disclosure rules that go beyond CMS: Georgia's Composite Medical Board clarifies that \"AI authorship\" must be disclosed in the signature line to distinguish computer-generated text from physician-verified facts, a professional conduct expectation enforceable through the Board's complaint and disciplinary process under O.C.G.A. \u00a7 43-34-8.",
+   "api_quote": "Under updated rules, the Board clarifies that \"AI authorship\" must be disclosed in the signature line to distinguish between computer-generated text a...",
+   "page_quote": "Under updated rules, the Board clarifies that \"AI authorship\" must be disclosed in the signature line to distinguish between computer-generated text a...",
+   "api_verdict": "partial",
+   "api_reason": "Signature-line disclosure supported; statute and enforcement cut off",
+   "page_verdict": "partial",
+   "page_reason": "Signature-line disclosure supported; O.C.G.A. enforcement detail truncated"
+  },
+  {
+   "id": "E104",
+   "claim": "This creates a compliance conflict for multistate practices, since the AMA's Augmented Intelligence policy framework (H-480.940) supports transparency, but Georgia physicians must satisfy both the state signature-line disclosure regime and the federal CMS regime simultaneously.",
+   "api_quote": "The AMA's Augmented Intelligence policy framework (H-480.940) supports this direction, recommending transpare\n\nGeorgia's 2026 GCMB board guidance requ...",
+   "page_quote": "The AMA's Augmented Intelligence policy framework (H-480.940) supports this direction, recommending transpare\n\nGeorgia's 2026 GCMB board guidance requ...",
+   "api_verdict": "partial",
+   "api_reason": "AMA transparency fragment; Georgia requirement truncated",
+   "page_verdict": "partial",
+   "page_reason": "AMA H-480.940 transparency supported; conflict framing truncated"
+  },
+  {
+   "id": "E105",
+   "claim": "This creates a compliance conflict for multistate practices, since the AMA's Augmented Intelligence policy framework (H-480.940) supports transparency, but Georgia physicians must satisfy both the state signature-line disclosure regime and the federal CMS regime simultaneously.",
+   "api_quote": "Georgia physicians must satisfy both regimes simultaneously.",
+   "page_quote": "Georgia physicians must satisfy both regimes simultaneously.",
+   "api_verdict": "supported",
+   "api_reason": "Quote states physicians must satisfy both regimes",
+   "page_verdict": "partial",
+   "page_reason": "Generic 'both regimes' without specifying state/federal content"
+  },
+  {
+   "id": "E106",
+   "claim": "In long-term care, surveyors are extending existing documentation-integrity scrutiny to AI-drafted notes, requiring facilities to confirm single-clinician sign-off on every note, confirm audit-trail safeguards, confirm who reviewed a note and when, and separately confirm resident consent to being recorded.",
+   "api_quote": "What Should Our Facility Do Before Rolling Out an AI Scribe?+ Run the decision tree above: confirm single-clinician sign-off on every note, confirm yo...",
+   "page_quote": "What Should Our Facility Do Before Rolling Out an AI Scribe?+ Run the decision tree above: confirm single-clinician sign-off on every note, confirm your F842 audit-trail safeguards, confirm you can show who reviewed a note and when, and separately confirm resident consent to being recorded.",
+   "api_verdict": "partial",
+   "api_reason": "Sign-off and audit trail supported; surveyors, consent truncated",
+   "page_verdict": "partial",
+   "page_reason": "Facility checklist, not surveyor requirement; F842 only implied"
+  },
+  {
+   "id": "E107",
+   "claim": "The AMA has an existing policy framework addressing AI documentation and clinical use, titled \"Augmented intelligence in health care: AI and clinical documentation\" (referenced as policy H-480.940), which broadly recommends transparency and physician accountability for AI-assisted notes, though detailed 2025\u20132026 updates to this specific policy were not found in the retrieved sources beyond the Georgia board comparison.",
+   "api_quote": "Penal Code \u00a7 632. https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PEN&sectionNum=632 \u00b7 American Medical Association. A...",
+   "page_quote": "Penal Code \u00a7 632. https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PEN&sectionNum=632 \u00b7 American Medical Association. A...",
+   "api_verdict": "unsupported",
+   "api_reason": "Quote is a citation list, not policy content",
+   "page_verdict": "unsupported",
+   "page_reason": "Quote is bare citation list; doesn't support policy content claim"
+  },
+  {
+   "id": "E108",
+   "claim": "on September 17, 2025, the Joint Commission and CHAI issued its first high-level framework on responsible AI use, intended to help hospitals and health systems responsibly deploy, govern, and monitor AI tools, aiming to help the industry align on practices that enhance patient safety by reducing AI-error risk while improving administrative, operational, and patient outcomes",
+   "api_quote": "On September 17, 2025, the Joint Commission, in collaboration with the Coalition for Health AI (\u201cCHAI\u201d), issued its first high-level framework on the ...",
+   "page_quote": "On September 17, 2025, the Joint Commission, in collaboration with the Coalition for Health AI (\u201cCHAI\u201d), issued its first high-level framework on the responsible use of artificial intelligence (\u201cAI\u201d) in healthcare.",
+   "api_verdict": "partial",
+   "api_reason": "Date and framework supported; stated aims truncated",
+   "page_verdict": "partial",
+   "page_reason": "Date and framework supported; stated aims absent"
+  },
+  {
+   "id": "E109",
+   "claim": "This guidance addresses seven core compliance areas: the Joint Commission-CHAI guidance establishes seven fundamental areas that healthcare organizations must address when adopting AI-driven tools, representing both compliance requirements and potential sources of legal liability, from a collaboration between the accrediting body for over 23,000 healthcare organizations and a coalition representing nearly 3,000 member organizations.",
+   "api_quote": "The Joint Commission-CHAI guidance establishes seven fundamental areas that healthcare organizations must address when adopting AI-driven tools.",
+   "page_quote": "The Joint Commission-CHAI guidance establishes seven fundamental areas that healthcare organizations must address when adopting AI-driven tools.",
+   "api_verdict": "supported",
+   "api_reason": "Quote states seven fundamental areas for AI adoption",
+   "page_verdict": "supported",
+   "page_reason": "Quote states seven fundamental areas"
+  },
+  {
+   "id": "E110",
+   "claim": "This guidance addresses seven core compliance areas: the Joint Commission-CHAI guidance establishes seven fundamental areas that healthcare organizations must address when adopting AI-driven tools, representing both compliance requirements and potential sources of legal liability, from a collaboration between the accrediting body for over 23,000 healthcare organizations and a coalition representing nearly 3,000 member organizations.",
+   "api_quote": "This landmark collaboration between the accrediting body for over 23,000 healthcare organizations and a coalition representing nearly 3,000 member org...",
+   "page_quote": "This landmark collaboration between the accrediting body for over 23,000 healthcare organizations and a coalition representing nearly 3,000 member organizations signals a fundamental shift in how healthcare AI compliance will be evaluated.",
+   "api_verdict": "supported",
+   "api_reason": "Quote gives 23,000 and nearly 3,000 member figures",
+   "page_verdict": "supported",
+   "page_reason": "Quote gives 23,000 and 3,000 figures"
+  },
+  {
+   "id": "E111",
+   "claim": "Roadmap and enforcement mechanisms followed in 2026: a series of governance playbooks were slated to launch through 2026, built on the original guidance and incorporating community feedback, after which the Joint Commission would develop a voluntary AI certification open to its more than 22,000 accredited and certified healthcare organizations nationwide.",
+   "api_quote": "A series of products are slated to launch later this year and into 2026. The next release will be governance playbooks, after a series of workshops ar...",
+   "page_quote": "A series of products are slated to launch later this year and into 2026. The next release will be governance playbooks, after a series of workshops are conducted to ensure hospitals and health systems of all sizes and regions are contributing to its development.",
+   "api_verdict": "partial",
+   "api_reason": "Playbooks timing supported; certification detail cut off",
+   "page_verdict": "partial",
+   "page_reason": "Playbooks and workshops supported; 'through 2026' loosely backed"
+  },
+  {
+   "id": "E112",
+   "claim": "Roadmap and enforcement mechanisms followed in 2026: a series of governance playbooks were slated to launch through 2026, built on the original guidance and incorporating community feedback, after which the Joint Commission would develop a voluntary AI certification open to its more than 22,000 accredited and certified healthcare organizations nationwide.",
+   "api_quote": "Following that, Joint Commission will develop a voluntary AI certification based on the final set of playbooks and open it to its more than 22,000 acc...",
+   "page_quote": "Following that, Joint Commission will develop a voluntary AI certification based on the final set of playbooks and open it to its more than 22,000 accredited and certified healthcare organizations nationwide.",
+   "api_verdict": "supported",
+   "api_reason": "Quote confirms voluntary certification, 22,000+ organizations",
+   "page_verdict": "supported",
+   "page_reason": "Quote backs voluntary certification and 22,000 organizations"
+  },
+  {
+   "id": "E113",
+   "claim": "on June 1, 2026, the Joint Commission announced its new Responsible Use of AI in Healthcare (RUAIH) certification, delivering on a 2025 promise, developed after convening more than 20 key coalitions and groups with expertise in healthcare and technology",
+   "api_quote": "Following initial guidance in 2025, new certification will recognize U.S. healthcare organizations and health systems adopting and implementing the te...",
+   "page_quote": "Following initial guidance in 2025, new certification will recognize U.S. healthcare organizations and health systems adopting and implementing the technology responsibly",
+   "api_verdict": "partial",
+   "api_reason": "June 1 2026 date and 20 coalitions absent from quote",
+   "page_verdict": "partial",
+   "page_reason": "June 1, 2026 date and 20+ coalitions not in quote"
+  },
+  {
+   "id": "E114",
+   "claim": "more than 80% of physicians currently using AI in professional settings\" creates \"a fast-growing need for universal standards for implementing this transformational technology responsibly",
+   "api_quote": "With more than 80% of physicians currently using AI in professional settings, there is a fast-growing need for universal standards for implementing th...",
+   "page_quote": "With more than 80% of physicians currently using AI in professional settings, there is a fast-growing need for universal standards for implementing this transformational technology in responsible ways,\u201d said Jonathan B.",
+   "api_verdict": "supported",
+   "api_reason": "Quote matches 80% figure and universal standards need",
+   "page_verdict": "supported",
+   "page_reason": "Quote contains the 80% physicians and standards language"
+  },
+  {
+   "id": "E115",
+   "claim": "Commentators note unresolved jurisdictional conflict: the question of healthcare AI regulation authority remains contentious and unresolved, federal policy remains in flux, and the Trump administration has signaled a preference for minimal AI regulation with executive orders aimed at limiting state AI regulatory authority \u2014 though executive orders cannot preempt state laws in this manner, so tension between federal and state healthcare AI policy will likely persist.",
+   "api_quote": "The question of healthcare AI regulation authority remains contentious and unresolved.",
+   "page_quote": "The question of healthcare AI regulation authority remains contentious and unresolved.",
+   "api_verdict": "supported",
+   "api_reason": "Quote states authority question contentious and unresolved",
+   "page_verdict": "partial",
+   "page_reason": "Only first clause supported; rest of claim absent"
+  },
+  {
+   "id": "E116",
+   "claim": "Commentators note unresolved jurisdictional conflict: the question of healthcare AI regulation authority remains contentious and unresolved, federal policy remains in flux, and the Trump administration has signaled a preference for minimal AI regulation with executive orders aimed at limiting state AI regulatory authority \u2014 though executive orders cannot preempt state laws in this manner, so tension between federal and state healthcare AI policy will likely persist.",
+   "api_quote": "Federal policy remains in flux. The Trump administration has signaled a preference for minimal AI regulation and has issued executive orders aimed at ...",
+   "page_quote": "Federal policy remains in flux. The Trump administration has signaled a preference for minimal AI regulation and has issued executive orders aimed at limiting state AI regulatory authority.",
+   "api_verdict": "partial",
+   "api_reason": "Flux and executive orders supported; preemption point cut off",
+   "page_verdict": "partial",
+   "page_reason": "Supports flux and EOs; preemption caveat not in quote"
+  }
+ ]
+}
