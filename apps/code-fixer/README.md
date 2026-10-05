@@ -4,9 +4,9 @@ Point it at a small Python repo whose tests fail. It copies the repo, runs the t
 
 Project #3 of my Year of AI. Python, Claude API (Opus 5.5), Docker (OrbStack).
 
-**Held-out result: 10 of 10 by the eval**, run once at the end after all tuning: runs/eval-20261002-131217 (9 cases) and runs/eval-20261002-155904 (tomlkit-550, rerun alone after a stalled API call ended the first run before that case was graded). Both ran on the code at commit b5f812f. The stall fix that came after changes only each API call's timeout, not what the agent does. $0.078 and 43 s per fix.
+**Held-out result: 9 of 10**, run once at the end after all tuning, then re-graded with hidden tests for every real case (runs/regrade-20261005-104714). Re-graded, not re-run: the agent didn't run again, and its code and the saved patches are unchanged. Only the grader changed, by adding hidden tests. By the tests the cases had when it ran, it was 10 of 10: 6 of the 10 were real bugs graded only by tests the agent could read. The hidden tests written for them afterward fail one of those patches, lark-1641, which fixes the method the failing test calls and leaves the cause in another file.
 
-Read 10 of 10 as an upper bound, for two reasons: 6 of the 10 are real bugs with no hidden tests, so they're graded only by tests the agent could read, and none of the held-out patches has been hand-checked against upstream's fix. Baselines (no test loop, Sonnet 5.5), the failure taxonomy and that hand-check on the dev set are in [DESIGN.md](DESIGN.md).
+The runs: runs/eval-20261002-131217 (9 cases) and runs/eval-20261002-155904 (tomlkit-550, rerun alone after a stalled API call ended the first run before that case was graded). Both ran on the code at commit b5f812f. The stall fix that came after changes only each API call's timeout, not what the agent does. $0.078 and 43 s per fix. None of the held-out patches has been hand-checked against upstream's fix. Baselines (no test loop, Sonnet 5.5), the failure taxonomy and that hand-check on the dev set are in [DESIGN.md](DESIGN.md).
 
 ## How it works
 
@@ -35,7 +35,7 @@ Every test run is a fresh container: no network, 512 MB of memory, one CPU, 256 
 
 - **Real** bugs are fixes merged on GitHub after the model's training data, undone; the fix's own tests are the bug report.
 - **Planted** bugs are one-token slips generated in well-tested MIT code and screened in the sandbox.
-- A case counts as solved only when the fix passes the visible tests and the hidden ones, applied to the broken repo with only the agent's changed files on top. 10 of the 12 real cases have no hidden tests.
+- A case counts as solved only when the fix passes the visible tests and the hidden ones, applied to the broken repo with only the agent's changed files on top. For 10 of the 12 real cases, the hidden tests are ones I wrote from upstream's fix (`evals/hidden/`), since the fix's own tests are the bug report.
 
 Sources and licenses: [evals/README.md](evals/README.md). Results by setup: [DESIGN.md](DESIGN.md).
 
@@ -62,6 +62,7 @@ Tests and the eval:
 .venv/bin/python eval.py run --split dev            # paid: prints the most it can spend; add --yes to run
 .venv/bin/python eval.py run --split dev --max-total 2.50 --yes   # with a ceiling for the whole run
 .venv/bin/python eval.py run --split dev --no-test-loop --yes     # baseline: no run_tests tool
+.venv/bin/python eval.py regrade                    # free: saved patches against today's hidden tests
 .venv/bin/python evals/handcheck/handcheck.py tinydb-633 runs/eval-<time>   # free: a patch against upstream's fix
 ```
 
@@ -77,7 +78,7 @@ Tests and the eval:
 | File | What it does |
 |---|---|
 | `fix.py` | CLI: one repo in, patch and trace out (`--json` for the fleet) |
-| `eval.py` | Verify the cases (free) or run the eval (paid, needs `--yes`) |
+| `eval.py` | Verify the cases (free), run the eval (paid, needs `--yes`), or re-grade saved patches (free) |
 | `code_fixer/agent.py` | The loop, the limits, the final check |
 | `code_fixer/tools.py` | The five tools and their guards |
 | `code_fixer/sandbox.py` | Test runs in a fresh container, result parsing |
