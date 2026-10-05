@@ -46,7 +46,7 @@ repo + test command
 - By the tests the cases had when it ran, it was 10 of 10. 6 of the 10 were real bugs with no hidden tests, graded only by tests the agent could read. Their hidden tests came after the run (section 3), and one of those six patches fails them: lark-1641, which fixes the method the failing test calls and leaves the cause in another file (failure taxonomy).
 - One case was rerun. The first run was killed while tomlkit-550 waited on a stalled API call, before that case was graded (section 7). The rerun used the same code and settings, and nothing was tuned in between.
 - Both runs used the code at commit b5f812f. The stall fix came after them, and it changes only each API call's timeout, not what the agent does.
-- None of the held-out patches has been hand-checked against upstream's fix.
+- I've since hand-checked all six real-bug patches against upstream's fix (the hand-check section below). Five behave like it on every trial, and lark-1641 doesn't.
 
 **Dev**, for comparison: 18 of 19 in every setup that had the test loop (below). The miss is always the same case, pyflakes-872.
 
@@ -147,6 +147,23 @@ Opus patches: eval-20261001-163752, -165125, eval-20261002-124619 and -125922 (m
 
 A plain insert leaves the ID to tinydb. Inserts that name their own ID fail for every copy, upstream included, whenever the ID is taken. Each Opus tinydb patch has one of those that fails where upstream's succeeds and one the other way round, both from the different numbering above. By the hand-check standard (under "What each design choice bought"), neither counts.
 
+### The held-out patches
+
+On 2026-10-05 I ran the same check on the six real-bug patches from the held-out run, with a probe written for each case. The probes, a runner and the results are in runs/handcheck-heldout-20261005/ on my machine, and its summary.txt explains the method.
+
+| case | trials | bug (control) differs | patch differs | what the probe does |
+|---|---|---|---|---|
+| boltons-424 | 400 | 177 | 0 | random removals, additions, pops, indexes and slices |
+| lark-1641 | 240 | 212 | 80 | copies a parse in progress three ways, then finishes both |
+| more-itertools-1248 | 600 | 513 | 0 | float ranges: the items, `len`, `in`, `index` and `r[i]` |
+| more-itertools-1261 | 800 | 54 | 0 | pools with `None` and duplicates, with valid and invalid combinations |
+| networkx-8734 | 1,841 | 68 | 0 | the hidden test's 41 graphs, 1,500 random graphs of 6 to 9 nodes and 300 glued cliques |
+| tomlkit-550 | 500 | 270 | 0 | grows `[table]` and `[[array]]` children under dotted keys, then adds top-level keys |
+
+lark-1641 fails this check for the same reason it fails its hidden tests. All 80 differences are in the 88 trials that copy the parser state on its own, and none of the 152 trials that go through `InteractiveParser.copy()` or `copy()` differ. In each of the 80, the first parse to finish matches upstream. The second shares its lexer, so it either stops with `UnexpectedToken` (62 trials) or finishes with a different tree (18).
+
+networkx-8734 passes with only one of upstream's two changes. Upstream fixed `_generate_partition` and also the step that carries components down a level; the patch rewrote only `_generate_partition`. With the old second step, upstream's partition fix differs from upstream on 3 of the 1,841 graphs. The patch differs on none of them, so its partitions never handed the old step a case it gets wrong. That's evidence on these graphs, not proof. My first probe for this case used 240 graphs and told the bug from upstream in only 3 of them, too weak a control to mean much, so I replaced it with this one.
+
 ## What didn't work
 
 **Telling the model to search for the same mistake elsewhere.** pyflakes-872 fails because the fix has two sites. So I added one line to the prompt: "Before you stop, search the repo for other code with the same mistake (the same logic, copied or written the same way) and fix it too: the tests may cover only one place."
@@ -160,7 +177,7 @@ The model did look ("I looked for the same mistake elsewhere and found none"), b
 
 ## Known limits
 
-- **The hidden tests for 10 real cases came after the runs they grade.** I wrote them from each upstream fix before reading any patch, but I also choose what they check, and an oracle only covers what it's asked. The tinydb test was written knowing what the hand-check found in Sonnet's patch. None of the held-out patches has been hand-checked against upstream's fix.
+- **The hidden tests for 10 real cases came after the runs they grade.** I wrote them from each upstream fix before reading any patch, but I also choose what they check, and an oracle only covers what it's asked. The tinydb test was written knowing what the hand-check found in Sonnet's patch. My hand-checks only cover the inputs their probes try.
 - **Training data.** The planted bugs sit in popular libraries the model has likely seen. The real fixes were merged after its training data, but boltons-445's issue has been public since 2020.
 - **One run per setup.** A one-case difference is within what a rerun can change: on more-itertools-1285 Opus's first fix was right in 1 of 4 attempts, and the same setup cost $1.03 in one run and $1.18 (with one extra prompt line) in another.
 - **The dev set barely separates setups.** Every setup with the loop scored 18 of 19 by the eval.
@@ -169,12 +186,12 @@ The model did look ("I looked for the same mistake elsewhere and found none"), b
 ## What I'd do next
 
 1. Run Sonnet 5.5 on the held-out set, so the model question gets an answer on cases nobody tuned on.
-2. Hand-check the other real cases the same way, the held-out ones first.
+2. Hand-check boltons-445 and xmltodict-421, the two passing dev real cases I haven't checked yet.
 3. Harder cases: fixes across files, bigger repos, bugs with two sites. The dev set can't tell the setups apart, so more prompt tuning on it would be guessing.
 
 ## Questions this design should answer
 
-- **How do you know it works?** 9 of 10 on a held-out set I ran once, at the end, after all tuning. It was 10 of 10 by the tests the cases had then. When I wrote hidden tests for the real bugs that had none and re-graded the saved patches for free, one held-out fix turned out to fix the caller, not the cause. Each case is verified before it counts, every case is graded by tests the agent never saw, and "fixed" is decided by a fresh sandbox run, not the model. On the dev set, passing patches for three real bugs were also compared with upstream's fix on random inputs.
+- **How do you know it works?** 9 of 10 on a held-out set I ran once, at the end, after all tuning. It was 10 of 10 by the tests the cases had then. When I wrote hidden tests for the real bugs that had none and re-graded the saved patches for free, one held-out fix turned out to fix the caller, not the cause. Each case is verified before it counts, every case is graded by tests the agent never saw, and "fixed" is decided by a fresh sandbox run, not the model. I also compared passing patches for real bugs with upstream's fix on random inputs: three from the dev set and all six from the held-out set, where lark-1641 is the only one that behaves differently.
 - **What did the test loop buy?** One case of 19, at no measurable extra cost ($1.03 against $1.05). The first fix there broke a different test in 3 of 4 attempts, and only a test run shows that. On the other 18, one test run confirmed a fix that was already right.
 - **Why Opus when Sonnet scores the same for half the price?** It scored the same only by the tests the cases had then. Its tinydb patch passed them and still leaves `insert()` calls that fail; the hand-check caught it, and so does the hidden test written since: 17 of 19. It's one case, so the honest answer is "probably Opus, and here's the experiment that would settle it": Sonnet on the held-out set.
 - **What's the hardest case and why does it fail?** pyflakes-872: the bug is in two places that don't look alike. The model fixes the one the test points at, every time. Telling it to search elsewhere didn't help, because it searches for the shape of its own fix.

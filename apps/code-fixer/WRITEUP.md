@@ -6,7 +6,7 @@ This is project #3 of my Year of AI, where I'm spending a year building AI proje
 
 I built it with Claude Code as my pair programmer. It wrote most of the code. I chose the design, set the budget, and decided what a fix had to prove before it counted.
 
-**How I know it works:** I built 29 test cases. 15 are bugs I planted in popular open-source libraries, 12 are real bugs that were fixed on GitHub after the model's training data, with the fix undone, and 2 I wrote by hand. I tuned on 19 of them and set 10 aside. On those 10, run once at the end, it fixed all 10 by the tests they had. But 6 of the 10 were real bugs with no hidden tests, graded only by tests the agent could read. So afterward I wrote hidden tests for every real bug and re-graded the saved fixes, which costs nothing. 9 of 10 still pass. I haven't hand-checked those patches against the real fixes yet.
+**How I know it works:** I built 29 test cases. 15 are bugs I planted in popular open-source libraries, 12 are real bugs that were fixed on GitHub after the model's training data, with the fix undone, and 2 I wrote by hand. I tuned on 19 of them and set 10 aside. On those 10, run once at the end, it fixed all 10 by the tests they had. But 6 of the 10 were real bugs with no hidden tests, graded only by tests the agent could read. So afterward I wrote hidden tests for every real bug and re-graded the saved fixes, which costs nothing. 9 of 10 still pass. Then I hand-checked the six real-bug patches against the fixes upstream merged, on random inputs. Five behave the same every time, and the sixth is the one the hidden tests caught.
 
 ## What broke
 

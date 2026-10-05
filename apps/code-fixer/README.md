@@ -4,9 +4,9 @@ Point it at a small Python repo whose tests fail. It copies the repo, runs the t
 
 Project #3 of my Year of AI. Python, Claude API (Opus 5.5), Docker (OrbStack).
 
-**On the held-out set it fixed 9 of 10 bugs, at $0.078 and 43 seconds a fix.** That's a small sample: 10 cases, run once, so the exact 95% interval runs from 55% to 99.7%, and nothing else ran on the same ten to compare against. The score is also a re-grade, not a re-run. When it ran, it scored 10 of 10 by the tests the cases had. Afterward I added hidden tests for the real bugs, and one patch fails them: lark-1641 fixes the method the failing test calls and leaves the cause in another file. I haven't hand-checked any of the held-out patches against upstream's fix yet, and it only handles small Python repos with pytest tests.
+**On the held-out set it fixed 9 of 10 bugs, at $0.078 and 43 seconds a fix.** That's a small sample: 10 cases, run once, so the exact 95% interval runs from 55% to 99.7%, and nothing else ran on the same ten to compare against. The score is also a re-grade, not a re-run. When it ran, it scored 10 of 10 by the tests the cases had. Afterward I added hidden tests for the real bugs, and one patch fails them: lark-1641 fixes the method the failing test calls and leaves the cause in another file. Since then I've hand-checked the six real-bug patches against upstream's fixes on random inputs. Five behave the same in every trial, and lark-1641 doesn't. And it only handles small Python repos with pytest tests.
 
-The runs were runs/eval-20261002-131217 (9 cases) and runs/eval-20261002-155904 (tomlkit-550, which I reran on its own after a stalled API call ended the first run before that case was graded). Both used the code at commit b5f812f, and runs/regrade-20261005-104714 re-graded them. The agent didn't run again for that. Its code and the saved patches are unchanged, and only the grader changed, by adding the hidden tests. The stall fix that came afterward only changes each API call's timeout; what the agent does is the same. All three folders are in [sample-runs/](sample-runs/), so you can check the score yourself. The baselines (no test loop, Sonnet 5.5), the failure taxonomy and the dev-set hand-check are in [DESIGN.md](DESIGN.md).
+The runs were runs/eval-20261002-131217 (9 cases) and runs/eval-20261002-155904 (tomlkit-550, which I reran on its own after a stalled API call ended the first run before that case was graded). Both used the code at commit b5f812f, and runs/regrade-20261005-104714 re-graded them. The agent didn't run again for that. Its code and the saved patches are unchanged, and only the grader changed, by adding the hidden tests. The stall fix that came afterward only changes each API call's timeout; what the agent does is the same. All three folders are in [sample-runs/](sample-runs/), so you can check the score yourself. The baselines (no test loop, Sonnet 5.5), the failure taxonomy and both hand-checks are in [DESIGN.md](DESIGN.md).
 
 ## How it works
 
@@ -36,6 +36,21 @@ Every test run is a fresh container: no network, 512 MB of memory, one CPU, 256 
 - **Real** bugs are fixes merged on GitHub after the model's training data, undone; the fix's own tests are the bug report.
 - **Planted** bugs are one-token slips generated in well-tested MIT code and screened in the sandbox.
 - A case counts as solved only when the fix passes the visible tests and the hidden ones, applied to the broken repo with only the agent's changed files on top. For 10 of the 12 real cases, the hidden tests are ones I wrote from upstream's fix (`evals/hidden/`), since the fix's own tests are the bug report.
+
+### Checking the held-out patches by hand
+
+I compared the six real-bug patches from the held-out run with upstream's fixes on seeded random inputs (runs/handcheck-heldout-20261005, on my machine). Each probe runs on the bug too, as a control, since a probe that can't tell the bug from upstream proves nothing.
+
+| case | trials | bug differs from upstream | patch differs from upstream |
+|---|---|---|---|
+| boltons-424 | 400 | 177 | 0 |
+| lark-1641 | 240 | 212 | 80 |
+| more-itertools-1248 | 600 | 513 | 0 |
+| more-itertools-1261 | 800 | 54 | 0 |
+| networkx-8734 | 1,841 | 68 | 0 |
+| tomlkit-550 | 500 | 270 | 0 |
+
+Five of the patches never differ. All 80 of lark-1641's differences come from copying a parse by copying its parser state alone: the copy and the original still share one lexer, so whichever finishes second fails or comes back with the wrong tree. Copies made through `InteractiveParser.copy()`, the method the patch fixed, never differ. networkx-8734 is the closer call. Upstream changed two functions and the patch changed only one, yet it matched upstream on all 1,841 graphs, including the 3 where upstream's first change, without its second, comes out different. That's evidence on these graphs, not proof.
 
 Sources and licenses: [evals/README.md](evals/README.md). Results by setup: [DESIGN.md](DESIGN.md).
 
