@@ -1,0 +1,146 @@
+# The code fixer's paid eval, started by hand only (Actions > Paid eval > Run workflow).
+#   plan: free. Checks the inputs and writes the plan (runs, cases, the most it can spend) to its summary.
+#   eval: waits in the paid-evals environment until a required reviewer approves that plan. Only that
+#         environment holds the API key, so no push or pull request can spend money.
+# Every run folder (traces, patches, results.json, the log) is kept as a workflow artifact for 30 days.
+# In a public repo artifacts are public too: they hold open-source code and the model's work, nothing private.
+name: Paid eval (code fixer)
+
+on:
+  workflow_dispatch:
+    inputs:
+      k:
+        description: "How many runs of the subset, 1 to 10. Each run's ceiling is max_usd / k."
+        type: number
+        default: 1
+      subset:
+        description: "dev, test (the held-out set) or comma-separated case ids"
+        type: string
+        default: dev
+      max_usd:
+        description: "Ceiling in dollars for the whole workflow, at most 10"
+        type: number
+        default: 2
+
+permissions:
+  contents: read
+
+concurrency:
+  group: paid-evals   # one paid eval at a time; a second waits instead of cancelling the first
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      k: ${{ steps.check.outputs.k }}
+      mode: ${{ steps.check.outputs.mode }}
+      value: ${{ steps.check.outputs.value }}
+      per_run: ${{ steps.check.outputs.per_run }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the inputs and write the plan to approve
+        id: check
+        working-directory: apps/code-fixer
+        env:
+          K: ${{ inputs.k }}
+          SUBSET: ${{ inputs.subset }}
+          MAX_USD: ${{ inputs.max_usd }}
+          REF: ${{ github.ref_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          python3 - <<'EOF'
+          import json, math, os, re, sys
+          from pathlib import Path
+
+          def stop(message):
+              print(f"::error::{message}")
+              sys.exit(1)
+
+          if os.environ["REF"] != os.environ["DEFAULT_BRANCH"]:
+              stop(f"paid evals run only from {os.environ['DEFAULT_BRANCH']}, not {os.environ['REF']}")
+          try:
+              k, max_usd = float(os.environ["K"]), float(os.environ["MAX_USD"])
+          except ValueError:
+              stop("k and max_usd must be numbers")
+          if k != int(k) or not 1 <= k <= 10:
+              stop("k must be a whole number from 1 to 10")
+          k = int(k)
+          if not 0 < max_usd <= 10:
+              stop("max_usd must be more than 0 and at most 10, the hard cap in this file")
+          per_run = math.floor(max_usd / k * 100) / 100   # rounded down, so k runs can't add up past max_usd
+          if per_run < 0.50:
+              stop(f"max_usd / k is ${per_run:.2f}, under one case's $0.50 ceiling, so nothing could run")
+
+          splits = {p.stem: json.loads(p.read_text())["split"] for p in Path("evals/cases").glob("*.json")}
+          subset = os.environ["SUBSET"].strip()
+          if subset in ("dev", "test"):
+              mode, chosen = "split", [c for c, s in splits.items() if s == subset]
+          elif re.fullmatch(r"[a-z0-9][a-z0-9.-]*(,[a-z0-9][a-z0-9.-]*)*", subset):
+              mode, chosen = "cases", subset.split(",")
+              unknown = [c for c in chosen if c not in splits]
+              if unknown:
+                  stop(f"no such case: {', '.join(unknown)}")
+          else:
+              stop("subset must be dev, test, or comma-separated case ids")
+
+          plan = (f"{k} run(s) of {subset} ({len(chosen)} cases), at most ${per_run:.2f} each: "
+                  f"at most ${per_run * k:.2f} in all. Model and per-case ceiling: the code fixer's defaults.")
+          if per_run < 0.50 * len(chosen):
+              plan += (" A case starts only while its own $0.50 ceiling fits in what the run has left,"
+                       " so some cases may not run; the eval lists them as not run, never as failures.")
+          print(plan)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write(f"### The plan to approve\n\n{plan}\n")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"k={k}\nmode={mode}\nvalue={subset}\nper_run={per_run:.2f}\n")
+          EOF
+
+  eval:
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: paid-evals
+    timeout-minutes: 180
+    defaults:
+      run:
+        working-directory: apps/code-fixer
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Set up as the README says
+        run: python3.11 -m venv .venv && .venv/bin/pip install -r requirements.txt
+      - name: Build the sandbox image
+        run: docker build -t code-fixer-sandbox:1 sandbox
+      - name: Run the eval k times, each under its share of max_usd
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          K: ${{ needs.plan.outputs.k }}
+          MODE: ${{ needs.plan.outputs.mode }}
+          VALUE: ${{ needs.plan.outputs.value }}
+          PER_RUN: ${{ needs.plan.outputs.per_run }}
+        run: |
+          set +e
+          mkdir -p runs
+          if [ "$MODE" = split ]; then sel=(--split "$VALUE"); else sel=(--cases "$VALUE"); fi
+          for i in $(seq 1 "$K"); do
+            echo "::group::Run $i of $K, ceiling \$$PER_RUN"
+            .venv/bin/python eval.py run "${sel[@]}" --max-total "$PER_RUN" --yes 2>&1 | tee "runs/workflow-run-$i.log"
+            code=${PIPESTATUS[0]}
+            echo "::endgroup::"
+            # eval.py exits 0 after stopping on an error no retry fixes (a bad key, no credit): catch that too
+            if [ "$code" -ne 0 ] || grep -q "^Stopped: HTTP" "runs/workflow-run-$i.log"; then
+              echo "::error::Run $i of $K stopped early, so the rest were skipped: they would stop the same way."
+              exit 1
+            fi
+          done
+      - name: Keep every run folder
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: code-fixer-runs-${{ github.run_id }}
+          path: apps/code-fixer/runs/
+          if-no-files-found: warn
+          retention-days: 30

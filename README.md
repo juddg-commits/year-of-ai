@@ -1,5 +1,7 @@
 # The Year of AI
 
+[![CI](https://github.com/juddg-commits/year-of-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/juddg-commits/year-of-ai/actions/workflows/ci.yml)
+
 Judd Gurtman · [juddgurtman.com](https://juddgurtman.com)
 
 This is where I build AI agents in public, one project at a time. Each app in `apps/` stands alone, with its own setup, offline tests, design notes and write-up. When I report a result, I name the saved run it came from.

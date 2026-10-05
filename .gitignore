@@ -18,18 +18,19 @@ apps/health-coach/data/
 **/.playwright-mcp/
 Untitled.md
 
-# Local-only workspace (see README "Where everything lives") — never published
+# Local-only folders, never published. The ones at the repo root are anchored with a leading /,
+# so they can't match a folder somewhere else: an unanchored workflows/ hid .github/workflows/.
 .claude/
-brain/
-content/
-ideas/
-ops/
-outreach/
+/brain/
+/content/
+/ideas/
+/ops/
+/outreach/
 /sandbox/
-workflows/
-agents/
-deliverables/
-health/
+/workflows/
+/agents/
+/deliverables/
+/health/
 
 # Front door: real past requests stay local
 apps/front-door/data/

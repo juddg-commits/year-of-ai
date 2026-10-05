@@ -1,0 +1,90 @@
+# Free checks on every push and pull request. No job here has an API key.
+#   tests:   each app's offline tests on a fresh machine, set up exactly as its README says
+#            (a clean-clone check). tests/conftest.py refuses any live network call.
+#   sandbox: builds the code fixer's container and verifies every eval case. Slow, and separate,
+#            so it never holds up the tests.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: tests (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:   # the lowest Python each README asks for, and the README's own setup line
+          - app: fleet-mcp
+            python: "3.10"
+            setup: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+          - app: research-agent
+            python: "3.10"
+            setup: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+          - app: health-coach
+            python: "3.10"
+            setup: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+          - app: code-fixer
+            python: "3.11"
+            setup: python3.11 -m venv .venv && .venv/bin/pip install -r requirements.txt
+    defaults:
+      run:
+        working-directory: apps/${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: apps/${{ matrix.app }}/requirements.txt
+      - name: Set up as the README says
+        run: ${{ matrix.setup }}
+      - name: Offline tests (fakes only, free)
+        run: .venv/bin/python -m unittest discover tests
+
+  sandbox:
+    name: code fixer sandbox (eval.py verify)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: apps/code-fixer
+    steps:
+      - uses: actions/checkout@v7
+      - name: Docker on this runner?
+        id: docker
+        run: |
+          if docker info > /dev/null 2>&1; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No Docker on this runner, so the sandbox checks were skipped."
+          fi
+      - uses: actions/setup-python@v7
+        if: steps.docker.outputs.ok == 'true'
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: apps/code-fixer/requirements.txt
+      - name: Set up as the README says
+        if: steps.docker.outputs.ok == 'true'
+        run: python3.11 -m venv .venv && .venv/bin/pip install -r requirements.txt
+      - name: Build the sandbox image
+        if: steps.docker.outputs.ok == 'true'
+        run: docker build -t code-fixer-sandbox:1 sandbox
+      - name: Offline tests again, now with real containers (the tests job skips those 4)
+        if: steps.docker.outputs.ok == 'true'
+        run: .venv/bin/python -m unittest discover tests
+      - name: Verify every eval case (free; downloads the real bugs' sources at pinned commits)
+        if: steps.docker.outputs.ok == 'true'
+        run: .venv/bin/python eval.py verify
