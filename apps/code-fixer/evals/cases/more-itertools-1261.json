@@ -12,6 +12,8 @@
       "replace": "    element = tuple(element)\n    l = len(element)\n    element = enumerate(element)\n\n    k, y = next(element, (None, None))\n    if k is None:\n        return 0\n\n    indexes = []\n    pool = tuple(iterable)\n    for n, x in enumerate(pool):\n        while x == y:\n            indexes.append(n)\n            tmp, y = next(element, (None, None))\n            if tmp is None:\n                break\n            else:\n                k = tmp\n        if y is None:\n            break\n    else:\n        raise ValueError(\n            'element is not a combination with replacement of iterable'\n        )\n\n    n = len(pool)\n    occupations = [0] * n\n    for p in indexes:\n        occupations[p] += 1\n\n    index = 0\n"
     }
   ],
-  "hidden": [],
+  "hidden": [
+    "tests/test_ours_cwr_index_pools.py"
+  ],
   "test_command": "python -m pytest -q"
 }

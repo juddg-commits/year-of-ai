@@ -22,7 +22,7 @@ Cases are split into `dev` (tune on it) and `test` (held out: run once, at the e
 ## Adding a case
 
 1. Pick a spot where a real bug could happen, and write the smallest edit that plants it (`find` must occur exactly once in the file).
-2. Choose hidden tests that exercise the same code another way, so a fix that only satisfies the visible tests fails. If the source has none, write one and mark it as ours.
+2. Choose hidden tests that exercise the same code another way, so a fix that only satisfies the visible tests fails. If the source has none, write one and mark it as ours. For a real bug, whose source isn't committed, it goes in `hidden/<case id>/` at the path it takes in the source; it's added only when the hidden tests go back in, and it may never replace one of upstream's files.
 3. Run `python eval.py verify --cases <id>` and read what fails.
 
 ## Real bugs
@@ -44,7 +44,9 @@ Their sources aren't in this repo. `sources.json` pins each one to the fix's mer
 | `tomlkit-550` | [python-poetry/tomlkit#550](https://github.com/python-poetry/tomlkit/pull/550) | MIT | test |
 | `lark-1641` | [lark-parser/lark#1641](https://github.com/lark-parser/lark/pull/1641) | MIT | test |
 
-Known limits: most real cases have no hidden tests (the fix's tests sit in one file, which must stay visible), so a fix there is graded on every test in the project rather than on unseen ones. `boltons-445`'s issue has been public since 2020, so the model may have seen the bug, though not the fix.
+Hidden tests: upstream's fix keeps its tests in one file, which has to stay visible as the bug report, so most real cases had none of their own. On 2026-10-05 I wrote one for each of the 10 that had none (`hidden/`), from each upstream fix's behavior and before reading any agent's patch. Each checks the fixed code against an oracle rather than upstream's exact output: a plain list for `IndexedSet`, brute force over every node subset for `k_components`, one `insert()` at a time for `insert_multiple()`, a round trip for tomlkit, the non-streaming parse for xmltodict. Each passes on upstream's fix and fails on the bug. Where upstream itself fails a check that lies outside the fix (tomlkit inside a `[table]`, `numeric_range`'s `reversed()`), the test leaves it out and says so.
+
+Known limits: `boltons-445`'s issue has been public since 2020, so the model may have seen the bug, though not the fix.
 
 ## Planted bugs, generated
 

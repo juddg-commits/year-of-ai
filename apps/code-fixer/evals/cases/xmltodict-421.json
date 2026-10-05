@@ -12,6 +12,8 @@
       "replace": "        # streamed items in memory when using item_depth > 0.\n        if len(self.path) == self.item_depth:\n            item = self.item\n            if item is None:\n                item = (None if not self.data\n                        else self.cdata_separator.join(self.data))\n\n            should_continue = self.item_callback(self.path, item)\n"
     }
   ],
-  "hidden": [],
+  "hidden": [
+    "tests/test_ours_streaming_depths_and_options.py"
+  ],
   "test_command": "python -m pytest -q"
 }

@@ -17,6 +17,8 @@
       "replace": "        return type(self)(\n            self.parse_conf,\n            self.lexer, # XXX copy\n            copy(self.state_stack),\n            deepcopy(self.value_stack) if deepcopy_values else copy(self.value_stack),\n"
     }
   ],
-  "hidden": [],
+  "hidden": [
+    "tests/test_ours_interactive_copy.py"
+  ],
   "test_command": "python -m pytest -q"
 }

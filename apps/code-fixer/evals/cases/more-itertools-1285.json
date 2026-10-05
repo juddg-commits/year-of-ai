@@ -27,6 +27,8 @@
       "replace": "            item_value = self._key(item)\n            if self._validator(item_value):\n                self._cache[item_value].append(item)\n\n        return iter(self._cache)\n"
     }
   ],
-  "hidden": [],
+  "hidden": [
+    "tests/test_ours_bucket_lookups.py"
+  ],
   "test_command": "python -m pytest -q"
 }

@@ -5,14 +5,18 @@ code keeps its LICENSE). Materializing a case copies the source, plants the bug 
 `find` must occur exactly once) and leaves out the hidden test files; only the grader adds them
 back. The agent never sees evals/: its tools can't leave the workspace.
 
-A real bug's source is fetched, not committed: see realbugs.py.
+A real bug's source is fetched, not committed: see realbugs.py. Hidden tests written for such a
+case live in evals/hidden/<case id>/, laid over the source only when the hidden tests go back in.
+They add files; they never replace one of upstream's.
 
 A case is usable only once verify() passes: the source without the bug passes every test,
 visible and hidden, and the bug fails at least one visible test."""
 
 import json
+import re
 import shlex
 import shutil
+import subprocess
 import tempfile
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -22,6 +26,7 @@ from . import config, realbugs, sandbox, workspace
 
 CASES_DIR = config.EVALS_DIR / "cases"
 SOURCES_DIR = config.EVALS_DIR / "sources"
+HIDDEN_DIR = config.EVALS_DIR / "hidden"   # hidden tests we wrote for cases whose source is fetched
 
 
 @dataclass
@@ -60,13 +65,29 @@ def load(ids: list | None = None, split: str | None = None, cases_dir: Path = CA
     return found
 
 
+def ours(case: Case, hidden_dir: Path = HIDDEN_DIR) -> list:
+    """The hidden test files written for this case (paths relative to the source), if any."""
+    root = Path(hidden_dir) / case.id
+    return sorted(p.relative_to(root).as_posix() for p in root.rglob("*")
+                  if p.is_file() and "__pycache__" not in p.parts) if root.is_dir() else []
+
+
 def materialize(case: Case, dest: Path, *, bug: bool = True, hidden: bool = False,
-                sources_dir: Path = SOURCES_DIR) -> Path:
+                sources_dir: Path = SOURCES_DIR, hidden_dir: Path = HIDDEN_DIR) -> Path:
     dest, origin = Path(dest), Path(sources_dir) / case.source
     if not origin.exists():
         raise FileNotFoundError(f"{case.id}: source {case.source} isn't here yet: python eval.py fetch gets it")
     shutil.copytree(origin, dest,
                     ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"))
+    added = ours(case, hidden_dir)
+    for rel in added:
+        if not case.is_hidden(rel):
+            raise ValueError(f"{case.id}: {rel} is in {Path(hidden_dir).name}/{case.id}/ but not in the case's hidden list")
+        if (dest / rel).exists():
+            raise ValueError(f"{case.id}: {rel} would replace upstream's file")
+        if hidden:
+            (dest / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(Path(hidden_dir) / case.id / rel, dest / rel)
     if not hidden:
         for rel in case.hidden:
             target = dest / rel
@@ -74,7 +95,7 @@ def materialize(case: Case, dest: Path, *, bug: bool = True, hidden: bool = Fals
                 shutil.rmtree(target)
             elif target.exists():
                 target.unlink()
-            else:
+            elif rel not in added:
                 raise ValueError(f"{case.id}: hidden path {rel} doesn't exist")
     if bug:
         for edit in case.bug:
@@ -100,7 +121,8 @@ def ensure_sources(chosen: list, sources_dir: Path = SOURCES_DIR, log: Callable 
         realbugs.fetch(name, specs[name], sources_dir)
 
 
-def verify(case: Case, runner: Callable = sandbox.run_tests, sources_dir: Path = SOURCES_DIR) -> dict:
+def verify(case: Case, runner: Callable = sandbox.run_tests, sources_dir: Path = SOURCES_DIR,
+           hidden_dir: Path = HIDDEN_DIR) -> dict:
     """Free (no API calls): four sandbox runs. Returns the verdict with the evidence."""
     problems = []
     for edit in case.bug:
@@ -111,10 +133,11 @@ def verify(case: Case, runner: Callable = sandbox.run_tests, sources_dir: Path =
             problems.append(f"hidden path {rel} isn't a test file")
     with tempfile.TemporaryDirectory(prefix="code-fixer-case-") as tmp:
         tmp = Path(tmp)
-        reference = runner(materialize(case, tmp / "reference", bug=False, hidden=True, sources_dir=sources_dir), case.command)
-        clean = runner(materialize(case, tmp / "clean", bug=False, sources_dir=sources_dir), case.command)
-        visible = runner(materialize(case, tmp / "visible", sources_dir=sources_dir), case.command)
-        full = runner(materialize(case, tmp / "full", hidden=True, sources_dir=sources_dir), case.command)
+        dirs = dict(sources_dir=sources_dir, hidden_dir=hidden_dir)
+        reference = runner(materialize(case, tmp / "reference", bug=False, hidden=True, **dirs), case.command)
+        clean = runner(materialize(case, tmp / "clean", bug=False, **dirs), case.command)
+        visible = runner(materialize(case, tmp / "visible", **dirs), case.command)
+        full = runner(materialize(case, tmp / "full", hidden=True, **dirs), case.command)
     if not reference.passed:
         problems.append(f"without the bug, the tests don't all pass: {reference.summary()}")
     elif not clean.passed:   # the visible tests must fail because of the bug, not because a file was hidden
@@ -130,14 +153,27 @@ def verify(case: Case, runner: Callable = sandbox.run_tests, sources_dir: Path =
 
 
 def grade(case: Case, changed: dict, runner: Callable = sandbox.run_tests,
-          sources_dir: Path = SOURCES_DIR) -> sandbox.TestRun:
+          sources_dir: Path = SOURCES_DIR, hidden_dir: Path = HIDDEN_DIR) -> sandbox.TestRun:
     """The broken case with the hidden tests back and the agent's changed files on top."""
     with tempfile.TemporaryDirectory(prefix="code-fixer-grade-") as tmp:
-        dest = materialize(case, Path(tmp) / "grade", hidden=True, sources_dir=sources_dir)
+        dest = materialize(case, Path(tmp) / "grade", hidden=True, sources_dir=sources_dir, hidden_dir=hidden_dir)
         for rel, text in changed.items():
             if not workspace.is_protected(rel):   # the tools refuse such edits; belt and braces
                 (dest / rel).write_bytes(text.encode("utf-8"))
         return runner(dest, case.command)
+
+
+def patched_files(case: Case, diff: str, sources_dir: Path = SOURCES_DIR, hidden_dir: Path = HIDDEN_DIR) -> dict:
+    """A saved patch as grade() takes it: the broken case with the patch applied, the files it
+    changes. For re-grading old runs against new hidden tests, free."""
+    with tempfile.TemporaryDirectory(prefix="code-fixer-regrade-") as tmp:
+        dest = materialize(case, Path(tmp) / "case", sources_dir=sources_dir, hidden_dir=hidden_dir)
+        # -F 0: no fuzz. A hunk that only fits somewhere nearby would grade a different patch.
+        applied = subprocess.run(["patch", "-p1", "-s", "-f", "-F", "0"], input=diff, cwd=dest, capture_output=True, text=True)
+        if applied.returncode:
+            raise ValueError(f"{case.id}: the patch doesn't apply: {(applied.stdout + applied.stderr).strip()[:300]}")
+        changed = re.findall(r"^\+\+\+ b/(\S+)", diff, re.M)
+        return {rel: (dest / rel).read_bytes().decode("utf-8") for rel in changed if (dest / rel).is_file()}
 
 
 def as_dict(case: Case) -> dict:

@@ -27,6 +27,8 @@
       "replace": "        parts, kw_parts = [], []\n        for i, arg in enumerate(args):\n            if (i >= n_positional and not self.varargs\n                    and arg not in self.posonlyargs):\n                kw_parts.append(arg + '=' + arg)\n"
     }
   ],
-  "hidden": [],
+  "hidden": [
+    "tests/test_ours_wraps_kwonly.py"
+  ],
   "test_command": "python -m pytest -q"
 }

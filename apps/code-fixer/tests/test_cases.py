@@ -41,6 +41,32 @@ class Materialize(unittest.TestCase):
         clean = cases.materialize(case(), Path(self.tmp.name) / "clean", bug=False, sources_dir=self.sources)
         self.assertEqual((clean / "calc.py").read_text(), FIXED)
 
+    def test_hidden_tests_we_wrote_go_back_in_only_for_grading(self):
+        hidden_dir = Path(self.tmp.name) / "hidden"
+        (hidden_dir / "calc-sign" / "tests").mkdir(parents=True)
+        (hidden_dir / "calc-sign" / "tests" / "test_ours.py").write_text("def test_ours():\n    pass\n")
+        c = case(hidden=["test_hidden.py", "tests/test_ours.py"])
+        self.assertEqual(cases.ours(c, hidden_dir), ["tests/test_ours.py"])
+        agent_view = cases.materialize(c, Path(self.tmp.name) / "agent", sources_dir=self.sources, hidden_dir=hidden_dir)
+        self.assertFalse((agent_view / "tests").exists())
+        self.assertFalse((agent_view / "test_hidden.py").exists())
+        graded = cases.materialize(c, Path(self.tmp.name) / "graded", hidden=True, sources_dir=self.sources,
+                                   hidden_dir=hidden_dir)
+        self.assertTrue((graded / "tests" / "test_ours.py").exists())
+        self.assertTrue((graded / "test_hidden.py").exists())
+
+    def test_hidden_tests_we_wrote_must_be_listed_and_never_replace_upstreams(self):
+        hidden_dir = Path(self.tmp.name) / "hidden"
+        (hidden_dir / "calc-sign").mkdir(parents=True)
+        (hidden_dir / "calc-sign" / "test_ours.py").write_text("def test_ours():\n    pass\n")
+        with self.assertRaisesRegex(ValueError, "not in the case's hidden list"):
+            cases.materialize(case(), Path(self.tmp.name) / "o1", hidden=True, sources_dir=self.sources,
+                              hidden_dir=hidden_dir)
+        (hidden_dir / "calc-sign" / "test_ours.py").rename(hidden_dir / "calc-sign" / "test_calc.py")
+        with self.assertRaisesRegex(ValueError, "would replace upstream's file"):
+            cases.materialize(case(hidden=["test_hidden.py", "test_calc.py"]), Path(self.tmp.name) / "o2",
+                              hidden=True, sources_dir=self.sources, hidden_dir=hidden_dir)
+
     def test_the_bug_text_must_match_exactly_once(self):
         with self.assertRaisesRegex(ValueError, "occurs 0 times"):
             cases.materialize(case(bug=[{"file": "calc.py", "find": "a * b", "replace": "x"}]),
@@ -106,9 +132,13 @@ class CommittedCases(unittest.TestCase):
             for edit in c.bug:
                 self.assertFalse(workspace.is_protected(edit["file"]), c.id)
                 self.assertEqual((src / edit["file"]).read_text().count(edit["find"]), 1, f"{c.id}: {edit['file']}")
+            added = cases.ours(c)
             for rel in c.hidden:
-                self.assertTrue((src / rel).exists(), f"{c.id}: {rel}")
+                self.assertTrue((src / rel).exists() or rel in added, f"{c.id}: {rel}")
                 self.assertTrue(workspace.is_protected(rel), f"{c.id}: {rel}")
+            for rel in added:
+                self.assertTrue(c.is_hidden(rel), f"{c.id}: {rel} is in evals/hidden/ but not hidden")
+                self.assertFalse((src / rel).exists(), f"{c.id}: {rel} would replace upstream's file")
 
     def test_ids_match_file_names(self):
         with tempfile.TemporaryDirectory() as tmp:

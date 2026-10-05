@@ -17,6 +17,8 @@
       "replace": "                    doc_ids.append(doc_id)\n                    table[doc_id] = dict(document)\n                    continue\n\n                # Generate new document ID for this document\n                # Store the doc_id, so we can return all document IDs\n                # later, then save the document with the new doc_id\n                doc_id = self._get_next_id()\n                doc_ids.append(doc_id)\n"
     }
   ],
-  "hidden": [],
+  "hidden": [
+    "tests/test_ours_insert_multiple_mixed.py"
+  ],
   "test_command": "python -m pytest -q"
 }

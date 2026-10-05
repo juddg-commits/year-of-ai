@@ -12,6 +12,8 @@
       "replace": "            if isinstance(v, (Table, AoT)) and k is not None and not k.is_dotted():\n                break\n            last_index = i\n        return last_index + 1\n\n    def _validate_out_of_order_table(self, key: Key | None = None) -> None:\n"
     }
   ],
-  "hidden": [],
+  "hidden": [
+    "tests/test_ours_dotted_table_round_trip.py"
+  ],
   "test_command": "python -m pytest -q"
 }

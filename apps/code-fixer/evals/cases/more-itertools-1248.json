@@ -22,6 +22,8 @@
       "replace": "        if self._growing:\n            if self._start <= value < self._stop:\n                q, r = divmod(value - self._start, self._step)\n                if r == self._zero:\n                    return int(q)\n        else:\n            if self._start >= value > self._stop:\n                q, r = divmod(self._start - value, -self._step)\n                if r == self._zero:\n                    return int(q)\n\n        raise ValueError(f\"{value} is not in numeric range\")\n"
     }
   ],
-  "hidden": [],
+  "hidden": [
+    "tests/test_ours_numeric_range_floats.py"
+  ],
   "test_command": "python -m pytest -q"
 }

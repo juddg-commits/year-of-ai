@@ -17,6 +17,8 @@
       "replace": "            iter_slice = self.iter_slice(start, stop, step)\n            return self.from_iterable(iter_slice)\n        if index < 0:\n            index += len(self)\n        real_index = self._get_real_index(index)\n        try:\n            ret = self.item_list[real_index]\n        except IndexError:\n            raise IndexError('IndexedSet index out of range')\n        return ret\n\n    def pop(self, index=None):\n"
     }
   ],
-  "hidden": [],
+  "hidden": [
+    "tests/test_ours_iset_indexing.py"
+  ],
   "test_command": "python -m pytest -q"
 }

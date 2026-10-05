@@ -17,6 +17,8 @@
       "replace": "            result[k] = list(_consolidate(result[k + 1], k))\n        else:\n            nodes_at_k = set.union(*k_comps[k])\n            to_add = [c for c in result[k + 1] if any(n not in nodes_at_k for n in c)]\n            if to_add:\n                result[k] = list(_consolidate(k_comps[k] + to_add, k))\n"
     }
   ],
-  "hidden": [],
+  "hidden": [
+    "networkx/algorithms/connectivity/tests/test_ours_kcomponents_brute_force.py"
+  ],
   "test_command": "python -m pytest -q networkx/algorithms/connectivity networkx/algorithms/approximation"
 }

@@ -6,6 +6,7 @@
     .venv/bin/python eval.py run --split dev           # PAID: prints the most it can spend, then stops
     .venv/bin/python eval.py run --split dev --yes     # ...and this spends it
     .venv/bin/python eval.py run --split dev --no-test-loop --max-total 2.50 --yes   # the baseline without test runs
+    .venv/bin/python eval.py regrade runs/eval-<time> ...   # free: grades saved patches against today's hidden tests
 
 A case is solved when the fix passes the agent's own final check (every visible test) AND the
 hidden tests, run on the broken repo with only the agent's changed files on top. Results go to
@@ -27,6 +28,7 @@ import tarfile
 import tempfile
 import time
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from code_fixer import agent, cases, config, llm, machine, report, sandbox
@@ -173,10 +175,74 @@ def cmd_run(args) -> int:
     return 0
 
 
+def regrade_row(run_dir: Path, row: dict, case: cases.Case) -> dict:
+    """One saved patch against the case as it is now. Solved needs the agent's own final check
+    (unchanged, from the run) and today's hidden tests."""
+    out = {"run": run_dir.name, "id": row["id"], "solved_before": bool(row.get("solved")), "solved_now": False,
+           "visible_pass": bool(row.get("visible_pass")), "hidden_failing": [], "error": None}
+    patch = run_dir / f"{row['id']}.patch"
+    if not patch.exists():   # the agent changed nothing: unsolved then and now
+        return out
+    try:
+        graded = cases.grade(case, cases.patched_files(case, patch.read_text()))
+    except Exception as e:   # one bad patch or container must not end the re-grade
+        return {**out, "error": f"{type(e).__name__}: {e}"}
+    if graded.error or graded.timed_out:   # the sandbox's failure, not the patch's: rerun it, never score it
+        return {**out, "error": graded.summary()}
+    out["hidden_failing"] = [t for t, o in graded.outcomes.items() if o in ("failed", "error") and case.is_hidden(t)]
+    out["graded"] = graded.summary()
+    out["solved_now"] = out["visible_pass"] and graded.passed
+    return out
+
+
+def cmd_regrade(args) -> int:
+    run_dirs = [Path(r) for r in args.runs] or sorted(config.RUNS_DIR.glob("eval-*"))
+    chosen = {c.id: c for c in cases.load(args.cases, args.split)}
+    if not fetch_sources(list(chosen.values())):
+        return 1
+    if not sandbox.image_id():
+        print("The sandbox isn't answering: open OrbStack (or run orbctl start).")
+        return 1
+    jobs, runs = [], []
+    for run_dir in run_dirs:
+        try:
+            saved = json.loads((run_dir / "results.json").read_text())
+        except (OSError, ValueError) as e:
+            print(f"Skipped {run_dir}: {type(e).__name__}: {e}")
+            continue
+        a = saved.get("args", {})
+        runs.append({"run": run_dir.name, "split": a.get("split"), "model": a.get("model"),
+                     "test_loop": not a.get("no_test_loop")})
+        jobs += [(run_dir, r, chosen[r["id"]]) for r in saved.get("cases", [])
+                 if r["id"] in chosen and not r.get("api_failure") and r.get("stop") != "crash"]
+    print(f"Re-grading {len(jobs)} saved result(s) from {len(runs)} run(s)…")
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        rows = list(pool.map(lambda job: regrade_row(*job), jobs))
+    for run in runs:
+        mine = [r for r in rows if r["run"] == run["run"]]
+        run.update({"graded": len(mine), "solved_before": sum(r["solved_before"] for r in mine),
+                    "solved_now": sum(r["solved_now"] for r in mine),
+                    "now_failing": [r["id"] for r in mine if r["solved_before"] and not r["solved_now"]],
+                    "now_passing": [r["id"] for r in mine if r["solved_now"] and not r["solved_before"]],
+                    "errors": [r["id"] for r in mine if r["error"]]})
+    out_dir = config.RUNS_DIR / f"regrade-{time.strftime('%Y%m%d-%H%M%S')}"
+    out_dir.mkdir(parents=True)
+    (out_dir / "results.json").write_text(json.dumps(
+        {"cases": sorted(chosen), "hidden": {i: c.hidden for i, c in sorted(chosen.items())},
+         "runs": runs, "rows": rows}, indent=2))
+    for run in runs:
+        print(f"{run['run']:22} {run['split'] or 'some':5} {run['model'] or '?':18} {'loop' if run['test_loop'] else 'no loop':8}"
+              f" solved {run['solved_before']} → {run['solved_now']} of {run['graded']}"
+              + (f" · now failing: {', '.join(run['now_failing'])}" if run["now_failing"] else "")
+              + (f" · errors: {', '.join(run['errors'])}" if run["errors"] else ""))
+    print(f"Results: {out_dir / 'results.json'}")
+    return 1 if any(r["error"] for r in rows) else 0
+
+
 def main() -> int:
-    p = argparse.ArgumentParser(description="Fetch, verify or run the code fixer's eval cases.")
+    p = argparse.ArgumentParser(description="Fetch, verify, run or re-grade the code fixer's eval cases.")
     sub = p.add_subparsers(dest="command", required=True)
-    for name in ("fetch", "verify", "run"):
+    for name in ("fetch", "verify", "run", "regrade"):
         sp = sub.add_parser(name)
         sp.add_argument("--split", choices=["dev", "test"], help="only this split")
         sp.add_argument("--cases", type=lambda s: [x for x in s.split(",") if x], help="comma-separated case ids")
@@ -189,8 +255,9 @@ def main() -> int:
                      help="baseline: no run_tests tool, one patch checked once (what the test loop buys)")
     run.add_argument("--yes", action="store_true", help="actually run (it costs money)")
     run.add_argument("--ignore-power", action="store_true", help="run on battery or with the lid closed")
+    sub.choices["regrade"].add_argument("runs", nargs="*", help="run folders (default: every runs/eval-*)")
     args = p.parse_args()
-    return {"fetch": cmd_fetch, "verify": cmd_verify, "run": cmd_run}[args.command](args)
+    return {"fetch": cmd_fetch, "verify": cmd_verify, "run": cmd_run, "regrade": cmd_regrade}[args.command](args)
 
 
 if __name__ == "__main__":
