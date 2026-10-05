@@ -32,7 +32,7 @@ Mother, my orchestrator, is the part of the fleet to worry about. It has all thr
 
 It can read files on my machine, including its notes and the agents' `.env` files with their API keys. It reads untrusted content, because the briefs these tools return are built from web pages, and it can search and fetch the web on its own. And it has a way out, since a web fetch or a search can carry data in its URL or query.
 
-Right now, Claude Code's permissions are what hold that in check. `research` and `fix_code` aren't on my pre-approved list, so in the default mode I'm asked before every paid call, and since 2026-10-05 web search and fetch ask first too. That narrows the way out without closing it. Mother can still hand work to other agents, and in my setup some of their tools can reach the network without asking.
+Right now, Claude Code's permissions are what hold that in check. `research` and `fix_code` aren't on my pre-approved list, so in the default mode I'm asked before every paid call. Since 2026-10-05 every web tool asks first too: search, fetch, and the scraping and browser servers. The one way out that still doesn't ask is the shell. Mother can't run shell commands itself, but agents it hands work to can, and I've left that pre-approved.
 
 Whatever the caller asks for, the server keeps its own limits: 4 sub-questions × 3 searches, $0.50 a fix, and 15 minutes for a brief or 20 for a fix, after which the agent's process is killed, the same as when a call is cancelled. Results get cut at 40,000 characters and point to the saved file, and `fix_code` only takes an absolute path to an existing folder.
 
