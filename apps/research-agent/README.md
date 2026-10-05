@@ -56,6 +56,16 @@ Each run saves the brief (`runs/*.md`) and a full JSON trace (`runs/*.json`): pl
 
 **Cost:** $1.25 and 2.5 minutes for the tuned AI scribes run with the defaults (4 sub-questions × 3 searches; `runs/20260928-092603`, before quote recovery was added, which uses no tokens). Time depends mostly on web search: the smaller run above took 7.5 minutes, 6 of them waiting on search. Research was about half the cost (53%), because each search reads 14-19k tokens of pages.
 
+## Threat model
+
+Simon Willison's [lethal trifecta](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/) is the combination that lets a prompt injection steal data: private data, untrusted content, and a way to send data out. Reading untrusted content is this agent's whole job. Its way out is narrow, and it holds no private data unless your question is private.
+
+It sees your question and whatever it finds, and nothing else. The question does go into web searches, though, so don't ask it anything you wouldn't type into a search engine. Everything it reads is untrusted: every page web search reads, and every page it downloads to recover a quote. The narrow way out is search itself. The research workers write their own queries, so a page they read could steer the next one. What it can't do is fetch a URL of its own choosing. Code downloads only the pages the search returned and the worker cited, with plain GET requests.
+
+The workers' only tool is web search, 3 searches each and 4 workers by default, and the fleet server won't allow more. No model in the pipeline can read files or run code. The validator drops claims their quotes don't support, but it only checks whether a quote backs its claim, so I don't count it as an injection filter. The writer only ever sees compact validated notes, never raw pages, and code removes citations to sources that don't exist. Page downloads are GET only, at most 10 seconds and 3 MB each, 12 at a time.
+
+I don't have an injection catch rate for it: that's not measured. No test plants instructions in a page and counts how often they're followed. A page that tells the model what to say could still shape a brief, within what its quotes support.
+
 ## Layout
 
 ```

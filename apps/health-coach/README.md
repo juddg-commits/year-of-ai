@@ -86,6 +86,16 @@ Every `git push` redeploys. Railway's Hobby plan is $5/month including $5 of usa
 - On a server, all routes sit behind the password (HttpOnly cookie, login rate limit). Every API call also requires an `X-Coach` header, so other sites can't trigger paid requests.
 - This is a coaching tool, not medical advice.
 
+## Threat model
+
+Coach holds your health data, so the question is whether anything could carry it out. Simon Willison's [lethal trifecta](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/) frames it: an agent with private data, untrusted content, and a way to send data out can be turned into a leak. Coach has plenty of the first and very little of the other two.
+
+The private data is yours. Your workouts, meals, weight, injuries, notes and profile go to the model every turn. The untrusted content is only what you type. It reads no web pages and no one else's text: code finds and ranks the form videos, and their titles never reach the model. There isn't much of a way out, either. Its seven tools only write to your own log files. Replies render with HTML escaped and no images, so nothing loads by itself, and a link goes nowhere unless you click it. The one piece of model-written text sent to a third party is the form-video search phrase, which goes to YouTube's API.
+
+On a server it has one password for one user, with an HttpOnly cookie and a login rate limit. Every API route needs an `X-Coach` header, so other sites can't trigger paid calls. A turn gets at most 8 tool rounds, and the monthly spend limit you set in the Anthropic console caps what it can spend.
+
+Injection is something I haven't tested on Coach, so it's not measured. With one user and no third-party text in its context, the only person in a position to inject is the user, into their own data.
+
 ## What I learned
 
 See [WRITEUP.md](WRITEUP.md): what broke, what the agent loop taught me, and why XP must be derived from logs. The design choices and their numbers are in [DESIGN.md](DESIGN.md).

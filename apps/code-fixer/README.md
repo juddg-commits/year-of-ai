@@ -73,6 +73,16 @@ Tests and the eval:
 - The planted bugs sit in popular libraries the model may have seen in training. The hand-written cases are there partly for that reason.
 - A fix can't add a file, and can't change a test even when the test is what's wrong.
 
+## Threat model
+
+I judge the risk with Simon Willison's [lethal trifecta](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/): an agent is open to prompt injection when it has private data, reads untrusted content, and has a way to send data out. The code fixer has the first two. It doesn't have the third.
+
+The private data is whatever repo you point it at, since its files go to the model through Anthropic's API. It never copies files that look like secrets (`.env`, keys, `.netrc`, `.pypirc`), and the API key stays in the fixer's own process, outside the sandbox. The untrusted content is the repo itself. The model reads its code, comments and test output, and any of that can carry instructions. The tests are untrusted code, too. What it lacks is a way out of its own. Its five tools only read, search and edit files in the copy and run the tests, and the tests run with no network. What leaves is a patch you review and a trace on your machine.
+
+The limits live in code. Every test runs in the sandbox: no network, 512 MB, one CPU, 256 processes, no Linux capabilities, a read-only root and workspace, and 60 seconds a run. Test files and pytest's config are read-only, and no tool can create or delete a file. Tool results are capped at 400 lines a read, 100 search matches and 2,000 characters a line, and test output gets cut to its first 2,000 and last 8,000 characters. A fix gets $0.50 by default, enforced before every call and again by the fleet server, plus 40 tool calls, 8 test runs, 30 turns and 15 minutes. Whether the tests pass is decided by a fresh sandbox run that the model has no say in.
+
+How often an injection would get through is not measured. None of the eval cases plants instructions in a repo, so all I can tell you is what one could reach. That includes anything written into the patch that the tests don't catch, so read a patch before you apply it.
+
 ## Files
 
 | File | What it does |
