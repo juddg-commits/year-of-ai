@@ -82,6 +82,8 @@ Tests and the eval:
 .venv/bin/python evals/handcheck/heldout.py         # free: the six held-out patches against upstream's fixes
 ```
 
+Paid evals run in CI too. I start them by hand ([eval.yml](../../.github/workflows/eval.yml)), and the paid job waits in a `paid-evals` environment until I approve it. That environment is the only place the API key lives, so no push or pull request can spend money. The first one was [run 37398190672](https://github.com/juddg-commits/year-of-ai/actions/runs/37398190672).
+
 ## Known limits
 
 - Python repos with pytest-compatible tests only, and only what the sandbox image holds (Python 3.12 and pytest). A repo whose tests need other packages fails in the sandbox.
