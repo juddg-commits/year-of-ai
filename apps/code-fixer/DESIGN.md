@@ -149,7 +149,7 @@ A plain insert leaves the ID to tinydb. Inserts that name their own ID fail for 
 
 ### The held-out patches
 
-On 2026-10-05 I ran the same check on the six real-bug patches from the held-out run, with a probe written for each case. The probes, a runner and the results are in runs/handcheck-heldout-20261005/ on my machine, and its summary.txt explains the method.
+On 2026-10-05 I ran the same check on the six real-bug patches from the held-out run, with a probe written for each case. The numbers below are from that run, handcheck-heldout-20261005. Its probes and runner are in `evals/handcheck/`, where `heldout.py` reruns all six for free.
 
 | case | trials | bug (control) differs | patch differs | what the probe does |
 |---|---|---|---|---|

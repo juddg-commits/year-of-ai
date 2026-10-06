@@ -5,8 +5,9 @@
 
 For a real-bug case it builds three kinds of copy: upstream's fix (the source as merged), the
 bug (the fix undone, as the agent got it) and the bug with each run's patch applied. Then it
-runs the case's probe (probe_<project>.py here: seeded random operations, one JSON list of
-results per trial) against each copy and counts the trials whose results differ from upstream.
+runs the case's probe (probe_<case>.py here, or probe_<project>.py if the case has none: seeded
+random operations, one JSON list of results per trial) against each copy and counts the trials
+whose results differ from upstream.
 The bug is the control: a probe that can't tell it from upstream proves nothing.
 
 Free: no API calls. The probes run locally, outside the sandbox, on the pinned sources."""
@@ -25,6 +26,9 @@ HERE = Path(__file__).resolve().parent
 
 
 def probe_for(case: cases.Case) -> Path:
+    own = HERE / f"probe_{case.id.replace('-', '_')}.py"
+    if own.exists():   # a project's probe may be for another of its cases (probe_more_itertools.py is 1285's)
+        return own
     project = case.source.split("@")[0].replace("-", "_")
     return HERE / f"probe_{project}.py"
 

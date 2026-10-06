@@ -39,7 +39,7 @@ Every test run is a fresh container: no network, 512 MB of memory, one CPU, 256 
 
 ### Checking the held-out patches by hand
 
-I compared the six real-bug patches from the held-out run with upstream's fixes on seeded random inputs (runs/handcheck-heldout-20261005, on my machine). Each probe runs on the bug too, as a control, since a probe that can't tell the bug from upstream proves nothing.
+I compared the six real-bug patches from the held-out run with upstream's fixes on seeded random inputs (run handcheck-heldout-20261005). The probes and the runner are in [evals/handcheck/](evals/handcheck/), so you can rerun it for free. Each probe runs on the bug too, as a control, since a probe that can't tell the bug from upstream proves nothing.
 
 | case | trials | bug differs from upstream | patch differs from upstream |
 |---|---|---|---|
@@ -79,6 +79,7 @@ Tests and the eval:
 .venv/bin/python eval.py run --split dev --no-test-loop --yes     # baseline: no run_tests tool
 .venv/bin/python eval.py regrade                    # free: saved patches against today's hidden tests
 .venv/bin/python evals/handcheck/handcheck.py tinydb-633 runs/eval-<time>   # free: a patch against upstream's fix
+.venv/bin/python evals/handcheck/heldout.py         # free: the six held-out patches against upstream's fixes
 ```
 
 ## Known limits
