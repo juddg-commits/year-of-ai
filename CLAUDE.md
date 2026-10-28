@@ -46,6 +46,8 @@ The Year of AI: one repo, one shipped project at a time (`curriculum/README.md`,
 - **Commit on day one.** Ship #1 sat uncommitted for weeks.
 - **One chat per working tree.** A second chat opened while the first was still building: the handoff was hours stale, and a test failed on the other chat's container. Before editing, check `git status` and for another running session.
 - **A handoff is a state file, not a log.** Rewrite `brain/state.md` at the end of each session and move what's history to `brain/history/`. Appended to session after session, one handoff reached 85 KB with five "START HERE" sections, and the older ones contradicted the newer ones.
+- **A leak check must not print the figures it looks for:** keep the patterns in a scratch file and grep -f it.
+- **Check what a judge was given before blaming its wiring.** An LLM judge's reasoning described text that wasn't at the start of the reply it graded. The guess was that it had been fed the wrong field, but the evaluator's config showed the right one: the judge had misread it.
 
 ## Public repo: keep private things out
 This repo is public on GitHub. Never commit `.env`, `runs/`, data folders, or anything about Judd's jobs, internships, school work or personal life. A run goes public only as a copy in its app's `sample-runs/`, scanned for keys and private details first, with local paths replaced. Local-only folders (`brain/`, `outreach/`, `content/`, `.claude/`…) are gitignored for that reason. Before a push, check the diff for secrets and personal details. Test files are public too: an eval's never-say terms spell out what they protect, so they live in a git-ignored list.
